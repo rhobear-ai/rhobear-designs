@@ -1,0 +1,469 @@
+<!doctype html>
+<!--
+ORIGINAL URL: https://www.leoleo.studio/en-gb
+RECREATION: samples/minimax-m3-high/leoleo-studio.html
+
+KEY DESIGN OBSERVATIONS
+  - Light, off-white ground; very generous whitespace.
+  - Custom font: Codec Pro for everything; Fira Code for the small mono service tag list.
+  - Pinned pill nav top-center: small LEOLEO face + Work / Services / About + filled black
+    Contact pill.
+  - Hero: a full-bleed photographic background (3D printed fabric), with floating
+    rotating keywords: "CREATIVE STUDIO", "AGILE", "ENTHUSIASTIC", "DYNAMIC"… the
+    keywords swap around a fixed center.
+  - Manifesto line: "Combining creativity and expertise, we reveal the character of
+    brands that stand out in their time." — last phrase fades to gray.
+  - Case grid: 2-up big cards, each with a placeholder photo + small bottom-left
+    project label pill with arrow.
+  - Services list: a giant right-aligned list ("Web experiment / E-commerce / 3D &
+    motion") in light gray; the small mono tag list (Strategy / Branding / Concepts
+    / AD / Brand Platform / Ton of voice / …) sits in the upper-right.
+  - "At the crossroads of craft and innovation, we help brands connect with their
+    audience in a meaningful way." — same fade-to-gray pattern.
+  - Big footer CTA "Got a project in mind? We're listening :)" with contact + socials
+    + language switcher (EN/FR).
+  - Bottom: a full-bleed black-and-white 3D-knit/cushion strip acts as the brand
+    texture (we replace with a quilted monochrome gradient block).
+  - "Press" section: 4 columns: book / press / studio / awards — small mono label +
+    placeholder image.
+
+CHALLENGES SOLVED
+  - Approximating Codec Pro with Inter Tight (Codec Pro is a paid custom font; Inter
+    Tight is the closest open-source geometric sans).
+  - Fira Code is used directly from Google Fonts for the mono tag list.
+  - The rotating keyword hero is animated with a small CSS + JS state machine that
+    cross-fades between keywords.
+  - The big "Web experiment" / "E-commerce" service list uses a tracked-out light
+    gray weight to mimic Codec Pro at 100% gray.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LEOLEO — Brand design, identity &amp; custom websites (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f1ec;
+    --bg-2: #ebe7e0;
+    --ink: #161616;
+    --ink-soft: #b3b3b3;
+    --ink-very-soft: #d8d4cc;
+    --line: #d8d4cc;
+    --paper: #fff;
+    --pill-active: #0a0a0a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: "Inter Tight", system-ui, sans-serif; font-weight: 500; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+  /* ============= NAV ============= */
+  .nav {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 30;
+    display: flex; align-items: center; gap: 28px;
+    background: #0a0a0a; color: #fff;
+    padding: 10px 14px 10px 16px;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  .nav .face {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #f5cb1c, #f64ea0);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #0a0a0a; font-weight: 800;
+  }
+  .nav a { font-size: 14px; padding: 6px 4px; }
+  .nav a.contact {
+    background: #fff; color: #0a0a0a; padding: 8px 18px; border-radius: 999px;
+  }
+  .nav a.contact:hover { background: #f4f1ec; }
+
+  /* ============= HERO ============= */
+  .hero {
+    position: relative; height: 100vh; min-height: 700px;
+    overflow: hidden;
+    background: linear-gradient(160deg, #b3a78a 0%, #6a5e3e 60%, #2a2014 100%);
+  }
+  .hero .layer { position: absolute; inset: 0; }
+  .hero .photo {
+    background:
+      radial-gradient(circle at 30% 40%, #f5cb1c 0%, transparent 50%),
+      radial-gradient(circle at 70% 60%, #b35230 0%, transparent 50%),
+      linear-gradient(160deg, #d6c39a 0%, #6a5e3e 60%, #2a2014 100%);
+  }
+  .hero .scrim {
+    background: linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.18) 100%);
+  }
+  .hero .shape {
+    position: absolute; left: 0; top: 0; width: 50%; height: 100%;
+    background: radial-gradient(circle at 30% 50%, rgba(245,203,28,0.65) 0%, transparent 60%);
+    filter: blur(8px);
+  }
+  .hero .words {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8%;
+  }
+  .hero .words .w {
+    color: #fff;
+    font-family: "Inter Tight", sans-serif; font-weight: 500;
+    font-size: clamp(14px, 1.6vw, 22px);
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .hero .word-stack {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    color: #fff;
+    font-family: "Inter Tight", sans-serif; font-weight: 500;
+    font-size: clamp(28px, 3.4vw, 56px);
+    letter-spacing: 0.04em; text-transform: uppercase;
+    text-align: center;
+    width: 360px; height: 80px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero .word-stack span { position: absolute; opacity: 0; transition: opacity 0.6s ease; }
+  .hero .word-stack span.on { opacity: 1; }
+
+  /* ============= MANIFESTO ============= */
+  .manifesto {
+    background: var(--bg);
+    padding: 130px 0 80px;
+  }
+  .manifesto h2 {
+    font-family: "Inter Tight", sans-serif; font-weight: 500;
+    font-size: clamp(28px, 4.4vw, 64px);
+    line-height: 1.05; letter-spacing: -0.01em;
+    margin: 0; max-width: 1100px;
+  }
+  .manifesto h2 .fade { color: var(--ink-soft); }
+  .manifesto h2 em { font-family: "Inter Tight", sans-serif; font-style: italic; font-weight: 400; }
+
+  /* ============= CASES ============= */
+  .cases { background: var(--bg); padding: 40px 0 0; }
+  .cases .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .cases .card { position: relative; aspect-ratio: 4/3; overflow: hidden; border-radius: 0; }
+  .cases .card .ph { width: 100%; height: 100%; }
+  .cases .card .ph.laptop { background: linear-gradient(180deg, #2a2a2a 0%, #555 60%, #2a2a2a 100%); }
+  .cases .card .ph.boa { background: linear-gradient(135deg, #031930 0%, #0a4565 60%, #1f56c2 100%); }
+  .cases .card .ph.stadium { background: linear-gradient(160deg, #b8e09d 0%, #5a8a3a 100%); }
+  .cases .card .ph.bloo { background: linear-gradient(160deg, #d5e5f0 0%, #8db1c4 100%); }
+  .cases .card .ph.lump { background: var(--paper); }
+  .cases .card .ph.lump::after { content: "Lump"; display: block; padding-top: 30%; text-align: center; font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: clamp(40px, 8vw, 100px); color: #f5cb1c; transform: rotate(-2deg); }
+  .cases .card .ph.laptop::after, .cases .card .ph.boa::after, .cases .card .ph.stadium::after, .cases .card .ph.bloo::after { display: block; }
+  .cases .card .ph.laptop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 60% 50%, rgba(255, 255, 255, 0.1), transparent 60%); }
+  .cases .card .pill {
+    position: absolute; left: 16px; bottom: 16px;
+    display: inline-flex; align-items: center; gap: 14px;
+    background: var(--paper); color: #0a0a0a;
+    padding: 12px 18px; border-radius: 999px;
+    font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 14px;
+  }
+  .cases .card .pill .arrow { width: 24px; height: 24px; border-radius: 50%; background: #ebebeb; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+  /* press band */
+  .press-band { background: var(--bg); padding: 24px 0 60px; }
+  .press-band .row { display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; gap: 18px; }
+  .press-band .row .year { font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 14px; }
+  .press-band .row .title { font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 22px; }
+  .press-band .row .arrow { width: 36px; height: 36px; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; justify-self: end; }
+
+  /* services */
+  .services {
+    background: var(--bg);
+    padding: 120px 0 80px;
+    position: relative;
+  }
+  .services .tags {
+    position: absolute; right: 32px; top: 60px;
+    font-family: "Fira Code", monospace; font-size: 12px; line-height: 1.5;
+    text-align: left; max-width: 200px;
+  }
+  .services h2 {
+    font-family: "Inter Tight", sans-serif; font-weight: 500;
+    font-size: clamp(60px, 9vw, 160px);
+    line-height: 1; letter-spacing: -0.02em;
+    color: var(--ink-very-soft);
+    margin: 0;
+  }
+  .services h2 em { font-style: italic; font-weight: 400; }
+  .services h2 .accent { color: var(--ink-soft); }
+
+  /* bridge copy */
+  .bridge {
+    background: var(--bg);
+    padding: 80px 0 120px;
+  }
+  .bridge h3 {
+    font-family: "Inter Tight", sans-serif; font-weight: 500;
+    font-size: clamp(28px, 4vw, 56px);
+    line-height: 1.05; letter-spacing: -0.01em; margin: 0; max-width: 900px;
+  }
+  .bridge h3 .fade { color: var(--ink-soft); }
+
+  /* press grid */
+  .press-grid { background: var(--bg); padding: 40px 0 100px; }
+  .press-grid .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .press-grid .cell { aspect-ratio: 1/1.05; background: var(--paper); position: relative; overflow: hidden; }
+  .press-grid .cell .lbl { position: absolute; left: 14px; top: 14px; font-size: 12px; }
+  .press-grid .cell .ph { position: absolute; inset: 0; }
+  .press-grid .cell .ph.book { background: linear-gradient(180deg, #1a1a1a, #2a2a2a); }
+  .press-grid .cell .ph.press { background: linear-gradient(180deg, #ddd, #aaa); }
+  .press-grid .cell .ph.studio { background: linear-gradient(180deg, #ad6025, #412a13); }
+  .press-grid .cell .ph.awards { background: linear-gradient(180deg, #f5cb1c, #b48d0b); }
+
+  /* footer */
+  footer { background: var(--bg); padding: 80px 0 0; }
+  footer .cta-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 24px; padding-bottom: 80px; }
+  footer h2 {
+    font-family: "Inter Tight", sans-serif; font-weight: 500;
+    font-size: clamp(36px, 5.5vw, 80px);
+    line-height: 0.95; letter-spacing: -0.02em; margin: 0;
+  }
+  footer .col h4 { font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 14px; margin: 0 0 8px; }
+  footer .col a { display: block; padding: 4px 0; }
+  footer .legal { display: flex; justify-content: space-between; align-items: center; padding: 12px 0 24px; }
+  footer .lang { display: inline-flex; border: 1px solid #c9c5ba; border-radius: 999px; overflow: hidden; }
+  footer .lang button { background: transparent; border: 0; padding: 8px 14px; font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 12px; cursor: pointer; }
+  footer .lang button.on { background: #0a0a0a; color: #fff; }
+
+  /* knurl / bottom band */
+  .knurl {
+    height: 280px; background:
+      linear-gradient(90deg, #ddd 0%, #f5f5f5 50%, #ddd 100%),
+      repeating-linear-gradient(90deg, #2a2a2a 0 6px, #ddd 6px 12px);
+    position: relative; overflow: hidden;
+  }
+  .knurl svg { width: 100%; height: 100%; display: block; }
+
+  @media (max-width: 900px) {
+    .cases .grid, .press-grid .grid, footer .cta-row { grid-template-columns: 1fr; }
+    .services .tags { position: static; max-width: 100%; padding-bottom: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============= NAV ============= -->
+<nav class="nav">
+  <span class="face">L.</span>
+  <a href="#work">Work</a>
+  <a href="#services">Services</a>
+  <a href="#about">About</a>
+  <a class="contact" href="#contact">Contact</a>
+</nav>
+
+<!-- ============= HERO ============= -->
+<section class="hero">
+  <div class="layer photo"></div>
+  <div class="layer shape"></div>
+  <div class="layer scrim"></div>
+  <div class="words">
+    <span class="w">Creative Studio</span>
+    <span class="w">Enthusiastic</span>
+  </div>
+  <div class="word-stack" id="wordStack">
+    <span class="on">Creative Studio</span>
+    <span>Agile</span>
+    <span>Enthusiastic</span>
+    <span>Dynamic</span>
+    <span>Playful</span>
+    <span>Curious</span>
+    <span>Bold</span>
+  </div>
+</section>
+
+<!-- ============= MANIFESTO ============= -->
+<section class="manifesto">
+  <div class="wrap">
+    <h2>Combining creativity and expertise,<br>we reveal the character of brands that <span class="fade">stand out in their time.</span></h2>
+  </div>
+</section>
+
+<!-- ============= CASES ============= -->
+<section class="cases" id="work">
+  <div class="wrap">
+    <div class="grid">
+      <div class="card"><div class="ph laptop"></div><div class="pill">Homerun <span class="arrow">→</span></div></div>
+      <div class="card"><div class="ph boa"></div><div class="pill">Boa Concept <span class="arrow">→</span></div></div>
+      <div class="card"><div class="ph stadium"></div><div class="pill">Sport 2024 <span class="arrow">→</span></div></div>
+      <div class="card"><div class="ph bloo"></div><div class="pill">Bloo <span class="arrow">→</span></div></div>
+      <div class="card"><div class="ph lump"></div><div class="pill">Lump <span class="arrow">→</span></div></div>
+      <div class="card"><div class="ph" style="background:linear-gradient(160deg,#1a1a1a,#3a3a3a)"></div><div class="pill">OKCC <span class="arrow">→</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= PRESS BAND ============= -->
+<section class="press-band">
+  <div class="wrap">
+    <div class="row">
+      <span class="year">2023</span>
+      <span class="title">OKCC</span>
+      <span class="arrow">→</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============= SERVICES ============= -->
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="tags">
+      STRATEGY<br>
+      BRANDING<br>
+      CONCEPTS<br>
+      AD<br>
+      BRAND PLATFORM<br>
+      TON OF VOICE<br>
+      CONSUMER EXPERIENCE<br>
+      SERVICE DESIGN<br>
+      CAMPAIGN<br>
+      PRINT<br>
+      UX/UI<br>
+      3D / MOTION<br>
+      ILLUSTRATION<br>
+      DEVELOPMENT
+    </div>
+    <h2>
+      Web experiment<br>
+      E-commerce<br>
+      3D <em>&amp;</em> motion
+    </h2>
+  </div>
+</section>
+
+<!-- ============= BRIDGE ============= -->
+<section class="bridge">
+  <div class="wrap">
+    <h3>At the crossroads of craft and innovation, <span class="fade">we help brands connect with their audience in a meaningful way.</span></h3>
+  </div>
+</section>
+
+<!-- ============= PRESS GRID ============= -->
+<section class="press-grid">
+  <div class="wrap">
+    <div class="grid">
+      <div class="cell">
+        <span class="lbl">Features</span>
+        <div class="ph book"></div>
+      </div>
+      <div class="cell">
+        <span class="lbl">Press</span>
+        <div class="ph press"></div>
+      </div>
+      <div class="cell">
+        <span class="lbl">Studio</span>
+        <div class="ph studio"></div>
+      </div>
+      <div class="cell">
+        <span class="lbl">Awards</span>
+        <div class="ph awards"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= FOOTER ============= -->
+<footer id="contact">
+  <div class="wrap">
+    <div class="cta-row">
+      <h2>Got a project in mind?<br>We're listening :)</h2>
+      <div class="col">
+        <h4>You got a project ?</h4>
+        <a href="mailto:hello@leoleo.studio">hello@leoleo.studio</a>
+        <h4 style="margin-top:14px">To apply</h4>
+        <a href="mailto:job@leoleo.studio">job@leoleo.studio</a>
+      </div>
+      <div class="col">
+        <h4>Follow us :</h4>
+        <a href="#">LinkedIn</a>
+        <a href="#">Instagram</a>
+      </div>
+    </div>
+    <div class="legal">
+      <div class="lang">
+        <button class="on">EN</button>
+        <button>FR</button>
+      </div>
+      <div>LEOLEO ©2025</div>
+    </div>
+  </div>
+  <div class="knurl">
+    <svg viewBox="0 0 1600 280" preserveAspectRatio="none">
+      <defs>
+        <pattern id="knurl-p" x="0" y="0" width="80" height="280" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="80" height="280" fill="#ddd"/>
+          <path d="M0 40 Q40 80 80 40 Q40 0 0 40 Z" fill="#aaa"/>
+          <path d="M0 120 Q40 160 80 120 Q40 80 0 120 Z" fill="#777"/>
+          <path d="M0 200 Q40 240 80 200 Q40 160 0 200 Z" fill="#444"/>
+          <path d="M0 280 Q40 320 80 280 Q40 240 0 280 Z" fill="#222"/>
+        </pattern>
+      </defs>
+      <rect width="1600" height="280" fill="url(#knurl-p)"/>
+    </svg>
+  </div>
+</footer>
+
+<script>
+  // Word stack rotation
+  const stack = document.getElementById('wordStack');
+  const items = stack.querySelectorAll('span');
+  let i = 0;
+  setInterval(() => {
+    items.forEach(s => s.classList.remove('on'));
+    i = (i + 1) % items.length;
+    items[i].classList.add('on');
+  }, 1800);
+
+  // GSAP scroll reveals
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.from('.manifesto h2', { y: 40, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: '.manifesto', start: 'top 75%' } });
+  gsap.from('.cases .card', { y: 60, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out', scrollTrigger: { trigger: '.cases', start: 'top 75%' } });
+  gsap.from('.services h2', { y: 60, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: '.services', start: 'top 75%' } });
+  gsap.from('.bridge h3', { y: 40, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: '.bridge', start: 'top 75%' } });
+  gsap.from('.press-grid .cell', { y: 40, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out', scrollTrigger: { trigger: '.press-grid', start: 'top 80%' } });
+  gsap.from('footer h2', { y: 30, opacity: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: 'footer', start: 'top 80%' } });
+
+  // language switcher
+  document.querySelectorAll('.lang button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.lang button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+    });
+  });
+</script>
+
+<!--
+PRESERVED WELL
+  - Pinned pill nav top-center (face + Work / Services / About + black Contact pill).
+  - Hero: full-bleed warm photo with a single rotating keyword ("Creative Studio"
+    cross-fading through "Agile", "Enthusiastic", "Dynamic"…) — the side text is
+    fixed on the page edges.
+  - "Combining creativity and expertise, we reveal the character of brands that
+    stand out in their time." — last clause fades to gray.
+  - 2-up case grid with small bottom-left pill labels.
+  - Big "Web experiment / E-commerce / 3D & motion" services list in light gray
+    with Fira Code mono tag list pinned upper-right.
+  - "At the crossroads of craft and innovation, we help brands connect with their
+    audience in a meaningful way." — same fade-to-gray pattern.
+  - Press grid: 4 cells (Features / Press / Studio / Awards) with gradient placeholders.
+  - Footer: "Got a project in mind? We're listening :)" + contact + socials +
+    EN/FR language switcher + ©2025.
+  - Bottom knurl / 3D-knit texture strip rendered as a tiled SVG of cushion folds.
+
+TRADE-OFFS / INTENTIONAL
+  - Codec Pro is a paid custom font; Inter Tight is the closest open-source
+    geometric sans. Fira Code stays as-is for the mono tag list.
+  - Hero photo is replaced with a tasteful warm gradient + radial accents that
+    approximate the original's olive/cream palette without lifting the actual
+    brand photography.
+  - The 3D-knit strip at the bottom is a tiled SVG of cushion folds — captures
+    the visual rhythm without the original WebGL knit simulation.
+-->
+</body>
+</html>

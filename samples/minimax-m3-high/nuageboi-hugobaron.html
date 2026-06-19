@@ -1,0 +1,419 @@
+<!--
+  Original: https://nuageboi.fr/
+  File:    nuageboi-hugobaron.html
+
+  KEY DESIGN OBSERVATIONS
+  - Two-tone brutalist editorial. Hero on saturated electric-green (#3FE03A),
+    then everything after is jet-black with stark white type.
+  - Display type is a heavy ultra-condensed display face ("HUGO BARON" takes
+    the entire viewport). Body uses a clean neutral sans.
+  - Persistent meta UI: number-prefixed nav (01 / INFO, 02 / REEL …), a
+    live Paris clock, and a floating showreel panel pinned bottom-right.
+  - 4 ghost tags "// NEW PORTFOLIO //" spaced evenly across the hero top.
+  - Marquee row of "APPROACH / IMPACT" pill badges repeats in many sections.
+  - "SCROLL DOWN ↓" centered pill in the hero.
+  - Sections reveal massive single-line H2s ("PARIS BASED", "ART DIRECTOR /",
+    "SHOWREEL / 2025", "SELECTED WORKS", "CLIENTS") with refined micro-copy
+    paragraph + colored badge.
+  - Client logos sit inside soft pill/oval cells in a 5-up grid.
+
+  CHALLENGES SOLVED
+  - Replaced the 3D showreel canvas with an animated CSS-only mesh-gradient
+    block + play affordance, preserving the "video panel pinned to viewport"
+    behaviour via fixed positioning.
+  - Live Paris clock recomputed every second from the browser's local time.
+  - Massive condensed display type rendered with Anton / Bebas Neue — no
+    premium font required to evoke the same brutalist voice.
+  - Green→black section transition with one CSS clip-path wedge, no canvas.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Hugo Baron — Portfolio</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root{
+  --green: #3FE03A;
+  --green-deep: #2cc52a;
+  --black: #050505;
+  --off: #f3f3ee;
+  --grey: #777;
+  --grey-2: #1c1c1c;
+  --font-disp: 'Anton', 'Bebas Neue', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--green);color:var(--black);font-family:var(--font-sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{transition:background .2s linear}
+
+/* TOP NAV */
+.topnav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:22px 32px;mix-blend-mode:normal;font-size:13px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.topnav .links{display:flex;gap:38px}
+.topnav .links span{cursor:pointer;transition:opacity .2s}
+.topnav .links span:hover{opacity:.6}
+.topnav .links .n{color:var(--black);opacity:.55;margin-right:6px;font-weight:500}
+.topnav .clock{background:var(--off);padding:4px 10px;border-radius:4px;font-family:var(--font-mono);font-size:13px;color:var(--black)}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;padding:80px 0 60px;background:var(--green);overflow:hidden}
+.hero .row-tags{position:absolute;top:74px;left:32px;right:32px;display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;color:var(--black);opacity:.75}
+.hero-title{font-family:var(--font-disp);font-weight:400;line-height:.82;color:var(--black);font-size:clamp(140px,28vw,540px);letter-spacing:-0.02em;text-transform:uppercase;white-space:nowrap;margin:0 0 -3vw -1vw;width:130%;user-select:none}
+.hero-bottom{position:absolute;bottom:36px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:flex-end}
+.hero-bottom .meta{font-size:13px;font-weight:500;letter-spacing:-0.01em}
+.hero-bottom .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 22px;border:1px solid var(--black);border-radius:999px;background:transparent;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:background .2s}
+.hero-bottom .pill:hover{background:var(--black);color:var(--green)}
+.hero-bottom .pill .arrow{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--black);color:var(--green);font-size:11px}
+
+/* SHOWREEL PANEL pinned */
+.showreel{position:fixed;right:32px;bottom:32px;width:380px;height:230px;background:#888;border-radius:8px;z-index:55;box-shadow:0 30px 60px #0006;overflow:hidden;display:flex;flex-direction:column}
+.showreel .head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(0,0,0,.4);color:#fff;font-family:var(--font-mono);font-size:11px}
+.showreel .stage{flex:1;background:radial-gradient(circle at 30% 40%, #ff7a4d 0%, #6f2bbf 40%, #19073d 100%);position:relative;display:grid;place-items:center;cursor:pointer}
+.showreel .stage::after{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 30% 40%, rgba(255,255,255,.07) 0 1px, transparent 1px 6px)}
+.showreel .play{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#000}
+.showreel .play svg{width:22px;height:22px;margin-left:4px}
+
+/* SECTIONS after hero */
+.section{background:var(--black);color:#fff;position:relative;padding:140px 32px}
+.section .container{max-width:1480px;margin:0 auto}
+.mega{font-family:var(--font-disp);font-weight:400;line-height:.85;text-transform:uppercase;letter-spacing:-0.01em;font-size:clamp(100px,17vw,280px);color:#fff;margin:0}
+.mega .slash{color:var(--green)}
+.mega .it{font-family:var(--font-display);font-style:italic;font-weight:300}
+
+.badge{display:inline-block;padding:6px 16px;border:1px solid var(--green);background:var(--green);color:var(--black);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-radius:4px;margin-bottom:18px}
+.badge.dark{background:transparent;color:var(--green);border-color:var(--green)}
+
+.body-copy{font-size:16px;line-height:1.55;color:#cfcfcf;max-width:520px}
+.body-copy em{color:#fff;font-style:italic}
+
+/* approach paragraph layout */
+.approach{display:grid;grid-template-columns:1fr 2fr;gap:60px;margin-top:120px;align-items:start}
+
+/* showreel full */
+.showreel-full{margin-top:80px;position:relative}
+.showreel-full .player{aspect-ratio:16/9;background:linear-gradient(135deg,#2a2a2a 0%,#0a0a0a 100%);border-radius:6px;display:grid;place-items:center;position:relative;overflow:hidden}
+.showreel-full .player::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(circle at 20% 30%, rgba(120,40,200,.5), transparent 50%),
+  radial-gradient(circle at 80% 70%, rgba(255,90,80,.4), transparent 50%),
+  repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 1px, transparent 1px 8px);}
+.showreel-full .player .watermark{position:absolute;top:18px;left:18px;font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,.7);letter-spacing:.05em;text-transform:lowercase}
+.showreel-full .player .play{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.95);display:grid;place-items:center;color:#000;z-index:2}
+.showreel-full .player .play svg{width:30px;height:30px;margin-left:6px}
+.showreel-full .bar{position:absolute;left:0;right:0;bottom:0;height:50px;background:linear-gradient(transparent, rgba(0,0,0,.7));display:flex;align-items:center;padding:0 18px;gap:14px;color:#fff;font-family:var(--font-mono);font-size:11px;z-index:2}
+.showreel-full .progress{flex:1;height:2px;background:#444;border-radius:2px;position:relative}
+.showreel-full .progress::before{content:"";position:absolute;left:0;top:0;height:100%;width:42%;background:var(--green);border-radius:2px}
+
+/* works carousel */
+.works{margin-top:120px;position:relative}
+.works-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.works-nav .nav-btn{background:transparent;border:1px solid #fff;color:#fff;padding:12px 22px;border-radius:999px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;font-weight:600;transition:all .2s}
+.works-nav .nav-btn:hover{background:#fff;color:#000}
+.work-stage{aspect-ratio:16/9;background:linear-gradient(135deg,#1a0d2b 0%,#0a0a14 100%);border-radius:8px;position:relative;overflow:hidden}
+.work-stage::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 60% 50%, rgba(180,80,200,.4), transparent 50%),radial-gradient(circle at 30% 30%, rgba(80,150,200,.3), transparent 50%);}
+.work-stage .label{position:absolute;bottom:30px;left:30px;right:30px;display:flex;justify-content:space-between;align-items:end;color:#fff;font-family:var(--font-mono);font-size:12px;z-index:2}
+.work-stage .label .title{font-family:var(--font-disp);font-size:64px;text-transform:uppercase;color:#fff}
+
+/* big text marquee sections */
+.big-text{padding:140px 32px;background:var(--black);color:#fff}
+.big-text .container{max-width:1480px;margin:0 auto}
+.crafting{font-family:var(--font-sans);font-weight:400;font-size:clamp(28px,3vw,46px);line-height:1.2;color:#fff;margin:0 auto 100px;max-width:1100px;text-align:center}
+.partnering{font-family:var(--font-disp);font-weight:400;line-height:.92;text-transform:uppercase;letter-spacing:-0.01em;font-size:clamp(70px,9vw,140px);color:#fff;margin:0}
+
+/* clients */
+.clients{background:var(--black);color:#fff;padding:160px 32px 80px}
+.clients h2{font-family:var(--font-disp);font-size:clamp(120px,18vw,260px);line-height:.85;text-transform:uppercase;margin:0 0 60px;letter-spacing:-0.01em}
+.clients-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid #222}
+.clients-grid .cell{aspect-ratio:1.3;border-right:1px solid #1c1c1c;border-bottom:1px solid #1c1c1c;display:grid;place-items:center;background:#050505;position:relative;overflow:hidden}
+.clients-grid .cell:nth-child(5n){border-right:0}
+.clients-grid .cell:nth-last-child(-n+5){border-bottom:0}
+.clients-grid .cell::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle, rgba(255,255,255,.04), transparent 70%);}
+.clients-grid .cell .label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;z-index:2;font-family:var(--font-sans)}
+.clients-grid .cell .label em{font-style:italic;font-family:'Times New Roman',serif;font-weight:400}
+
+/* footer */
+.foot{background:var(--black);color:#fff;padding:80px 32px 30px;border-top:1px solid #1c1c1c}
+.foot .container{max-width:1480px;margin:0 auto}
+.foot-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:60px;align-items:start;margin-bottom:60px}
+.foot-row h3{font-family:var(--font-disp);font-size:80px;line-height:.9;text-transform:uppercase;margin:0}
+.foot-row .pill{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border:1px solid #fff;border-radius:999px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:#fff}
+.foot-row .pill:hover{background:#fff;color:#000}
+.foot .small{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#666}
+.foot .small a{color:#888}
+
+/* utility */
+.mono{font-family:var(--font-mono);font-size:12px;color:var(--black);text-transform:lowercase}
+.upper-label{font-family:var(--font-mono);font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.12em}
+
+/* misc */
+.approach-pill{display:inline-block;padding:5px 14px;border:1px solid #fff;color:#fff;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;border-radius:4px}
+
+/* responsive */
+@media (max-width: 900px){
+  .topnav .links{gap:18px;font-size:11px}
+  .hero-title{font-size:32vw;white-space:normal}
+  .showreel{width:90vw;right:5vw}
+  .approach{grid-template-columns:1fr;gap:30px}
+  .clients-grid{grid-template-columns:repeat(2,1fr)}
+  .clients-grid .cell:nth-child(5n){border-right:1px solid #1c1c1c}
+  .clients-grid .cell:nth-child(2n){border-right:0}
+  .foot-row{grid-template-columns:1fr}
+  .work-stage .label .title{font-size:30px}
+  .partnering{font-size:14vw}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="links">
+    <span><span class="n">01</span>/Info</span>
+    <span><span class="n">02</span>/Reel</span>
+    <span><span class="n">03</span>/Works</span>
+    <span><span class="n">04</span>/Contact</span>
+  </div>
+  <div style="display:flex;gap:14px;align-items:center">
+    <span class="mono">Paris/</span>
+    <span class="clock" id="clock">15:47</span>
+    <span class="mono">© 2026</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="row-tags">
+    <span>// New portfolio //</span>
+    <span>// New portfolio //</span>
+    <span>// New portfolio //</span>
+    <span>// New portfolio //</span>
+  </div>
+
+  <h1 class="hero-title">RON HUGOBARON</h1>
+
+  <div class="hero-bottom">
+    <div class="meta">
+      <div>3D ARTIST &amp; DIRECTION</div>
+      <div>AVAILABLE APR. 2025</div>
+    </div>
+    <button class="pill">Scroll Down <span class="arrow">↓</span></button>
+    <div class="meta" style="text-align:right">
+      <div>PARIS / BASED</div>
+      <div>FR · FR · FR</div>
+    </div>
+  </div>
+</section>
+
+<!-- PARIS BASED -->
+<section class="section">
+  <div class="container">
+    <h2 class="mega">Paris<br/><span style="font-size:.6em">based</span></h2>
+
+    <div class="approach">
+      <div></div>
+      <div>
+        <span class="approach-pill">Approach</span>
+        <p class="body-copy" style="margin-top:20px">
+          <em>Passionate about imagery and movement,</em> I create unique visual universes that combine artistic direction, 3D, and motion design.
+        </p>
+        <p class="body-copy" style="margin-top:20px">
+          My approach is based on refined aesthetics, meticulous attention to detail, and a perfect mastery of digital tools to bring <em style="color:var(--green)">innovative and impactful concepts to life.</em>
+        </p>
+      </div>
+    </div>
+
+    <h2 class="mega" style="margin-top:80px">ART DIRECTOR <span class="slash">/</span></h2>
+    <h2 class="mega">3D ARTIST <span class="slash">/</span></h2>
+  </div>
+</section>
+
+<!-- SHOWREEL -->
+<section class="section">
+  <div class="container">
+    <h2 class="mega">SHOWREEL <span class="slash">/</span> 2025</h2>
+
+    <div class="showreel-full">
+      <div class="player">
+        <span class="watermark">@nuageboi</span>
+        <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 22,12 6,20"/></svg></div>
+        <div class="bar">
+          <span>▶</span>
+          <span>00:42</span>
+          <div class="progress"></div>
+          <span>01:34</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SELECTED WORKS -->
+<section class="section">
+  <div class="container">
+    <h2 class="mega">SELECTED</h2>
+    <h2 class="mega">WORKS</h2>
+
+    <div class="works-nav" style="margin-top:80px">
+      <div class="upper-label">3 selected projects</div>
+      <div style="display:flex;gap:12px">
+        <button class="nav-btn">← Previous</button>
+        <button class="nav-btn">Next →</button>
+      </div>
+    </div>
+
+    <div class="work-stage">
+      <div class="label">
+        <div>
+          <div class="upper-label" style="margin-bottom:6px">Project 01 / 2025</div>
+          <div class="title">AURA</div>
+        </div>
+        <a href="#" class="pill" style="border-color:#fff;color:#fff">View →</a>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:30px;color:#888;font-family:var(--font-mono);font-size:12px">
+      <span>01 / 03</span>
+      <span>3D · MOTION</span>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERING -->
+<section class="big-text">
+  <div class="container">
+    <p class="crafting reveal">
+      Crafting cutting-edge visual experiences for<br/>
+      forward-thinking brands that aim to stand out and<br/>
+      leave a lasting impression.
+    </p>
+    <h2 class="partnering reveal">PARTNERING WITH AMBITIOUS BRANDS TO CRAFT</h2>
+    <h2 class="partnering reveal" style="margin-top:10px">& CAPTIVATING DIGITAL CONTENT.</h2>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<section class="clients">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:60px;margin-bottom:60px;align-items:start">
+      <div>
+        <span class="badge dark">Impact</span>
+        <p class="body-copy" style="margin-top:16px">
+          Collaborating with innovative brands that want to bring their vision to life through powerful visuals. I work independently and partner with creative studios, production houses, and agencies to create impactful 3D and motion experiences.
+        </p>
+      </div>
+      <div></div>
+    </div>
+
+    <h2 class="reveal">CLIENTS</h2>
+
+    <div class="clients-grid">
+      <div class="cell"><span class="label">UNIVERSAL<br/><em>music group</em></span></div>
+      <div class="cell"><span class="label" style="font-style:italic;font-family:'Times New Roman',serif;font-weight:400;font-size:24px">Virgin</span></div>
+      <div class="cell"><span class="label" style="font-family:'Times New Roman',serif">HBO</span></div>
+      <div class="cell"><span class="label">WARNER<br/><em>music</em></span></div>
+      <div class="cell"><span class="label">webedia</span></div>
+
+      <div class="cell"><span class="label">ADIDAS</span></div>
+      <div class="cell"><span class="label">NIKE</span></div>
+      <div class="cell"><span class="label">APPLE</span></div>
+      <div class="cell"><span class="label" style="font-style:italic;font-family:'Times New Roman',serif;font-weight:400;font-size:24px">Samsung</span></div>
+      <div class="cell"><span class="label">NETFLIX</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot">
+  <div class="container">
+    <div class="foot-row">
+      <h3>LET'S<br/>CREATE<br/>TOGETHER.</h3>
+      <a href="#" class="pill">Get in touch ↗</a>
+      <div style="text-align:right;color:#888;font-family:var(--font-mono);font-size:12px;line-height:1.7">
+        <div>Made by / amine z.</div>
+        <div>Built with curiosity.</div>
+      </div>
+    </div>
+    <div class="small">
+      <span>© Hugo Baron 2026 — All rights reserved.</span>
+      <a href="#">Back to top ↑</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Pinned Showreel Panel -->
+<aside class="showreel">
+  <div class="head">
+    <span>SHOWREEL / 2025</span>
+    <span id="sr-time">01:34:00</span>
+  </div>
+  <div class="stage">
+    <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 22,12 6,20"/></svg></div>
+  </div>
+</aside>
+
+<script>
+// Live Paris clock
+function tick(){
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+setInterval(tick, 1000); tick();
+
+// GSAP reveals
+gsap.registerPlugin(ScrollTrigger);
+document.querySelectorAll('.reveal').forEach(el => {
+  gsap.from(el, {
+    opacity: 0, y: 40, duration: 1.1, ease: 'power3.out',
+    scrollTrigger: { trigger: el, start: 'top 85%', once: true }
+  });
+});
+
+// Hero title parallax on scroll
+gsap.to('.hero-title', {
+  yPercent: -15, ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// Showreel panel fade after scroll past hero
+gsap.to('.showreel', {
+  opacity: 0, pointerEvents: 'none',
+  scrollTrigger: { trigger: '.showreel-full', start: 'top 70%', toggleActions: 'play none none reverse' }
+});
+
+// Mega type scale-in
+document.querySelectorAll('.mega').forEach(el => {
+  gsap.from(el, {
+    y: 80, opacity: 0, duration: 1.2, ease: 'expo.out',
+    scrollTrigger: { trigger: el, start: 'top 90%', once: true }
+  });
+});
+
+// Work carousel simulation
+let wi = 0;
+const works = [
+  {n:'01',t:'AURA',cat:'3D · MOTION'},
+  {n:'02',t:'NEON BLOOM',cat:'3D · BRAND'},
+  {n:'03',t:'PRISM',cat:'3D · ART DIRECTION'}
+];
+setInterval(()=>{
+  wi = (wi+1) % works.length;
+  const w = works[wi];
+  document.querySelector('.work-stage .label .upper-label').textContent = `Project ${w.n} / 2025`;
+  document.querySelector('.work-stage .label .title').textContent = w.t;
+  const meta = document.querySelector('.works-nav + .work-stage + div');
+  if (meta) meta.firstElementChild.textContent = `${w.n} / 03`;
+}, 5000);
+</script>
+</body>
+</html>

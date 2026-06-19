@@ -1,0 +1,566 @@
+<!--
+  MIKKI SINDHUNATA — Recreation
+  Original URL: https://mikkisindhunata.com/
+  Recreation by: MiniMax M3 (high)
+
+  KEY DESIGN OBSERVATIONS
+  - Director portfolio with a strong, deliberate editorial feel. Four pages:
+    Home (hero with featured reel), Works (single-reel highlight), Archive
+    (full project index, 22 projects), About, Contact. The Archive is the
+    showpiece — a 6-column data table on a dark canvas listing every project
+    chronologically.
+  - Two typefaces: B612 Mono (a NASA-derived monospace, free Google Fonts)
+    for body / labels / table data, and Anton SC (small-caps Anton, free
+    Google Fonts) for ALL display / nav / page titles. Everything is uppercase.
+  - Color logic: light pages (home / works / about / contact) sit on a soft
+    fabric-textured off-white (~rgb(232,232,232) base, ~rgb(245,245,245)
+    section); Archive is a deep near-black with white type. Cookie consent
+    is an inverted black card with white text.
+  - Navigation lives top-of-page as a row of pill-shaped buttons. Active
+    page is filled black with white type. The center is a stacked monogram
+    "MI / K / KI" rendered as three lines.
+  - Home hero: a single big reel of 4 featured projects. Each project is a
+    full-bleed still with title and "01 — 04 ECCO LEATHER — EL3 MOTION"
+    metadata. Play button centered, prev/next arrow controls bottom-right.
+  - Page architecture uses an obvious two-anchor "left + right" composition
+    (e.g., "MIKKI ... SINDHUNATA" split with hero image between), and the
+    same trick repeats on Works ("WORKS ... OVERVIEW"), Archive ("VIDEO
+    ... ARCHIVE") and About (centered title).
+  - Archive table has columns: # / Brand / Title / Type / Region / Agency /
+    Year. Hover on a row reveals a project "still" preview card.
+  - The page footer is uniform across pages: tiny mono text "©2026 MIKKI
+    SINDHUNATA - COOKIES" + "ALL RIGHTS RESERVED" + "WEBSITE BY" small
+    credit at right.
+
+  CHALLENGES SOLVED
+  - Fabric-texture background: generated procedurally as an SVG noise pattern
+    with a subtle cloth-like radial gradient overlay, applied to body.
+  - Stacked monogram "MI / K / KI": simple three-line span with subtle
+    spacing — the original uses Anton SC's small-caps to give that unique
+    stacked look.
+  - Featured reel carousel: 4-project cross-fade with prev/next arrow
+    controls and "01 — 04" project counter — full keyboard support.
+  - Archive hover-preview: a fixed thumbnail pop that follows the cursor
+    on row hover, exactly like the original's hover "still" treatment.
+  - Inverted cookie consent: implemented as a fixed overlay card matching
+    the original's bold typographic treatment.
+
+  NOTES ON ASSETS
+  - No real project stills, logos, or portraits. All "stills" are original
+    gradient compositions matching each project's likely palette. Body copy
+    on the about page is paraphrased to remove any proprietary details.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mikki Sindhunata — Director (Recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=B612+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Anton+SC&family=Anton:wght@400&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          mono: ['"B612 Mono"', 'monospace'],
+          display: ['"Anton SC"', '"Anton"', 'sans-serif'],
+        },
+        colors: {
+          paper: '#e8e8e8',
+          soft: '#efefef',
+          rule: '#dddddd',
+          ink: '#1e1e1e',
+          dark: '#0a0a0a',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --c-paper: #e8e8e8;
+    --c-soft: #efefef;
+    --c-rule: #dddddd;
+    --c-ink: #1e1e1e;
+    --c-dark: #0a0a0a;
+  }
+  html, body { background: var(--c-paper); color: var(--c-ink); font-family: "B612 Mono", monospace; -webkit-font-smoothing: antialiased; }
+  body { overflow-x: hidden; }
+  .font-display { font-family: "Anton SC", "Anton", sans-serif; letter-spacing: 0; text-transform: uppercase; font-weight: 400; line-height: 0.95; }
+
+  /* Fabric texture (subtle cloth weave) */
+  .fabric {
+    background-color: #e8e8e8;
+    background-image:
+      linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.04) 100%),
+      radial-gradient(80% 100% at 30% 20%, rgba(255,255,255,0.4), transparent 50%),
+      radial-gradient(60% 60% at 80% 80%, rgba(0,0,0,0.06), transparent 50%);
+    position: relative;
+  }
+  .fabric::before {
+    content:""; position: absolute; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply; opacity: 0.45;
+  }
+  .fabric::after {
+    content:""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 4px);
+    mix-blend-mode: multiply; opacity: 0.25;
+  }
+
+  /* Top nav */
+  .topbar { padding: 18px clamp(20px, 4vw, 56px); display: flex; align-items: center; justify-content: space-between; gap: 16px; position: relative; z-index: 5; }
+  .pill { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; border: 1px solid #1e1e1e; border-radius: 999px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--c-ink); text-decoration: none; background: transparent; cursor: pointer; transition: background 220ms ease, color 220ms ease; font-family: "B612 Mono", monospace; }
+  .pill[aria-current="page"], .pill.active { background: #1e1e1e; color: #fff; }
+  .pill:hover { background: rgba(0,0,0,0.1); }
+  .pill.active:hover { background: #000; }
+  .pill .ico { width: 12px; height: 12px; margin-right: 8px; display: inline-block; }
+
+  /* Center monogram */
+  .monogram { display: flex; flex-direction: column; align-items: center; font-family: "Anton SC", sans-serif; font-size: 14px; line-height: 0.95; letter-spacing: 0.02em; }
+  .monogram span { display: block; }
+
+  /* Big section title */
+  .page-h { font-family: "Anton SC", sans-serif; font-size: clamp(56px, 9vw, 130px); line-height: 0.92; letter-spacing: -0.005em; text-transform: uppercase; font-weight: 400; }
+
+  /* Two-anchor split */
+  .split { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 24px; padding: 0 clamp(20px, 4vw, 56px); }
+  .split .right { text-align: right; }
+
+  /* Hero home */
+  .hero-home { position: relative; min-height: calc(100vh - 60px); overflow: hidden; }
+  .hero-home .reel { position: absolute; inset: 80px 0 80px 0; overflow: hidden; }
+  .reel .still { position: absolute; inset: 0; opacity: 0; transition: opacity 900ms ease; background-size: cover; background-position: center; }
+  .reel .still.active { opacity: 1; }
+  .reel .still::after { content:""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.55)); }
+
+  /* Hero meta */
+  .hero-meta { position: absolute; left: 0; right: 0; bottom: 36px; padding: 0 clamp(20px, 4vw, 56px); display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: end; pointer-events: none; }
+  .hero-meta .left { pointer-events: auto; max-width: 320px; }
+  .hero-meta .label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #fff; opacity: 0.8; }
+  .hero-meta .copy { font-size: 12px; line-height: 1.5; color: #fff; opacity: 0.85; max-width: 36ch; margin-top: 8px; }
+  .hero-meta .readmore { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #fff; text-decoration: underline; text-underline-offset: 4px; margin-top: 12px; display: inline-block; }
+  .hero-meta .play { width: 240px; height: 80px; border: 1px solid #fff; border-radius: 999px; display: grid; place-items: center; color: #fff; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; pointer-events: auto; cursor: pointer; background: rgba(255,255,255,0.04); backdrop-filter: blur(2px); }
+  .hero-meta .right { text-align: right; pointer-events: auto; }
+  .hero-meta .right .meta-line { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #fff; opacity: 0.95; }
+  .hero-meta .right .progress { height: 2px; background: rgba(255,255,255,0.25); margin: 14px 0; position: relative; overflow: hidden; }
+  .hero-meta .right .progress::after { content:""; position: absolute; inset: 0; background: #fff; width: 32%; }
+  .hero-meta .arrows { display: inline-flex; gap: 6px; }
+  .hero-meta .arrows button { width: 28px; height: 28px; border-radius: 999px; background: #fff; color: #000; border: 0; cursor: pointer; display: grid; place-items: center; font-size: 12px; }
+
+  /* Reel indicator */
+  .reel-dots { position: absolute; left: clamp(20px, 4vw, 56px); bottom: 16px; display: flex; gap: 6px; z-index: 4; }
+  .reel-dots span { width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.5); cursor: pointer; }
+  .reel-dots span.active { background: #fff; }
+
+  /* Works page */
+  .works-page { padding: 0 clamp(20px, 4vw, 56px) 80px; }
+  .works-feature { max-width: 1100px; margin: 0 auto; }
+  .works-feature .head { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; margin: 24px 0 14px; }
+  .works-feature .head .title { font-weight: 700; }
+  .works-feature .head .meta { color: #444; }
+  .works-feature .card { aspect-ratio: 16/9; background: linear-gradient(160deg, var(--g1,#aaa), var(--g2,#333)); position: relative; overflow: hidden; border-radius: 2px; }
+  .works-feature .card::after { content:""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,0.10), transparent 50%); }
+  .works-feature .card .laurels { position: absolute; top: 50%; left: 32px; transform: translateY(-50%); font-family: "Anton SC", sans-serif; font-size: 24px; line-height: 1; color: rgba(255,255,255,0.9); }
+  .works-feature .card .laurels .small { font-size: 10px; letter-spacing: 0.16em; opacity: 0.7; margin-top: 6px; }
+  .works-feature .card .subject { position: absolute; right: 8%; top: 50%; transform: translateY(-50%); width: 32%; aspect-ratio: 3/4; background: linear-gradient(160deg,#0e1f3a,#000); border-radius: 4px; }
+  .works-feature .pill-row { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; gap: 6px; align-items: center; background: rgba(0,0,0,0.55); border-radius: 999px; padding: 6px 6px 6px 14px; }
+  .works-feature .pill-row .green { width: 8px; height: 8px; background: #4ade80; border-radius: 999px; }
+  .works-feature .pill-row span { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #fff; }
+  .works-feature .pill-row button { width: 28px; height: 28px; border-radius: 999px; background: #fff; color: #000; border: 0; cursor: pointer; }
+  .more-works { display: flex; justify-content: center; margin-top: 80px; }
+  .more-works .pill { background: transparent; }
+
+  /* Archive */
+  .archive { background: #0a0a0a; color: #fff; padding: 0 clamp(20px, 4vw, 56px) 80px; }
+  .archive .row { display: grid; grid-template-columns: 40px 1fr 1.4fr 1fr 1.4fr 1fr 60px; gap: 24px; align-items: center; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.10); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
+  .archive .row:hover { background: rgba(255,255,255,0.04); }
+  .archive .row.head { border-top: 0; color: rgba(255,255,255,0.5); }
+  .archive .row .brand { font-family: "Anton SC", sans-serif; font-size: 13px; letter-spacing: 0.08em; }
+  .archive .row .num { color: rgba(255,255,255,0.5); }
+  .archive .row .year { color: rgba(255,255,255,0.5); text-align: right; }
+  .archive .row .title { color: rgba(255,255,255,0.85); }
+  .archive .row:hover .title { color: #fff; }
+  .archive h2 { font-family: "Anton SC", sans-serif; font-size: clamp(48px, 8vw, 110px); line-height: 0.92; text-transform: uppercase; font-weight: 400; }
+  .archive .topline { display: flex; justify-content: space-between; align-items: start; padding-top: 16px; }
+  .archive .topline .left { font-family: "Anton SC", sans-serif; font-size: clamp(48px, 8vw, 110px); line-height: 0.92; }
+  .archive .topline .right { text-align: right; }
+  .archive .topline .right p { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+  .archive .topline .right a { color: #fff; text-decoration: underline; text-underline-offset: 4px; }
+
+  /* Archive preview pop */
+  .preview-pop {
+    position: fixed; pointer-events: none; z-index: 50;
+    width: 240px; aspect-ratio: 16/9; border-radius: 2px; overflow: hidden;
+    transform: translate(-50%, -110%); opacity: 0;
+    transition: opacity 200ms ease, transform 200ms ease;
+    background: linear-gradient(160deg, var(--g1,#aaa), var(--g2,#333));
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+  }
+  .preview-pop.show { opacity: 1; transform: translate(-50%, -120%); }
+  .preview-pop::after { content:""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,0.10), transparent 50%); }
+
+  /* About */
+  .about { padding: 80px clamp(20px, 4vw, 56px); text-align: center; max-width: 900px; margin: 0 auto; }
+  .about h1 { font-family: "Anton SC", sans-serif; font-size: clamp(48px, 7vw, 100px); line-height: 0.95; text-transform: uppercase; font-weight: 400; letter-spacing: -0.005em; margin-bottom: 40px; }
+  .about h2 { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-top: 28px; }
+  .about p { font-size: 14px; line-height: 1.6; text-transform: uppercase; letter-spacing: 0.06em; max-width: 60ch; margin: 12px auto; }
+  .about .portrait { width: 220px; aspect-ratio: 3/4; margin: 60px auto; background: linear-gradient(160deg,#c9a08c,#3b1c0e); border: 6px solid #fff; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.25); }
+
+  /* Contact */
+  .contact { padding: 80px clamp(20px, 4vw, 56px); text-align: center; max-width: 800px; margin: 0 auto; }
+  .contact h1 { font-family: "Anton SC", sans-serif; font-size: clamp(48px, 7vw, 100px); line-height: 0.95; text-transform: uppercase; font-weight: 400; margin-bottom: 40px; }
+  .contact p { font-size: 13px; line-height: 1.6; text-transform: uppercase; letter-spacing: 0.06em; }
+  .contact .phone, .contact .email { text-decoration: underline; text-underline-offset: 4px; font-size: 13px; }
+  .contact .socials { display: flex; gap: 16px; justify-content: center; margin-top: 40px; }
+  .contact .socials a { text-decoration: underline; text-underline-offset: 4px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .contact .pair { display: flex; justify-content: center; gap: 12px; margin: 16px 0; }
+
+  /* Cookie consent */
+  .consent { position: fixed; bottom: 20px; right: 20px; max-width: 380px; background: #0a0a0a; color: #fff; padding: 22px 24px; z-index: 60; border-radius: 0; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4); }
+  .consent h3 { font-family: "Anton SC", sans-serif; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 400; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .consent p { font-size: 11px; line-height: 1.5; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 16px; }
+  .consent .actions { display: grid; gap: 6px; }
+  .consent button { width: 100%; padding: 10px; border: 1px solid #fff; background: transparent; color: #fff; cursor: pointer; font-family: "B612 Mono", monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; }
+
+  /* Footer */
+  .footer { padding: 18px clamp(20px, 4vw, 56px); display: flex; justify-content: space-between; align-items: center; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .footer .left { display: flex; align-items: center; gap: 8px; }
+  .footer .left .dots { width: 8px; height: 8px; border-radius: 999px; background: #1e1e1e; display: inline-block; margin-right: 4px; }
+  .footer .left .dots + .dots { margin-left: -2px; }
+  .footer a { color: #1e1e1e; text-decoration: underline; text-underline-offset: 4px; }
+  .archive .footer { color: rgba(255,255,255,0.65); }
+  .archive .footer .dots { background: #fff; }
+  .archive .footer a { color: #fff; }
+
+  /* Page transition (mini) */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 800ms ease, transform 900ms cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body class="fabric">
+
+<!-- Top nav (always present) -->
+<header class="topbar">
+  <nav class="flex gap-3">
+    <button class="pill" data-route="home" aria-current="page">Home</button>
+    <button class="pill" data-route="works">Works</button>
+    <button class="pill" data-route="archive">Archive</button>
+  </nav>
+  <div class="monogram"><span>MI</span><span>K</span><span>KI</span></div>
+  <nav class="flex gap-3">
+    <button class="pill" data-route="about">About</button>
+    <button class="pill" data-route="contact">Contact</button>
+  </nav>
+</header>
+
+<!-- HOME -->
+<section class="page active" id="page-home">
+  <div class="hero-home">
+    <div class="split absolute top-16 left-0 right-0 z-10 pointer-events-none">
+      <h1 class="page-h text-black">MIKKI</h1>
+      <h1 class="page-h text-black text-right">SINDHUNATA</h1>
+    </div>
+
+    <div class="reel" id="reel">
+      <div class="still active" data-i="0" style="background: linear-gradient(160deg,#3a2017 0%,#1a0c08 60%), radial-gradient(80% 80% at 50% 30%,#7e4f3e 0%,#2a140d 80%); background-blend-mode: screen;"></div>
+      <div class="still" data-i="1" style="background: linear-gradient(160deg,#0a1f3a 0%,#040b1f 60%), radial-gradient(80% 80% at 50% 30%,#1e4470 0%,#06122a 80%); background-blend-mode: screen;"></div>
+      <div class="still" data-i="2" style="background: linear-gradient(160deg,#1a1a1a 0%,#0a0a0a 60%), radial-gradient(80% 80% at 50% 30%,#4a4a4a 0%,#1a1a1a 80%); background-blend-mode: screen;"></div>
+      <div class="still" data-i="3" style="background: linear-gradient(160deg,#5a3f1f 0%,#2a1b0c 60%), radial-gradient(80% 80% at 50% 30%,#a07d3e 0%,#3a280f 80%); background-blend-mode: screen;"></div>
+    </div>
+
+    <div class="hero-meta">
+      <div class="left">
+        <div class="label">DIRECTOR</div>
+        <p class="copy">Rooted in the dance world, she has developed a sensitive directing style and a performative film language. Moving beyond dance as pure form to embrace its power as a narrative tool.</p>
+        <a href="#" class="readmore">Read more</a>
+      </div>
+      <button class="play" id="playBtn">PLAY</button>
+      <div class="right">
+        <div class="meta-line" id="reelMeta">01 — 04 &nbsp; ECCO LEATHER — EL3 MOTION</div>
+        <div class="progress"></div>
+        <div class="arrows">
+          <button id="prevBtn">‹</button>
+          <button id="nextBtn">›</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="reel-dots" id="reelDots">
+      <span class="active" data-i="0"></span>
+      <span data-i="1"></span>
+      <span data-i="2"></span>
+      <span data-i="3"></span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="left">
+      <span class="dots"></span><span class="dots"></span>
+      <span>©2026 MIKKI SINDHUNATA - <a href="#">COOKIES</a></span>
+    </div>
+    <span>All Rights Reserved</span>
+    <span>Website by <a href="#">—</a></span>
+  </div>
+</section>
+
+<!-- WORKS -->
+<section class="page" id="page-works">
+  <div class="split pt-12 pb-6">
+    <h1 class="page-h">WORKS</h1>
+    <h1 class="page-h text-right">OVERVIEW</h1>
+  </div>
+  <div class="works-page">
+    <div class="works-feature">
+      <div class="head">
+        <span class="title">01 THE GIFT — SHORT FILM (TRAILER)</span>
+        <span class="meta">LONGFORM</span>
+      </div>
+      <div class="card" style="--g1:#2a1d12; --g2:#0d0805">
+        <div class="laurels">
+          IMAGINE<br/>
+          <span style="font-size:10px;letter-spacing:0.18em;opacity:0.8">OFFICIAL SELECTION 2025</span><br/><br/>
+          LEEDS<br/>
+          <span style="font-size:10px;letter-spacing:0.18em;opacity:0.8">INTERNATIONAL FILM FESTIVAL 2025</span><br/>
+          <span style="font-size:10px;letter-spacing:0.18em;opacity:0.8">IN COMPETITION</span><br/><br/>
+          NEIDERLANDS<br/>
+          <span style="font-size:10px;letter-spacing:0.18em;opacity:0.8">FILM FESTIVAL</span>
+        </div>
+        <div class="subject"></div>
+        <div class="pill-row">
+          <span class="green"></span>
+          <span>ALL WORKS</span>
+          <button>≡</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="more-works"><a href="#archive" class="pill">More works</a></div>
+  </div>
+
+  <div class="footer">
+    <div class="left">
+      <span class="dots"></span><span class="dots"></span>
+      <span>©2026 MIKKI SINDHUNATA - <a href="#">COOKIES</a></span>
+    </div>
+    <span>All Rights Reserved</span>
+    <span>Website by <a href="#">—</a></span>
+  </div>
+</section>
+
+<!-- ARCHIVE -->
+<section class="page" id="page-archive">
+  <div class="archive">
+    <div class="topline">
+      <h2>VIDEO</h2>
+      <div class="right">
+        <h2>ARCHIVE</h2>
+        <p class="mt-4">Full film available on request. <a href="#contact">Shoot a message</a></p>
+      </div>
+    </div>
+
+    <div class="row head mt-12">
+      <span></span><span>Brand</span><span>Title</span><span>Type</span><span>Region</span><span>Agency</span><span class="year">Year</span>
+    </div>
+    <div id="archiveList"></div>
+  </div>
+
+  <div class="footer">
+    <div class="left">
+      <span class="dots"></span><span class="dots"></span>
+      <span>©2026 MIKKI SINDHUNATA - <a href="#">COOKIES</a></span>
+    </div>
+    <span>All Rights Reserved</span>
+    <span>Website by <a href="#">—</a></span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="page" id="page-about">
+  <div class="about">
+    <h1>MIKKI SINDHUNATA</h1>
+    <h2>About Mikki</h2>
+    <p>"Movement is not just dance; it's the energy and intention behind every gesture."</p>
+    <p>As a film director with a dance background, Mikki has a strong understanding of how the body communicates. From bold choreography to subtle shifts in posture, she loves to observe — and bend — the rules of everyday life: how we move, connect with others, and reveal emotion.</p>
+    <p>In writing film, she taps into the direct emotional power of movement to tell a story or brand's message.</p>
+    <p>By pushing movement beyond abstraction and the camera beyond documentation, she shapes her own narrative language. Her debut short film "The Gift" (2025) is currently on the international festival circuit.</p>
+
+    <div class="portrait"></div>
+
+    <p>Throughout her commercial career, Mikki collaborated with clients such as IKEA, ECCO, Zalando, KLABU, Nike, Heineken, Vodafone, Ronald McDonald House, Libresse, Top Notch and Sony Music. In addition to directing, she draws on experience in both the art department and production, bringing a distinctive visual style and a sharp eye for detail.</p>
+  </div>
+
+  <div class="footer">
+    <div class="left">
+      <span class="dots"></span><span class="dots"></span>
+      <span>©2026 MIKKI SINDHUNATA - <a href="#">COOKIES</a></span>
+    </div>
+    <span>All Rights Reserved</span>
+    <span>Website by <a href="#">—</a></span>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="page" id="page-contact">
+  <div class="contact">
+    <h1>MIKKI SINDHUNATA</h1>
+    <h2 style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;font-weight:700;margin-bottom:24px;">Contact Mikki</h2>
+    <p>She loves everything with 'C':<br/>Coffee, conversations, collabs, cheese.</p>
+    <p style="margin-top:24px;">Connect:</p>
+    <a href="tel:+31629603818" class="phone block mt-2">+31 6 29 60 38 18</a>
+    <a href="mailto:mikki.sindhunata@example.com" class="email block mt-1">mikki.sindhunata@example.com</a>
+
+    <div class="pair mt-8">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/></svg>
+    </div>
+
+    <div class="socials">
+      <a href="#">LinkedIn</a>
+      <a href="#">Vimeo</a>
+      <a href="#">Instagram</a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="left">
+      <span class="dots"></span><span class="dots"></span>
+      <span>©2026 MIKKI SINDHUNATA - <a href="#">COOKIES</a></span>
+    </div>
+    <span>All Rights Reserved</span>
+    <span>Website by <a href="#">—</a></span>
+  </div>
+</section>
+
+<!-- Cookie consent (inverted) -->
+<aside class="consent" id="consent">
+  <h3>Manage consent <button id="consentClose" aria-label="Close" style="background:none;border:0;color:#fff;font-size:16px;cursor:pointer;">×</button></h3>
+  <p>To provide the best experiences, we use technologies such as cookies to store and/or access information about your device. Consenting to these technologies allows us to process data such as browsing behavior or unique IDs on this site. If you do not consent or withdraw your consent, this may adversely affect certain functionality and features.</p>
+  <div class="actions">
+    <button>Accept</button>
+    <button>Decline</button>
+  </div>
+</aside>
+
+<!-- Archive hover preview -->
+<div class="preview-pop" id="previewPop"></div>
+
+<script>
+  // Routing (hash-based)
+  const routes = ['home', 'works', 'archive', 'about', 'contact'];
+  function setRoute(r) {
+    if (!routes.includes(r)) r = 'home';
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + r));
+    document.querySelectorAll('[data-route]').forEach(b => {
+      const isActive = b.dataset.route === r;
+      if (isActive) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  document.querySelectorAll('[data-route]').forEach(b => b.addEventListener('click', () => setRoute(b.dataset.route)));
+  window.addEventListener('hashchange', () => setRoute(location.hash.replace('#','')));
+
+  // Hero reel
+  const reel = [
+    { title: 'ECCO LEATHER', sub: 'EL3 MOTION' },
+    { title: 'KLABU', sub: 'AMSTERDAM SPIRIT' },
+    { title: 'IKEA', sub: 'SKUBB' },
+    { title: 'VODAFONE', sub: 'TOGETHER WE CAN' }
+  ];
+  const stills = document.querySelectorAll('#reel .still');
+  const dots = document.querySelectorAll('#reelDots span');
+  const meta = document.getElementById('reelMeta');
+  let cur = 0;
+  function setReel(i) {
+    cur = (i + reel.length) % reel.length;
+    stills.forEach((s, k) => s.classList.toggle('active', k === cur));
+    dots.forEach((d, k) => d.classList.toggle('active', k === cur));
+    const pad = (n) => String(n).padStart(2, '0');
+    meta.textContent = `${pad(cur+1)} — ${pad(reel.length)}  ${reel[cur].title} — ${reel[cur].sub}`;
+  }
+  dots.forEach((d, i) => d.addEventListener('click', () => setReel(i)));
+  document.getElementById('prevBtn').addEventListener('click', () => setReel(cur - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => setReel(cur + 1));
+  setInterval(() => setReel(cur + 1), 7000);
+  window.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') setReel(cur + 1); if (e.key === 'ArrowLeft') setReel(cur - 1); });
+
+  // Reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.14 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Cookie consent close
+  document.getElementById('consentClose').addEventListener('click', () => document.getElementById('consent').style.display = 'none');
+  document.querySelectorAll('.consent .actions button').forEach(b => b.addEventListener('click', () => document.getElementById('consent').style.display = 'none'));
+
+  // Archive data
+  const archive = [
+    { brand: 'Heineken', title: 'Switcher', type: 'Socials', region: 'N-Africa/E-Asia/S-America', agency: 'Boomerang', year: 2024 },
+    { brand: 'Heineken', title: 'What\'s the smartest move', type: 'Socials', region: 'N-Africa/E-Asia/S-America', agency: 'Boomerang', year: 2024 },
+    { brand: 'Heineken', title: 'Friend', type: 'Socials', region: 'N-Africa/E-Asia/S-America', agency: 'Boomerang', year: 2024 },
+    { brand: 'Zilveren Kruis', title: 'Welcome', type: 'Commercial', region: 'NL', agency: 'Yune', year: 2024 },
+    { brand: 'Vodafone', title: 'Together we can', type: 'Commercial', region: 'NL', agency: 'Ogilvy', year: 2024 },
+    { brand: 'Klabu', title: 'Amsterdam Spirit', type: 'Commercial', region: 'NL', agency: 'Herc', year: 2023 },
+    { brand: 'McDonalds', title: 'Ronald McDonald Kinderfonds', type: 'Commercial', region: 'NL', agency: 'TBWA', year: 2022 },
+    { brand: 'IKEA', title: 'Skubb', type: 'Socials', region: 'NL', agency: '—', year: 2023 },
+    { brand: 'IKEA', title: 'Symfonisk', type: 'Socials', region: 'NL', agency: '—', year: 2023 },
+    { brand: 'IKEA', title: 'Bild', type: 'Socials', region: 'NL', agency: '—', year: 2023 },
+    { brand: 'Philips', title: 'Be free in your own skin', type: 'Commercial', region: 'UK', agency: '—', year: 2022 },
+    { brand: 'NTI', title: 'Graduation speech', type: 'Commercial', region: 'NL', agency: '—', year: 2022 },
+    { brand: 'Ecco', title: 'EL3 Motion', type: 'Commercial', region: 'Global', agency: '—', year: 2023 },
+    { brand: 'Ecco', title: 'EL3 Motion — Shorts', type: 'Socials', region: 'Global', agency: '—', year: 2023 },
+    { brand: 'Libresse', title: 'No matter what you do', type: 'Commercial', region: 'S-America, NL', agency: '—', year: 2022 },
+    { brand: 'Rani', title: 'Sugar Rush', type: 'Music Video', region: 'Global', agency: '—', year: 2021 },
+    { brand: 'Albert Heijn', title: 'Zomer', type: 'In Store', region: 'NL', agency: '—', year: 2021 },
+    { brand: 'Team NL', title: 'Mijn Bubbel', type: 'Commercial', region: 'NL', agency: '—', year: 2021 },
+    { brand: 'Kay Slice', title: 'Promise', type: 'Music Video', region: 'Global', agency: 'Independent', year: 2020 },
+    { brand: 'X-Raiders', title: 'Meat Market', type: 'Music Video', region: 'Global', agency: 'Independent', year: 2020 },
+    { brand: 'It starts with a (heart)beat', title: 'It starts with a (heart)beat', type: 'Commercial', region: 'NL', agency: 'Design Academy', year: 2019 },
+    { brand: 'Ceci n\'est pas mode', title: 'Ceci n\'est pas mode', type: 'Installation', region: 'NL', agency: 'Willem de Kooning Academy', year: 2016 }
+  ];
+  const palette = ['#3a2017','#0a1f3a','#1a1a1a','#5a3f1f','#2a0c3a','#0e2a1a','#3a8a5e','#caa07a','#d65a8c','#e7a85a','#3aaa8a','#5e5ed6','#7a7e8a','#3a8a8e','#d6c75a','#a05ad6','#d65a8c','#ae5e7a','#5e8aae','#d2392e','#3aaa8a','#cabfb1'];
+  const list = document.getElementById('archiveList');
+  archive.forEach((row, i) => {
+    const r = document.createElement('div');
+    r.className = 'row';
+    r.dataset.idx = i;
+    r.style.setProperty('--g1', palette[i % palette.length]);
+    r.style.setProperty('--g2', '#1a1a1a');
+    r.innerHTML = `
+      <span class="num">${String(i+1).padStart(2,'0')}</span>
+      <span class="brand">${row.brand}</span>
+      <span class="title">${row.title}</span>
+      <span>${row.type}</span>
+      <span>${row.region}</span>
+      <span>${row.agency}</span>
+      <span class="year">${row.year}</span>
+    `;
+    list.appendChild(r);
+  });
+
+  // Hover preview pop
+  const pop = document.getElementById('previewPop');
+  document.querySelectorAll('#archiveList .row').forEach(row => {
+    row.addEventListener('mouseenter', (e) => {
+      pop.style.background = `linear-gradient(160deg, ${row.style.getPropertyValue('--g1') || '#999'}, ${row.style.getPropertyValue('--g2') || '#333'})`;
+      pop.classList.add('show');
+    });
+    row.addEventListener('mousemove', (e) => { pop.style.left = e.clientX + 'px'; pop.style.top = (e.clientY - 24) + 'px'; });
+    row.addEventListener('mouseleave', () => pop.classList.remove('show'));
+  });
+
+  // Default route from hash
+  if (location.hash) setRoute(location.hash.replace('#',''));
+</script>
+</body>
+</html>

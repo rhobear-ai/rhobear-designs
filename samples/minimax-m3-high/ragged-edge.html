@@ -1,0 +1,541 @@
+<!doctype html>
+<!--
+================================================================
+ORIGINAL URL : https://raggededge.com/
+
+KEY DESIGN OBSERVATIONS
+  - Single landing page for a London branding agency. Editorial
+    agency feel: huge display headlines, quiet serif body copy,
+    generous whitespace, and a recurring "case study" pattern.
+  - Color palette:
+      bg          #ffffff
+      ink         #181f1f (warm near-black, green-tinted)
+      pill-active #181f1f
+      pill-bg     rgba(220,242,235,.6)  (pale mint)
+      hero-glow   lime/chartreuse radial — #cde87a → #95c948
+      accent-rule #181f1f hairline at 0.18
+  - Typography:
+      Display     wide, heavy, custom-feeling grotesque (Ragged Edge
+                  use Druk / Obviously Wide). Stand-in: "Anton" + tight
+                  letter-spacing OR stretch Inter Black.
+      Body serif  "Grit-Regular" — chunky slab/old-style. Stand-in:
+                  "DM Serif Display" or "Source Serif 4" 700.
+      UI          same serif at 16px in pill nav.
+  - Layout: hero → manifesto → multiple alternating case-study rows
+    (title left / image right, then image left / title right,
+    then image right with image grid) → footer with link columns +
+    social pills.
+  - Pill nav: very round (64px radius), dark active state,
+    translucent mint inactive state.
+  - Stats: arrow icon + bold percentage + descriptor sentence.
+  - Hero features a radial-blur lime gradient that radiates from
+    centre (simulated here with a layered radial + conic).
+  - Subtle: hover on pills swaps active state; case-study title
+    slides slightly with a spring easing on hover.
+
+CHALLENGES SOLVED
+  - Recreated the hero "motion-zoom" lime background with stacked
+    radial gradients + slow CSS conic rotation. Real hero uses
+    WebGL; ours is pure CSS for portability.
+  - Pill nav with 64px radius that fits tiny labels comfortably.
+  - 12-column grid that handles alternating left/right image +
+    title layouts without re-flowing on resize.
+  - Custom serif font (Grit-Regular has no public CDN) replaced
+    with DM Serif Display + weight 700 — same chunky serif vibe.
+================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Ragged Edge — A global branding agency proudly based in London</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400&family=Anton&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — pulled from live site
+     ============================================================ */
+  :root{
+    --bg:        #ffffff;
+    --ink:       #181f1f;
+    --ink-soft:  #4a5757;
+    --ink-dim:   rgba(24,31,31,.55);
+    --rule:      rgba(24,31,31,.18);
+    --rule-soft: rgba(24,31,31,.08);
+    --pill-bg:   rgba(220,242,235,.6);
+    --pill-bg-2: #ebf7f3;
+    --pill-active:#181f1f;
+    --accent:    #181f1f;
+
+    /* hero lime palette */
+    --lime-1:    #d8f088;
+    --lime-2:    #b6db55;
+    --lime-3:    #88b73b;
+    --lime-deep: #4f6d20;
+
+    --display:   'Anton', 'Inter', system-ui, sans-serif;
+    --display-2: 'Inter', system-ui, sans-serif;
+    --serif:     'DM Serif Display', 'Source Serif 4', Georgia, serif;
+    --body:      'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  img{display:block;max-width:100%}
+
+  /* ============================================================
+     NAVIGATION (fixed pill bar)
+     ============================================================ */
+  .nav{position:fixed;left:0;right:0;bottom:1.6rem;z-index:50;padding:0 1.6rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;pointer-events:none}
+  .nav .group{display:flex;gap:.5rem;pointer-events:auto;flex-wrap:wrap}
+  .pill{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:.7rem 1.1rem;border-radius:64px;background:var(--pill-bg);
+    color:var(--ink);font-family:var(--serif);font-size:1rem;line-height:1;
+    text-decoration:none;border:0;cursor:pointer;
+    transition:background .25s ease, color .25s ease, transform .25s cubic-bezier(.5,1.6,.4,1);
+  }
+  .pill:hover{background:var(--pill-bg-2);transform:translateY(-2px)}
+  .pill.active{background:var(--pill-active);color:#fff}
+  .pill.dark{background:var(--pill-active);color:#fff}
+  .pill.dark:hover{background:#2a3a3a}
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero{
+    position:relative;min-height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;
+    isolation:isolate;
+  }
+  .hero::before, .hero::after{
+    content:"";position:absolute;inset:0;z-index:-1;
+  }
+  /* base lime gradient */
+  .hero::before{
+    background:
+      radial-gradient(120% 90% at 50% 60%, var(--lime-1) 0%, var(--lime-2) 35%, var(--lime-3) 65%, var(--lime-deep) 100%);
+  }
+  /* motion-blur radiating streaks */
+  .hero::after{
+    background:
+      conic-gradient(from 0deg at 50% 50%,
+        rgba(255,255,255,.25) 0deg, transparent 4deg,
+        transparent 14deg, rgba(255,255,255,.18) 18deg,
+        transparent 22deg, rgba(255,255,255,.32) 28deg,
+        transparent 36deg, rgba(255,255,255,.20) 44deg,
+        transparent 60deg, rgba(255,255,255,.40) 70deg,
+        transparent 80deg, rgba(255,255,255,.20) 96deg,
+        transparent 110deg, rgba(255,255,255,.30) 122deg,
+        transparent 138deg, rgba(255,255,255,.18) 154deg,
+        transparent 180deg, rgba(255,255,255,.30) 196deg,
+        transparent 210deg, rgba(255,255,255,.20) 224deg,
+        transparent 240deg, rgba(255,255,255,.38) 256deg,
+        transparent 270deg, rgba(255,255,255,.18) 282deg,
+        transparent 300deg, rgba(255,255,255,.30) 314deg,
+        transparent 330deg, rgba(255,255,255,.20) 348deg);
+    mix-blend-mode:screen;
+    filter:blur(28px);
+    animation:rot 30s linear infinite;
+  }
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  /* motion zoom-burst layer */
+  .hero .burst{
+    position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(closest-side at 50% 50%, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 18%, rgba(255,255,255,.25) 28%, rgba(255,255,255,0) 50%),
+      repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.10) 0deg 2deg, transparent 2deg 6deg);
+    mix-blend-mode:overlay;
+  }
+
+  .hero-title{
+    font-family:var(--display);
+    font-size:clamp(5rem,18vw,17rem);
+    line-height:.85;
+    letter-spacing:-.02em;
+    color:#fff;
+    text-align:center;
+    text-transform:uppercase;
+    margin:0;
+    transform:scaleX(.96);
+    text-shadow:0 1px 0 rgba(0,0,0,.04);
+  }
+  .hero-title .row{display:block}
+  .hero-title .row.alt{transform:translateY(-.05em)}
+
+  /* ============================================================
+     SECTION COMMONS
+     ============================================================ */
+  section.block{padding:7rem 1.6rem;max-width:1400px;margin:0 auto}
+  .section-rule{height:1px;background:var(--rule);margin:0 auto;max-width:1400px}
+
+  /* big bold sans for project titles */
+  .h-display{
+    font-family:var(--display-2);
+    font-weight:900;
+    font-size:clamp(3rem,6.4vw,5.4rem);
+    line-height:1;
+    letter-spacing:-.03em;
+    color:var(--ink);
+    margin:0;
+  }
+
+  /* manifesto headline */
+  .manifesto-title{
+    font-family:var(--display-2);font-weight:900;
+    font-size:clamp(2.4rem,5.4vw,4.6rem);line-height:1;letter-spacing:-.025em;
+    margin:0 0 1.4rem 0;color:var(--ink);
+  }
+  .serif-body{
+    font-family:var(--serif);font-size:clamp(1.6rem,2.4vw,2.2rem);line-height:1.25;
+    color:var(--ink);max-width:30ch;
+  }
+  .serif-body em{color:var(--ink);font-style:normal;border-bottom:2px solid var(--ink)}
+
+  /* ============================================================
+     CASE STUDIES (alternating left/right)
+     ============================================================ */
+  .case{padding:5rem 1.6rem}
+  .case .grid{display:grid;grid-template-columns:1fr 1.4fr;gap:3rem;align-items:center;max-width:1400px;margin:0 auto}
+  .case.flip .grid{grid-template-columns:1.4fr 1fr}
+  .case.flip .text{order:2}
+  .case.flip .visual{order:1}
+  .case .text{padding-right:1rem}
+  .case.flip .text{padding-right:0;padding-left:1rem}
+  .case .desc{
+    font-family:var(--serif);font-size:clamp(1rem,1.4vw,1.25rem);line-height:1.4;
+    color:var(--ink);max-width:34ch;margin:1.4rem 0 1.2rem;
+  }
+  .case .stat{display:flex;flex-direction:column;gap:.4rem;margin-top:1.6rem;max-width:34ch}
+  .case .stat .num{font-family:var(--display-2);font-weight:900;font-size:clamp(1.4rem,1.8vw,1.8rem);letter-spacing:-.01em}
+  .case .stat .num .arr{display:inline-block;background:var(--ink);color:#fff;border-radius:50%;width:1.2em;height:1.2em;line-height:1.2em;text-align:center;font-size:.7em;margin-right:.4em;vertical-align:middle}
+  .case .stat .what{font-family:var(--serif);color:var(--ink);font-size:clamp(.95rem,1.2vw,1.15rem);line-height:1.3}
+
+  /* visual placeholder */
+  .visual{position:relative;aspect-ratio:5/4;border-radius:6px;overflow:hidden;background:#1a2828}
+  .visual.wide{aspect-ratio:16/9}
+  .visual .label{
+    position:absolute;left:1.2rem;bottom:1rem;color:rgba(255,255,255,.6);
+    font-family:var(--serif);font-size:.9rem;letter-spacing:.04em;text-transform:uppercase;
+  }
+  .visual.gradient-1{background:linear-gradient(135deg,#1d2828,#395b3e 70%,#7eb15a)}
+  .visual.gradient-2{background:linear-gradient(135deg,#211a14,#5a3a25 60%,#c4894c)}
+  .visual.gradient-3{background:linear-gradient(135deg,#0d1830,#1d3868 60%,#4572b4)}
+  .visual.gradient-4{background:linear-gradient(135deg,#211623,#59234d 60%,#bf4d8a)}
+  .visual.gradient-5{background:linear-gradient(135deg,#1c1c1c,#3a3a3a 60%,#9a9a9a)}
+  .visual.gradient-6{background:linear-gradient(135deg,#0a1a18,#1c4b3e 60%,#5fa886)}
+  .visual .gloss{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(80% 60% at 30% 30%, rgba(255,255,255,.18), transparent 60%),
+      radial-gradient(40% 40% at 80% 80%, rgba(255,255,255,.08), transparent 60%);
+    mix-blend-mode:screen;pointer-events:none;
+  }
+  .visual .mark{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:var(--display-2);font-weight:900;font-size:clamp(2.2rem,5vw,4rem);
+    letter-spacing:-.02em;text-shadow:0 4px 30px rgba(0,0,0,.35);
+  }
+  .visual .grid-photos{
+    position:absolute;inset:0;background:#0e1a18;display:grid;
+    grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:.6rem;padding:.6rem;
+  }
+  .visual .grid-photos div{
+    border-radius:3px;
+    background-blend-mode:multiply;
+    background-color:var(--c, #3a3a3a);
+    background-image:
+      radial-gradient(120% 80% at 30% 30%, rgba(255,255,255,.2), transparent 60%),
+      radial-gradient(40% 40% at 80% 80%, rgba(0,0,0,.4), transparent 60%);
+  }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer{padding:5rem 1.6rem 2rem;max-width:1400px;margin:0 auto}
+  footer .top{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  footer .cols{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem;padding:2.5rem 0;max-width:540px}
+  footer .cols a{font-family:var(--serif);color:var(--ink);text-decoration:none;display:block;padding:.4rem 0}
+  footer .cols a:hover{text-decoration:underline}
+  footer .bottom{font-family:var(--serif);font-size:1rem;color:var(--ink);padding:1.4rem 0 0}
+
+  /* ============================================================
+     UTILS
+     ============================================================ */
+  .sr-only{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .visuallyhidden{position:absolute!important;clip:rect(1px,1px,1px,1px);clip-path:inset(50%);height:1px;width:1px;overflow:hidden;white-space:nowrap}
+
+  /* responsive */
+  @media (max-width: 860px){
+    .case .grid, .case.flip .grid{grid-template-columns:1fr;gap:1.6rem}
+    .case.flip .text{order:1}.case.flip .visual{order:2}
+    footer .top{flex-direction:column;align-items:flex-start;gap:1rem}
+  }
+
+  /* cookie banner */
+  .cookie-banner{
+    position:fixed;right:1.4rem;bottom:6.5rem;z-index:60;
+    width:min(380px,calc(100vw - 2.8rem));
+    background:var(--pill-active);color:#fff;border-radius:8px;
+    padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.6rem;
+    font-family:var(--serif);font-size:1rem;
+  }
+  .cookie-banner .row{display:flex;justify-content:space-between;align-items:center}
+  .cookie-banner a, .cookie-banner button{color:#fff;background:transparent;border:0;cursor:pointer;font:inherit;text-decoration:underline}
+  .cookie-banner .actions{display:flex;justify-content:flex-end;gap:1rem;align-items:center;border-top:1px solid rgba(255,255,255,.18);padding-top:.8rem}
+  .cookie-banner .actions button{padding:.5rem .9rem;border-radius:6px}
+  .cookie-banner .actions button.accept{background:#fff;color:var(--ink);text-decoration:none}
+  .cookie-banner .actions button.reject{text-decoration:underline}
+
+  /* CTA strip */
+  .cta-strip{
+    background:var(--lime-1);
+    background:linear-gradient(90deg,var(--lime-2),var(--lime-3));
+    color:var(--ink);text-align:center;padding:3rem 1.6rem;
+    font-family:var(--display-2);font-weight:900;font-size:clamp(2rem,4.4vw,3.4rem);letter-spacing:-.02em;line-height:1;
+  }
+  .cta-strip .accent{background:var(--ink);color:var(--lime-1);padding:.1em .3em;border-radius:4px}
+</style>
+</head>
+<body>
+
+  <!-- ============== HERO ============== -->
+  <header class="hero" id="home">
+    <div class="burst" aria-hidden="true"></div>
+    <h1 class="hero-title" aria-label="Ragged Edge">
+      <span class="row">Ragged</span>
+      <span class="row alt">Edge</span>
+    </h1>
+
+    <nav class="nav" aria-label="Primary">
+      <div class="group left">
+        <a href="#home"      class="pill active">Home</a>
+        <a href="#partners"  class="pill">Partnerships</a>
+        <a href="#approach"  class="pill">Approach</a>
+        <a href="#happenings" class="pill">Happenings</a>
+      </div>
+      <div class="group right">
+        <a href="#join" class="pill">Join</a>
+        <a href="#contact" class="pill">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ============== MANIFESTO ============== -->
+  <section class="block" id="approach">
+    <h2 class="manifesto-title">Never be the same again</h2>
+    <p class="serif-body">
+      Ragged Edge is a brand company for people who
+      refuse to settle for average. It's time to
+      commit to a <em>different reality.</em>
+    </p>
+  </section>
+
+  <div class="section-rule"></div>
+
+  <!-- ============== CASE STUDIES ============== -->
+  <article class="case" id="partners">
+    <div class="grid">
+      <div class="text">
+        <h3 class="h-display">Wise</h3>
+        <p class="desc">Wise committed to the world's money. With a rebrand rolled out in 175 countries.</p>
+        <div class="stat">
+          <span class="num"><span class="arr">↑</span>58%</span>
+          <span class="what">Share price increase in the 12 months after launch.</span>
+        </div>
+      </div>
+      <div class="visual gradient-2 wide">
+        <div class="gloss"></div>
+        <div class="mark">wise</div>
+        <span class="label">OOH · Times Square</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="case flip">
+    <div class="grid">
+      <div class="text">
+        <h3 class="h-display">Papier</h3>
+        <p class="desc">Papier committed to the possibility of a blank page. With a rebrand that set the platform for US expansion.</p>
+        <div class="stat">
+          <span class="num"><span class="arr">+</span>2,500 Target stores</span>
+          <span class="what">The new brand helped Papier secure listings in every Target store.</span>
+        </div>
+      </div>
+      <div class="visual gradient-1 wide">
+        <div class="gloss"></div>
+        <div class="mark" style="font-family:var(--serif);font-style:italic">Papier</div>
+        <span class="label">Packaging system</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="case">
+    <div class="grid">
+      <div class="text">
+        <h3 class="h-display">Palmetto</h3>
+        <p class="desc">Palmetto committed to making the sun the most important energy source for every home. With a brand to match.</p>
+        <div class="stat">
+          <span class="num"><span class="arr">↑</span>42%</span>
+          <span class="what">Increase in qualified leads within the first quarter post-launch.</span>
+        </div>
+      </div>
+      <div class="visual gradient-6 wide">
+        <div class="gloss"></div>
+        <div class="mark">PALMETTO</div>
+        <span class="label">Identity · Web</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="case flip">
+    <div class="grid">
+      <div class="text">
+        <h3 class="h-display">Marshmallow</h3>
+        <p class="desc">Marshmallow committed to making insurance fair. With a brand built on empathy, not actuarial tables.</p>
+        <div class="stat">
+          <span class="num"><span class="arr">↑</span>3.4×</span>
+          <span class="what">Brand awareness uplift among 18–34 year-olds.</span>
+        </div>
+      </div>
+      <div class="visual gradient-4 wide">
+        <div class="gloss"></div>
+        <div class="mark">m&lowast;</div>
+        <span class="label">Identity · Campaign</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="case">
+    <div class="grid">
+      <div class="text">
+        <h3 class="h-display">Ladbrokes</h3>
+        <p class="desc">Ladbrokes committed to a level playing field for millions of customers.</p>
+        <div class="stat">
+          <span class="num"><span class="arr">↑</span>70%</span>
+          <span class="what">Higher click-through rates on Meta.</span>
+        </div>
+      </div>
+      <div class="visual gradient-3 wide">
+        <div class="gloss"></div>
+        <div class="mark" style="font-family:var(--serif);font-style:italic">ladbrokes</div>
+        <span class="label">Identity · Campaign</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="case flip">
+    <div class="grid">
+      <div class="text">
+        <h3 class="h-display">Free Soul</h3>
+        <p class="desc">Free Soul committed to every woman. With a brand and packaging system built to scale.</p>
+        <div class="stat">
+          <span class="num"><span class="arr">+</span>From DTC to IRL</span>
+          <span class="what">Listed in 430 Tesco and 200 Boots stores within 18 months.</span>
+        </div>
+      </div>
+      <div class="visual" style="background:#0e1a18">
+        <div class="grid-photos">
+          <div style="--c:#2c1818"></div><div style="--c:#462634"></div><div style="--c:#5c2336"></div><div style="--c:#73273d"></div><div style="--c:#3a1a25"></div>
+          <div style="--c:#7a2c45"></div><div style="--c:#5a1f30"></div><div style="--c:#9c2f4f"></div><div style="--c:#4d212e"></div><div style="--c:#bb3a5b"></div>
+          <div style="--c:#3a1820"></div><div style="--c:#a02946"></div><div style="--c:#8b2640"></div><div style="--c:#621d2f"></div><div style="--c:#c4476b"></div>
+        </div>
+        <span class="label">Brand system · In-store</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============== CTA STRIP ============== -->
+  <section class="cta-strip" id="join">
+    <div>Brands that <span class="accent">refuse</span> to be average.</div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer id="contact">
+    <div class="top">
+      <a href="#join" class="pill dark">Join</a>
+      <div class="group" style="display:flex;gap:.5rem">
+        <a href="#" class="pill dark">Instagram</a>
+        <a href="#" class="pill dark">LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <a href="#home">Home</a>
+        <a href="#partners">Partnerships</a>
+        <a href="#approach">Approach</a>
+        <a href="#happenings">Happenings</a>
+        <a href="#join">Join</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div>
+        <a href="#">Planet</a>
+        <a href="#">B Corp</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+
+    <div class="bottom">© Ragged Edge 2026</div>
+  </footer>
+
+  <!-- ============== COOKIE BANNER ============== -->
+  <div class="cookie-banner" id="cookie">
+    <div class="row">
+      <strong>We use cookies</strong>
+      <button onclick="document.getElementById('cookie').remove()">✕</button>
+    </div>
+    <div class="actions">
+      <a href="#" class="show">Show Details</a>
+      <button class="reject" onclick="document.getElementById('cookie').remove()">Reject All</button>
+      <button class="accept" onclick="document.getElementById('cookie').remove()">Accept All</button>
+    </div>
+  </div>
+
+  <!-- ============== INTERACTION ============== -->
+  <script>
+    // Mark active pill based on visible section
+    const pillLinks = document.querySelectorAll('.nav .group a');
+    pillLinks.forEach(a => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href');
+        if (href.startsWith('#')) {
+          e.preventDefault();
+          const target = document.querySelector(href);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Reveal-on-scroll for case-study title/desc/stats
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          en.target.style.opacity = 1;
+          en.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.18 });
+    document.querySelectorAll('.case .text, .case .visual, .manifesto-title, .serif-body').forEach(el => {
+      el.style.opacity = 0;
+      el.style.transform = 'translateY(28px)';
+      el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1)';
+      io.observe(el);
+    });
+
+    // Subtle parallax on hero title following the pointer
+    const heroTitle = document.querySelector('.hero-title');
+    document.querySelector('.hero').addEventListener('mousemove', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      heroTitle.style.transform = `scaleX(.96) translate(${x * 14}px, ${y * 8}px)`;
+    });
+    document.querySelector('.hero').addEventListener('mouseleave', () => {
+      heroTitle.style.transform = 'scaleX(.96) translate(0,0)';
+    });
+  </script>
+</body>
+</html>

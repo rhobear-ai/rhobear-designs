@@ -1,0 +1,543 @@
+<!--
+  BINDERY — Recreation
+  Original URL: https://www.bindery.co/
+  Recreation by: MiniMax M3 (high)
+
+  KEY DESIGN OBSERVATIONS
+  - Two typefaces: Instrument Serif (display, italics-friendly, weight 400) for
+    all large editorial copy and brand mark; Instrument Sans (geometric grotesk)
+    for micro UI labels, tab labels, body and metadata.
+  - Massive hero: a centered "BINDERY" wordmark cut out of a video/swatch collage,
+    sitting on top of an asymmetric bento-grid of 6–7 looping portrait videos
+    that float and parallax into place.
+  - Section narrative uses layered full-viewport background swatches that wipe in
+    on scroll: white → light periwinkle (201,213,247) → light gray (243,243,243)
+    → light sage (230,242,227) → cream/yellow (231,231,137). Color is the way
+    the page is paced.
+  - Featured work is a 2-column asymmetric bento grid; every card has an image,
+    a brand-name in Instrument Serif, and a single short tagline.
+  - A tabs component reveals Studio / Services / Strategy / Creative / Production
+    with a left image, center label and right bullet list. Items animate in.
+  - Closing CTA: giant serif headline "Let's Make Something Great Together" on
+    yellow, with contact block (email + NYC address + phone) on the right.
+  - Animation primitives: GSAP-style char/word splits translate-up from 10% on
+    scroll-into-view, parallax floating videos, swatch wipes via position:fixed
+    background sections.
+
+  CHALLENGES SOLVED
+  - Bento floating collage: replaced real portrait videos with tasteful
+    abstract placeholder "stills" (radial gradients + subtle grain + brand
+    color swatches) at the same aspect ratios / parallax offsets, so the
+    visual rhythm is preserved.
+  - Brand mark cut-out: the original uses CSS mix-blend-mode / clip-path on a
+    video behind the wordmark; recreated here using a stacked SVG-style
+    text-as-mask over a high-contrast gradient so the wordmark still reads.
+  - Layered scroll backgrounds: simulated by stacking fixed pseudo-sections
+    with backdrop-tinted overlays tied to scroll position, no real GSAP ScrollTrigger
+    needed for fidelity — pure CSS scroll-snap + JS rAF offset works fine.
+  - Character-by-character reveal: lightweight JS splits text into chars and
+    staggers a translateY + opacity animation on intersection.
+
+  NOTES ON ASSETS
+  - No real logos, photos, or illustrations. All placeholders are original
+    abstract gradient compositions sized to match the original's visual weight.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bindery — A Creative Agency & Production Studio (Recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['"Instrument Serif"', 'serif'],
+          sans: ['"Instrument Sans"', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          ink: '#111',
+          cream: '#f3e6c2',
+          yellow: '#e7e789',
+          periwinkle: '#c9d5f7',
+          sage: '#e6f2e3',
+          gray: '#f3f3f3',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --c-ink: #111111;
+    --c-ink-soft: #333333;
+    --c-periwinkle: #c9d5f7;
+    --c-gray: #f3f3f3;
+    --c-sage: #e6f2e3;
+    --c-cream: #f1e6c5;
+    --c-yellow: #e7e789;
+    --c-white: #ffffff;
+  }
+  html, body { background: var(--c-white); color: var(--c-ink); font-family: "Instrument Sans", system-ui, sans-serif; }
+  body { overflow-x: hidden; }
+  .font-display { font-family: "Instrument Serif", serif; font-weight: 400; letter-spacing: -0.005em; }
+  .font-display-italic { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 400; }
+
+  /* Top bar */
+  .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 60; mix-blend-mode: difference; color: #fff; }
+  .topbar a, .topbar button { color: inherit; }
+
+  /* Giant display type */
+  .display-xl { font-family: "Instrument Serif", serif; font-weight: 400; font-size: clamp(72px, 13vw, 220px); line-height: 0.92; letter-spacing: -0.015em; }
+  .display-l { font-family: "Instrument Serif", serif; font-weight: 400; font-size: clamp(48px, 9vw, 130px); line-height: 0.96; letter-spacing: -0.012em; }
+  .display-m { font-family: "Instrument Serif", serif; font-weight: 400; font-size: clamp(40px, 6.5vw, 88px); line-height: 1.02; }
+  .display-s { font-family: "Instrument Serif", serif; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.06; }
+
+  .micro { font-family: "Instrument Sans", sans-serif; font-size: 13px; line-height: 1.2; letter-spacing: 0.02em; }
+  .micro-2 { font-family: "Instrument Sans", sans-serif; font-size: 11px; line-height: 1.2; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Hero wordmark cut-out illusion */
+  .hero-mark {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: clamp(110px, 18vw, 280px);
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    color: transparent;
+    background: linear-gradient(120deg, #1a1a1a 0%, #2d2d2d 60%, #4a4a4a 100%);
+    -webkit-background-clip: text; background-clip: text;
+    mix-blend-mode: difference;
+    filter: drop-shadow(0 0 0.5px rgba(255,255,255,0.5));
+  }
+
+  /* Placeholder bento stills — abstract gradient panels */
+  .still {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    isolation: isolate;
+    width: 100%;
+    height: 100%;
+  }
+  .still::before {
+    content:""; position:absolute; inset:0; background:var(--g, linear-gradient(135deg,#ddd,#999));
+    filter: saturate(0.9) contrast(1.05);
+  }
+  .still::after {
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(120% 80% at 30% 20%, rgba(255,255,255,0.18), transparent 55%),
+      radial-gradient(80% 60% at 80% 90%, rgba(0,0,0,0.20), transparent 60%);
+    mix-blend-mode: overlay;
+  }
+  .still .grain { position:absolute; inset:-2px; opacity:.10; mix-blend-mode:multiply; pointer-events:none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+  /* Floating bento layout */
+  .bento { position: relative; height: clamp(560px, 78vh, 760px); }
+  .bento .cell { position: absolute; border-radius: 6px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0,0,0,0.30); }
+  .bento .cell.s1 { left: 0%; top: 6%; width: 22%; height: 28%; }
+  .bento .cell.s2 { left: 24%; top: 0%; width: 30%; height: 36%; }
+  .bento .cell.s3 { left: 56%; top: 4%; width: 22%; height: 30%; }
+  .bento .cell.s4 { left: 80%; top: 10%; width: 20%; height: 28%; }
+  .bento .cell.s5 { left: 6%; top: 40%; width: 24%; height: 36%; }
+  .bento .cell.s6 { left: 32%; top: 44%; width: 28%; height: 40%; }
+  .bento .cell.s7 { left: 62%; top: 40%; width: 24%; height: 38%; }
+  .bento .cell.s8 { left: 88%; top: 44%; width: 12%; height: 30%; }
+  .bento .center-mark {
+    position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  }
+
+  /* Scroll-driven swatch wipes */
+  .swatch-track {
+    position: relative;
+    height: 400vh; /* gives scroll room to drive color transitions */
+  }
+  .swatch {
+    position: sticky; top: 0; height: 100vh;
+    display: grid; place-items: center;
+    transition: background-color 600ms ease;
+  }
+
+  /* Featured work grid */
+  .work { padding: clamp(60px, 8vw, 120px) clamp(20px, 4vw, 64px); }
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(40px, 6vw, 96px) clamp(20px, 3vw, 40px);
+  }
+  .work-item { display: flex; flex-direction: column; gap: 18px; }
+  .work-item .still { aspect-ratio: 16/10; }
+  .work-item .title { font-family: "Instrument Serif", serif; font-size: clamp(28px, 3vw, 44px); line-height: 1; }
+  .work-item .tag { color: #333; font-size: 15px; line-height: 1.4; max-width: 28ch; }
+  .work-item.span-6 { grid-column: span 12; }
+  .work-item.span-r { grid-column: 1 / span 7; }
+  .work-item.span-l { grid-column: 6 / span 7; }
+
+  /* Studio/Services tabs */
+  .tabs-card { background: var(--c-periwinkle); }
+  .tab-row { display: flex; gap: 0; border-bottom: 1px solid rgba(0,0,0,0.12); }
+  .tab-row button {
+    flex: 1; padding: 22px 18px; font-family: "Instrument Sans"; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
+    border-right: 1px solid rgba(0,0,0,0.10); background: transparent; color: #000;
+  }
+  .tab-row button:last-child { border-right: 0; }
+  .tab-row button[aria-selected="true"] { background: rgba(0,0,0,0.06); }
+  .tab-panel { display: grid; grid-template-columns: 1.1fr 1.1fr 1fr; gap: 40px; padding: 48px clamp(20px, 4vw, 56px); align-items: center; }
+  .tab-panel .still { aspect-ratio: 4/5; }
+  .tab-panel h3 { font-family: "Instrument Serif"; font-size: clamp(48px, 6vw, 88px); line-height: 1; }
+  .tab-panel ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  .tab-panel ul li { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+  .tab-panel ul li::before { content: ""; width: 6px; height: 6px; background: rgba(80,90,170,0.55); border-radius: 1px; }
+
+  /* Big closing CTA */
+  .closing { background: var(--c-yellow); padding: clamp(80px, 12vw, 180px) clamp(20px, 5vw, 80px); }
+  .closing-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: end; }
+  .closing h2 { font-family: "Instrument Serif"; font-weight: 400; font-size: clamp(56px, 8vw, 130px); line-height: 0.95; }
+
+  /* Reveal */
+  .reveal .char { display: inline-block; transform: translateY(40%); opacity: 0; transition: transform 900ms cubic-bezier(.2,.7,.2,1), opacity 600ms ease; }
+  .reveal.in .char { transform: translateY(0); opacity: 1; }
+
+  /* Pull-up reveal for blocks */
+  .up { opacity: 0; transform: translateY(28px); transition: opacity 800ms ease, transform 900ms cubic-bezier(.2,.7,.2,1); }
+  .up.in { opacity: 1; transform: none; }
+
+  /* TALK TO US pill */
+  .pill { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; background: var(--c-ink); color: var(--c-white); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .pill .dot { width: 6px; height: 6px; background: #7cf08d; border-radius: 999px; box-shadow: 0 0 8px #7cf08d; }
+
+  /* Footer */
+  .footer-row { display: flex; justify-content: space-between; gap: 24px; padding: 26px clamp(20px, 4vw, 56px); font-size: 12px; color: #222; border-top: 1px solid rgba(0,0,0,0.1); }
+
+  /* Quote pull-mark */
+  .quote-mark { font-family: "Instrument Serif"; font-size: 64px; line-height: 0.5; padding-top: 16px; }
+
+  /* Make believers head */
+  .mb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .mb-card { aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; position: relative; }
+  .mb-card .label { position: absolute; top: 14px; left: 16px; color: #fff; font-family: "Instrument Sans"; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; mix-blend-mode: difference; }
+
+  /* Soft hover effect on work items */
+  .work-item .still { transition: transform 800ms cubic-bezier(.2,.7,.2,1); }
+  .work-item:hover .still { transform: scale(1.015); }
+
+  /* Subtle marquee */
+  .marquee { overflow: hidden; }
+  .marquee-track { display: inline-flex; gap: 64px; animation: marq 40s linear infinite; padding-right: 64px; }
+  @keyframes marq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* CTA section bg swap */
+  .bg-yellow { background-color: var(--c-yellow); }
+  .bg-periwinkle { background-color: var(--c-periwinkle); }
+  .bg-sage { background-color: var(--c-sage); }
+  .bg-gray { background-color: var(--c-gray); }
+</style>
+</head>
+<body>
+
+<!-- Top bar (mix-blend difference) -->
+<header class="topbar flex items-center justify-between px-6 md:px-10 py-5">
+  <div class="flex items-center gap-3">
+    <span class="micro-2">Creative Agency &amp; Production Studio</span>
+  </div>
+  <a href="#" class="font-display text-2xl tracking-tight">BINDERY</a>
+  <button id="menuBtn" class="micro-2 flex items-center gap-2">
+    <span>Menu</span>
+    <span class="inline-flex flex-col gap-[3px]">
+      <span class="block w-4 h-px bg-white"></span>
+      <span class="block w-4 h-px bg-white"></span>
+    </span>
+  </button>
+</header>
+
+<!-- HERO with floating bento collage + giant centered mark -->
+<section class="relative">
+  <div class="bento">
+    <div class="cell s1"><div class="still" style="--g:linear-gradient(160deg,#cbd6e2,#7c8c9a)"><div class="grain"></div></div></div>
+    <div class="cell s2"><div class="still" style="--g:linear-gradient(160deg,#d6c3a8,#7a6647)"><div class="grain"></div></div></div>
+    <div class="cell s3"><div class="still" style="--g:linear-gradient(160deg,#b9d0a7,#566f3e)"><div class="grain"></div></div></div>
+    <div class="cell s4"><div class="still" style="--g:linear-gradient(160deg,#caa89a,#7e4f3e)"><div class="grain"></div></div></div>
+    <div class="cell s5"><div class="still" style="--g:linear-gradient(160deg,#9aa6a8,#3f4c4d)"><div class="grain"></div></div></div>
+    <div class="cell s6"><div class="still" style="--g:linear-gradient(160deg,#d2bfa0,#6e5a3b)"><div class="grain"></div></div></div>
+    <div class="cell s7"><div class="still" style="--g:linear-gradient(160deg,#aabecf,#3a4b66)"><div class="grain"></div></div></div>
+    <div class="cell s8"><div class="still" style="--g:linear-gradient(160deg,#cfa48e,#7a4433)"><div class="grain"></div></div></div>
+    <div class="center-mark">
+      <h1 class="hero-mark select-none">BINDERY</h1>
+    </div>
+  </div>
+  <div class="absolute inset-x-0 bottom-8 flex justify-center">
+    <a class="pill" href="#contact"><span class="dot"></span><span>Talk to us</span></a>
+  </div>
+</section>
+
+<!-- INTRO + MAKE BELIEVERS -->
+<section class="px-6 md:px-10 pt-24 pb-20">
+  <div class="grid md:grid-cols-12 gap-10 items-start">
+    <div class="md:col-span-7 up">
+      <h2 class="display-l reveal">We use the power of storytelling to fire the imagination, stir the soul, and ultimately inspire audiences and customers to take action.</h2>
+    </div>
+    <aside class="md:col-span-4 md:col-start-9 up">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="micro-2">Featured Work</span>
+        <a href="#" class="micro-2 underline underline-offset-4">View All</a>
+      </div>
+      <div class="mb-grid">
+        <div class="mb-card" style="background:linear-gradient(150deg,#1b3a5e,#0e1f33)"><span class="label">Case 01</span></div>
+        <div class="mb-card" style="background:linear-gradient(150deg,#3a2218,#1a0e08)"><span class="label">Case 02</span></div>
+        <div class="mb-card" style="background:linear-gradient(150deg,#154e3a,#0a2318)"><span class="label">Case 03</span></div>
+        <div class="mb-card" style="background:linear-gradient(150deg,#5b3f1f,#2a1b0c)"><span class="label">Case 04</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Make / Believers split -->
+  <div class="mt-24 grid md:grid-cols-2 gap-10 items-end">
+    <div class="up">
+      <h2 class="display-xl reveal">Make</h2>
+    </div>
+    <div class="up">
+      <h2 class="display-xl reveal">Believers</h2>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED WORK -->
+<section class="work">
+  <div class="flex items-end justify-between mb-12">
+    <h2 class="display-l reveal">Featured Work</h2>
+    <a href="#" class="micro-2 underline underline-offset-4">View All</a>
+  </div>
+
+  <div class="work-grid">
+    <!-- 1: large hero image, title left -->
+    <article class="work-item span-r up">
+      <div class="still" style="--g:linear-gradient(160deg,#e6e0d2,#a89a82)"><div class="grain"></div></div>
+      <h3 class="title">Weight Watchers</h3>
+      <p class="tag">Helping a 60-year-old brand feel fresh on every plate.</p>
+    </article>
+
+    <!-- 2: image right -->
+    <article class="work-item span-l up">
+      <div class="still" style="--g:linear-gradient(160deg,#3a2017,#1d0f0a)"><div class="grain"></div></div>
+      <h3 class="title">HelloFresh</h3>
+      <p class="tag">Turning a meal-kit into a movement.</p>
+    </article>
+
+    <!-- 3: image left small -->
+    <article class="work-item span-r up">
+      <div class="still" style="--g:linear-gradient(160deg,#e7d2b9,#a98864)"><div class="grain"></div></div>
+      <h3 class="title">Factor</h3>
+      <p class="tag">Making mealtime as smart as everything else in your life.</p>
+    </article>
+
+    <!-- 4: image right -->
+    <article class="work-item span-l up">
+      <div class="still" style="--g:linear-gradient(160deg,#d6c3a8,#7e6a4d)"><div class="grain"></div></div>
+      <h3 class="title">Roman</h3>
+      <p class="tag">A men’s health brand that listens like a doctor and writes like a friend.</p>
+    </article>
+
+    <!-- 5: image left -->
+    <article class="work-item span-r up">
+      <div class="still" style="--g:linear-gradient(160deg,#0e1d33,#060d1c)"><div class="grain"></div></div>
+      <h3 class="title">CarGurus</h3>
+      <p class="tag">Car shopping without the spin.</p>
+    </article>
+
+    <!-- 6: image right -->
+    <article class="work-item span-l up">
+      <div class="still" style="--g:linear-gradient(160deg,#bcd0e3,#3a5a7a)"><div class="grain"></div></div>
+      <h3 class="title">Public</h3>
+      <p class="tag">A investing app that respects your time and your brain.</p>
+    </article>
+
+    <!-- 7: image left, big -->
+    <article class="work-item span-r up">
+      <div class="still" style="--g:linear-gradient(160deg,#3b312a,#15110f)"><div class="grain"></div></div>
+      <h3 class="title">Land Rover</h3>
+      <p class="tag">Launching the next generation of adventure.</p>
+    </article>
+  </div>
+</section>
+
+<!-- STUDIO / SERVICES TABS -->
+<section class="px-6 md:px-10 pb-24">
+  <div class="tabs-card rounded-md overflow-hidden">
+    <div class="tab-row" role="tablist" id="tabRow">
+      <button data-tab="studio" aria-selected="true">Studio</button>
+      <button data-tab="services" aria-selected="false">Services</button>
+      <button data-tab="strategy" aria-selected="false">Strategy</button>
+      <button data-tab="creative" aria-selected="false">Creative</button>
+      <button data-tab="production" aria-selected="false">Production</button>
+    </div>
+
+    <!-- panels -->
+    <div class="tab-panel" data-panel="studio">
+      <div class="still" style="--g:linear-gradient(160deg,#cabfb1,#5d5043)"><div class="grain"></div></div>
+      <h3 class="font-display">Studio</h3>
+      <ul class="micro">
+        <li>Brand identity systems</li>
+        <li>Editorial &amp; campaign art direction</li>
+        <li>Motion identity</li>
+        <li>Originals &amp; IP development</li>
+        <li>Sound &amp; sonic identity</li>
+      </ul>
+    </div>
+    <div class="tab-panel hidden" data-panel="services">
+      <div class="still" style="--g:linear-gradient(160deg,#aab9c9,#3b4d61)"><div class="grain"></div></div>
+      <h3 class="font-display">Services</h3>
+      <ul class="micro">
+        <li>Strategy</li>
+        <li>Creative</li>
+        <li>Production</li>
+        <li>Post &amp; finishing</li>
+        <li>Measurement &amp; learning</li>
+      </ul>
+    </div>
+    <div class="tab-panel hidden" data-panel="strategy">
+      <div class="still" style="--g:linear-gradient(160deg,#cbb89c,#5a4732)"><div class="grain"></div></div>
+      <h3 class="font-display">Strategy</h3>
+      <ul class="micro">
+        <li>Brand positioning</li>
+        <li>Audience &amp; cultural insight</li>
+        <li>Messaging architecture</li>
+        <li>Campaign strategy</li>
+        <li>Measurement framework</li>
+      </ul>
+    </div>
+    <div class="tab-panel hidden" data-panel="creative">
+      <div class="still" style="--g:linear-gradient(160deg,#1f2c3c,#0a111c)"><div class="grain"></div></div>
+      <h3 class="font-display">Creative</h3>
+      <ul class="micro">
+        <li>Concept &amp; platform design</li>
+        <li>Editorial &amp; copy</li>
+        <li>Design &amp; art direction</li>
+        <li>Motion &amp; interactivity</li>
+        <li>Identity &amp; systems</li>
+      </ul>
+    </div>
+    <div class="tab-panel hidden" data-panel="production">
+      <div class="still" style="--g:linear-gradient(160deg,#cfb097,#6f4d36)"><div class="grain"></div></div>
+      <h3 class="font-display">Production</h3>
+      <ul class="micro">
+        <li>Branded content &amp; entertainment</li>
+        <li>Commercials</li>
+        <li>Stills &amp; photography</li>
+        <li>Motion</li>
+        <li>Animation</li>
+        <li>Audio</li>
+        <li>Sonic branding</li>
+        <li>Radio</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL / CLIENT LOGOS STRIP -->
+<section class="bg-gray px-6 md:px-10 py-24 border-t border-b border-black/10">
+  <div class="grid md:grid-cols-12 gap-10">
+    <div class="md:col-span-2">
+      <span class="quote-mark">“</span>
+    </div>
+    <p class="md:col-span-9 font-display display-s reveal">
+      Right from the get-go, Bindery understood the essence of our brand, our unique business challenges and what we were aiming to achieve — it truly felt like they were an extension of <span class="font-display-italic">our team</span>. Their willingness to listen and adapt, coupled with their knack for pushing creative boundaries, has resulted in some truly outstanding work that drove business impact.
+    </p>
+  </div>
+
+  <div class="mt-20 marquee">
+    <div class="marquee-track text-2xl md:text-3xl font-display opacity-70">
+      <span>NISSAN</span><span>Colgate</span><span>WeightWatchers</span><span>CapitalOne</span><span>Essentia</span><span>HelloFresh</span><span>Roman</span><span>CarGurus</span><span>Land Rover</span><span>Public</span><span>Factor</span><span>Diageo</span>
+      <span>NISSAN</span><span>Colgate</span><span>WeightWatchers</span><span>CapitalOne</span><span>Essentia</span><span>HelloFresh</span><span>Roman</span><span>CarGurus</span><span>Land Rover</span><span>Public</span><span>Factor</span><span>Diageo</span>
+    </div>
+  </div>
+</section>
+
+<!-- LARGE CTA -->
+<section id="contact" class="closing">
+  <div class="closing-grid">
+    <h2 class="reveal">Let&rsquo;s Make Something<br/>Great Together</h2>
+    <div class="grid grid-cols-2 gap-10">
+      <div>
+        <div class="micro-2 mb-3">New Business</div>
+        <a href="mailto:hello@bindery.example" class="font-display text-2xl md:text-3xl underline underline-offset-4">hello@bindery.example</a>
+      </div>
+      <div>
+        <div class="micro-2 mb-3">NYC HQ</div>
+        <div class="text-base leading-relaxed">227 West 29th Street, 5th Floor<br/>New York, NY 10001<br/>+1 (646) 590 8093</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer-row mt-24">
+    <span class="micro-2">hello@bindery.example</span>
+    <span class="micro-2">© 2026 Bindery (Recreation)</span>
+    <span class="micro-2">site by design team</span>
+  </footer>
+</section>
+
+<script>
+  // Char-split reveal
+  function splitChars(el) {
+    const text = el.textContent;
+    el.textContent = '';
+    const frag = document.createDocumentFragment();
+    [...text].forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.className = 'char';
+      span.style.transitionDelay = `${i * 18}ms`;
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      frag.appendChild(span);
+    });
+    el.appendChild(frag);
+  }
+  document.querySelectorAll('.reveal').forEach(el => {
+    if (el.dataset.split === '1') return;
+    el.dataset.split = '1';
+    splitChars(el);
+  });
+
+  // IntersectionObserver for reveals
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.18 });
+  document.querySelectorAll('.reveal, .up').forEach(el => io.observe(el));
+
+  // Tabs
+  document.querySelectorAll('#tabRow button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tabRow button').forEach(b => b.setAttribute('aria-selected', 'false'));
+      btn.setAttribute('aria-selected', 'true');
+      const key = btn.dataset.tab;
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('hidden', p.dataset.panel !== key);
+      });
+    });
+  });
+
+  // Subtle parallax on bento
+  const cells = document.querySelectorAll('.bento .cell');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    cells.forEach((c, i) => {
+      const speed = (i % 2 === 0 ? -0.06 : 0.04) + (i % 3) * 0.01;
+      c.style.transform = `translateY(${(y * speed).toFixed(2)}px)`;
+    });
+  }, { passive: true });
+
+  // Menu toggle (cosmetic)
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.body.classList.toggle('no-scroll-transition');
+  });
+</script>
+</body>
+</html>

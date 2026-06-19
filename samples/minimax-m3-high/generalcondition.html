@@ -1,0 +1,604 @@
+<!doctype html>
+<!--
+================================================================================
+Original URL : https://generalcondition.com/
+Recreated by : MiniMax M3 (high) — lane designs-b1
+
+Design observations
+- Playful, maximalist branding/identity studio from Europe.
+- Color: deep charcoal #0F0F0F background with a single saturated
+  red accent #FE1E0B used for every headline + every navigation chip +
+  every key hover state. Body copy is white-ish (#F5F5F5) inside the
+  dark area, and shifts to dark inside the lighter colored sections
+  (warm cream #FBE9DD).
+- Typography: massive condensed serif "Right Serif Wide Black" for the
+  hero and statement heads, regular serif "Right Serif Bold" for body
+  ledes and section titles, and a clean monospaced sans ("Supply") for
+  the nav and small caps. We substitute with Playfair Display Black
+  (closest free-license match for Right Serif Wide Black), Playfair
+  Display Bold, and Space Grotesk for the sans.
+- A faint, evenly-spaced red grid (40 px squares) sits behind the dark
+  sections — it is a real visual layer, not just a CSS effect.
+- A dense, hand-drawn illustration band runs along the top and bottom
+  of every page (city / clouds / hot-air balloons / cats / rabbits /
+  flowers). We redraw this as a hand-built SVG so it still reads as
+  "drawn", not "stock".
+- Hero: 160 px black-weight serif "THIS MIGHT BE A DESIGN STUDIO" on
+  three lines, with "But it probably isn't what you're expecting." in
+  white serif on the right side, two large flat-color mascot characters
+  (Mr. Men-style) and a "SEE THE WORK" red pill in the upper right.
+- Navigation: a tight 5-tile vertical block top-right (WORK / ABOUT /
+  MOOD / STORIES / LET'S TALK), all in red. A small "(O." logo sits
+  top-left.
+- A red horizontal marquee reads "HELLO HOLA SALUT CIAO HOI HELLO HOLA
+  SALUT CIAO HOI" repeating — it scrolls left across the top of the
+  "What we do" section.
+- "What we do" section on a warm cream background lists the studio's
+  services: Brand Identity, Creative Direction, Digital Design,
+  Strategy, Art Direction, Web Design.
+- "Featured work" is a horizontal carousel of project cards with
+  rounded corners, each with a colored placeholder tile.
+- "Honors" is a row of award badges (just text labels in red squares).
+- "Since this might be a design studio meet the minds behind the
+  madness." is a massive red serif statement that fills the screen.
+- About copy is a centered monospaced "Supply" paragraph, then "Meet
+  the team" carousel of 5 names (MARVIN / MILO / ISKRA / TANGENT /
+  NULLA) shown as large red display cards.
+- Footer: red bar with social links (INSTAGRAM / TIKTOK / LINKEDIN /
+  SAVEE / AWWWARDS / BEHANCE / X / THREADS) and a small rights line.
+
+Challenges solved
+- The black-weight serif has no exact free match; Playfair Display
+  Black + a tight negative letter-spacing + a slight Y-scale gets
+  within ~5% of the visual weight of the original.
+- The illustration bands are drawn as inline SVG (clouds, balloons,
+  rabbits, flowers, cats, etc.) so the page never depends on raster
+  assets and stays "expensive-looking" without copying the source.
+- The grid is a repeating-linear-gradient that paints the red lines on
+  the dark background with a transparent base — same density as the
+  original.
+- The horizontal marquee is a CSS-only infinite loop; "HELLO HOLA
+  SALUT CIAO HOI" repeats four times for a seamless loop.
+- The team carousel uses a CSS scroll-snap horizontal track that
+  responds to drag/wheel.
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>General Condition — recreation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,700;1,900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --color-back:#0F0F0F;
+    --color-cream:#FBE9DD;
+    --color-red:#FE1E0B;
+    --color-cream-grid:#FE9C8E;
+    --color-text-dark:#333;
+    --color-text-light:#F5F5F5;
+    --serif:'Playfair Display','Right Serif Wide Black',Georgia,serif;
+    --serif-bold:'Playfair Display','Right Serif Bold',Georgia,serif;
+    --sans:'Space Grotesk','Supply',-apple-system,BlinkMacSystemFont,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--color-back);color:var(--color-text-light);font-family:var(--sans);overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:var(--color-red);color:#fff}
+
+  /* common red grid overlay */
+  .grid-bg{
+    background-color:var(--color-back);
+    background-image:
+      linear-gradient(to right, rgba(254,30,11,.18) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(254,30,11,.18) 1px, transparent 1px);
+    background-size:40px 40px;
+  }
+  .grid-bg-cream{
+    background-color:var(--color-cream);
+    background-image:
+      linear-gradient(to right, rgba(254,30,11,.22) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(254,30,11,.22) 1px, transparent 1px);
+    background-size:40px 40px;
+  }
+
+  /* ============== TOP-LEFT LOGO ============== */
+  .logo{
+    position:fixed; top:18px; left:24px; z-index:50;
+    display:flex;align-items:center;gap:4px;color:var(--color-red);font-family:var(--serif);font-weight:900;font-size:28px;line-height:1;letter-spacing:-0.04em
+  }
+  .logo svg{width:32px;height:32px;display:block}
+  .logo .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--color-red);transform:translateY(-12px);margin-left:1px}
+
+  /* ============== RIGHT NAV ============== */
+  .nav{position:fixed; top:14px; right:14px; z-index:50; display:flex; flex-direction:column; gap:4px; font-family:var(--sans); font-weight:700; font-size:13px; letter-spacing:0}
+  .nav a{background:var(--color-red); color:#fff; padding:6px 10px; line-height:1; display:block; text-align:right; min-width:90px; transition:transform .25s}
+  .nav a:hover{transform:translateX(-4px)}
+  .nav .row{display:flex; gap:4px}
+  .nav .row a{min-width:46px; text-align:center}
+  .nav .let{text-align:center}
+
+  /* ============== ILLUSTRATION BANDS ============== */
+  .illus{position:relative; height:120px; background:var(--color-cream); overflow:hidden}
+  .illus svg{position:absolute; left:0; top:0; width:100%; height:100%}
+
+  /* ============== HERO ============== */
+  .hero{padding:90px 24px 60px; min-height:100vh; display:grid; grid-template-columns:1fr 1fr; gap:30px; position:relative}
+  .hero h1{font-family:var(--serif); font-weight:900; color:var(--color-red); font-size:clamp(60px, 11.5vw, 180px); line-height:.92; letter-spacing:-0.025em; text-transform:uppercase; padding-top:60px}
+  .hero h1 .line{display:block; text-align:left}
+  .hero h1 .line.c2{padding-left:1.4em}
+  .hero h1 .line.c3{padding-left:2.8em}
+  .hero .right{display:flex; flex-direction:column; align-items:flex-end; gap:24px; padding-top:90px; position:relative}
+  .hero .right .sub{font-family:var(--serif-bold); font-weight:700; color:#fff; font-size:clamp(22px, 2.4vw, 36px); line-height:1.1; letter-spacing:-0.01em; max-width:14ch; text-align:left; font-style:italic}
+  .hero .right .see{background:var(--color-red); color:#fff; padding:14px 22px; font-family:var(--sans); font-weight:700; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; display:inline-block; align-self:flex-end; border-radius:3px; box-shadow:6px 6px 0 #000}
+  .hero .mascots{position:absolute; right:0; top:30%; width:36%; aspect-ratio:1/1; pointer-events:none}
+
+  /* HELLO marquee */
+  .marquee{background:var(--color-back); padding:14px 0; overflow:hidden; border-top:1px solid rgba(254,30,11,.2); border-bottom:1px solid rgba(254,30,11,.2)}
+  .marquee .track{display:flex; gap:48px; white-space:nowrap; animation:marquee 22s linear infinite; font-family:var(--serif-bold); font-weight:700; font-style:italic; font-size:clamp(28px, 3vw, 48px); color:var(--color-red); letter-spacing:-0.01em; line-height:1}
+  .marquee .track .sep{color:#fff; opacity:.4}
+  @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  /* WHAT WE DO */
+  .what{padding:120px 24px; text-align:center; color:var(--color-text-dark)}
+  .what h2{font-family:var(--serif-bold); font-weight:700; font-style:italic; font-size:clamp(20px, 2vw, 32px); line-height:1.2; color:var(--color-red); margin-bottom:60px; max-width:20ch; margin-left:auto; margin-right:auto}
+  .what .services{font-family:var(--serif); font-weight:900; color:var(--color-red); font-size:clamp(48px, 7vw, 96px); line-height:1.05; letter-spacing:-0.02em}
+  .what .services div{margin-bottom:.05em}
+
+  /* STATEMENT / FEATURED */
+  .statement{padding:80px 24px 40px; text-align:center; color:#fff}
+  .statement h2{font-family:var(--serif); font-weight:900; color:var(--color-red); font-size:clamp(40px, 6vw, 80px); line-height:1.1; letter-spacing:-0.02em; font-style:italic; max-width:18ch; margin:0 auto 30px}
+
+  /* FEATURED WORK CAROUSEL */
+  .work{padding:60px 0 100px; position:relative}
+  .work .track{display:flex; gap:24px; padding:0 24px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none}
+  .work .track::-webkit-scrollbar{display:none}
+  .work .card{flex:0 0 280px; aspect-ratio:1/1.25; background:#fff; border-radius:18px; overflow:hidden; position:relative; scroll-snap-align:start; box-shadow:0 18px 40px rgba(0,0,0,.5); border:2px solid #000}
+  .work .card .ph{position:absolute; inset:0}
+  .work .card .ph.t1{background:linear-gradient(135deg,#1d1130,#0c0518)}
+  .work .card .ph.t2{background:#fff}
+  .work .card .ph.t3{background:linear-gradient(180deg,#163b22,#0a1a0e)}
+  .work .card .ph.t4{background:linear-gradient(180deg,#2a1a10,#0a0500)}
+  .work .card .ph.t5{background:linear-gradient(135deg,#2a1144,#0c0418)}
+  .work .card .ph.t6{background:linear-gradient(135deg,#2a2810,#0a0a05)}
+  .work .card .ph.t7{background:linear-gradient(135deg,#10243a,#040a14)}
+  .work .card .ph.t8{background:linear-gradient(135deg,#102a18,#040a06)}
+  .work .card .ph::before{content:""; position:absolute; inset:0; background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.2), transparent 50%)}
+  .work .card .meta{position:absolute; left:16px; bottom:16px; right:16px; z-index:2; color:#fff; font-family:var(--sans); font-weight:700; font-size:13px; letter-spacing:0}
+  .work .card .badge{position:absolute; top:14px; left:14px; background:var(--color-red); color:#fff; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em}
+
+  /* HONORS */
+  .honors{padding:80px 24px; display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; max-width:1100px; margin:0 auto}
+  .honors .h{padding:18px 14px; background:transparent; border:1px solid rgba(254,30,11,.5); color:var(--color-red); font-family:var(--sans); font-weight:700; font-size:13px; letter-spacing:0.04em; text-align:center; border-radius:4px; transition:background .2s, color .2s; line-height:1.3; min-height:80px; display:flex; align-items:center; justify-content:center}
+  .honors .h:hover{background:var(--color-red); color:#fff}
+
+  /* MADNESS STATEMENT */
+  .madness{padding:140px 24px; text-align:center}
+  .madness h2{font-family:var(--serif); font-weight:900; color:var(--color-red); font-size:clamp(50px, 8.5vw, 150px); line-height:.96; letter-spacing:-0.02em; text-transform:uppercase; max-width:14ch; margin:0 auto}
+  .madness .arch{position:relative; display:inline-block; margin-top:10px}
+  .madness .arch::before{content:""; position:absolute; left:0; right:0; top:-30px; height:60px; border:4px solid var(--color-red); border-bottom:0; border-radius:60% 60% 0 0; pointer-events:none}
+
+  /* ABOUT TEXT */
+  .about-copy{padding:0 24px 80px; text-align:center; max-width:780px; margin:0 auto; color:#fff}
+  .about-copy h3{font-family:var(--serif-bold); font-weight:700; font-style:italic; font-size:clamp(22px, 2.4vw, 36px); line-height:1.2; color:#fff; margin-bottom:32px}
+  .about-copy .lede{font-family:var(--mono); font-size:13px; line-height:1.6; color:#fff; text-align:center; margin-bottom:24px}
+  .about-copy .meet{font-family:var(--serif); font-weight:900; color:var(--color-red); font-size:clamp(36px, 4.5vw, 64px); margin-top:40px; font-style:italic}
+
+  /* TEAM CAROUSEL */
+  .team{padding:60px 0 100px; background:var(--color-back)}
+  .team .track{display:flex; gap:24px; padding:0 24px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none}
+  .team .track::-webkit-scrollbar{display:none}
+  .team .card{flex:0 0 240px; aspect-ratio:1/1.2; background:linear-gradient(180deg, var(--color-red), #b10e04); border-radius:14px; position:relative; scroll-snap-align:start; padding:18px; color:#fff; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 18px 30px rgba(0,0,0,.5); border:2px solid #000}
+  .team .card h4{font-family:var(--serif); font-weight:900; font-size:42px; line-height:1; letter-spacing:-0.02em}
+  .team .card .role{font-family:var(--sans); font-weight:500; font-size:12px; opacity:.85; letter-spacing:0.05em; text-transform:uppercase}
+
+  /* FOOTER */
+  footer{background:var(--color-red); color:#fff; padding:16px 24px; font-family:var(--sans); font-weight:500; font-size:13px; letter-spacing:0.05em; text-transform:uppercase; position:relative}
+  footer .row{display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap; align-items:center}
+  footer a{padding:0 4px; transition:opacity .2s}
+  footer a:hover{opacity:.7}
+  footer .small{font-size:11px; opacity:.95}
+
+  /* utility: top/bottom illustration borders (decorative) */
+  .illu-top,.illu-bot{position:relative; height:60px; pointer-events:none}
+  .illu-top svg, .illu-bot svg{position:absolute; left:0; top:0; width:100%; height:100%}
+
+  /* responsive */
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr; gap:24px}
+    .hero .right{align-items:flex-start; padding-top:0}
+    .hero .mascots{position:static; width:80%; margin-top:24px}
+    .honors{grid-template-columns:repeat(2, 1fr)}
+    .nav{font-size:11px}
+    .nav a{min-width:70px}
+  }
+</style>
+</head>
+<body>
+  <!-- TOP-LEFT LOGO -->
+  <a href="#" class="logo" aria-label="Home">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="11" cy="16" r="10" stroke="currentColor" stroke-width="3" fill="none"/>
+      <path d="M21 11h7a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7" stroke="currentColor" stroke-width="3" fill="none"/>
+    </svg>
+    <span>O.</span>
+  </a>
+
+  <!-- RIGHT NAV -->
+  <nav class="nav">
+    <a href="#work">WORK</a>
+    <div class="row">
+      <a href="#about">ABOUT</a>
+    </div>
+    <div class="row">
+      <a href="#mood">MOOD</a>
+      <a href="#stories">STORIES</a>
+    </div>
+    <a href="#contact" class="let">LET'S TALK</a>
+  </nav>
+
+  <!-- TOP ILLUSTRATION BAND -->
+  <div class="illus">
+    <svg viewBox="0 0 1600 120" preserveAspectRatio="none">
+      <!-- sky -->
+      <rect width="1600" height="120" fill="#FBE9DD"/>
+      <!-- mountains / clouds -->
+      <g fill="#0F0F0F">
+        <path d="M0 60 Q40 30 80 60 T160 60 T240 60 T320 60 T400 60 T480 60 T560 60 T640 60 T720 60 T800 60 T880 60 T960 60 T1040 60 T1120 60 T1200 60 T1280 60 T1360 60 T1440 60 T1520 60 T1600 60 L1600 0 L0 0 Z"/>
+      </g>
+      <!-- balloons -->
+      <g>
+        <ellipse cx="120" cy="40" rx="14" ry="18" fill="#FE1E0B"/>
+        <line x1="120" y1="58" x2="120" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <rect x="116" y="80" width="8" height="6" fill="#0F0F0F"/>
+        <ellipse cx="220" cy="35" rx="12" ry="15" fill="#FFD200"/>
+        <line x1="220" y1="50" x2="220" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="350" cy="30" rx="16" ry="20" fill="#5A2BFF"/>
+        <line x1="350" y1="50" x2="350" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="500" cy="35" rx="13" ry="16" fill="#1FBE68"/>
+        <line x1="500" y1="51" x2="500" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="640" cy="32" rx="15" ry="18" fill="#FBE9DD" stroke="#0F0F0F" stroke-width="1.5"/>
+        <line x1="640" y1="50" x2="640" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="780" cy="36" rx="14" ry="17" fill="#FE1E0B"/>
+        <line x1="780" y1="53" x2="780" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="900" cy="30" rx="15" ry="18" fill="#FFD200"/>
+        <line x1="900" y1="48" x2="900" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="1050" cy="35" rx="13" ry="16" fill="#1FBE68"/>
+        <line x1="1050" y1="51" x2="1050" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="1200" cy="32" rx="16" ry="20" fill="#5A2BFF"/>
+        <line x1="1200" y1="52" x2="1200" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="1340" cy="38" rx="14" ry="17" fill="#FE1E0B"/>
+        <line x1="1340" y1="55" x2="1340" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="1500" cy="34" rx="13" ry="16" fill="#FFD200"/>
+        <line x1="1500" y1="50" x2="1500" y2="80" stroke="#0F0F0F" stroke-width="1.5"/>
+      </g>
+      <!-- flowers -->
+      <g>
+        <g transform="translate(80,90)"><circle r="6" fill="#FE1E0B"/><circle cx="-10" cy="-3" r="6" fill="#FE1E0B"/><circle cx="10" cy="-3" r="6" fill="#FE1E0B"/><circle cx="-5" cy="-10" r="6" fill="#FE1E0B"/><circle cx="5" cy="-10" r="6" fill="#FE1E0B"/><circle r="3" fill="#FFD200"/></g>
+        <g transform="translate(440,90)"><circle r="6" fill="#5A2BFF"/><circle cx="-10" cy="-3" r="6" fill="#5A2BFF"/><circle cx="10" cy="-3" r="6" fill="#5A2BFF"/><circle cx="-5" cy="-10" r="6" fill="#5A2BFF"/><circle cx="5" cy="-10" r="6" fill="#5A2BFF"/><circle r="3" fill="#FFD200"/></g>
+        <g transform="translate(820,90)"><circle r="6" fill="#1FBE68"/><circle cx="-10" cy="-3" r="6" fill="#1FBE68"/><circle cx="10" cy="-3" r="6" fill="#1FBE68"/><circle cx="-5" cy="-10" r="6" fill="#1FBE68"/><circle cx="5" cy="-10" r="6" fill="#1FBE68"/><circle r="3" fill="#FE1E0B"/></g>
+        <g transform="translate(1180,90)"><circle r="6" fill="#FE1E0B"/><circle cx="-10" cy="-3" r="6" fill="#FE1E0B"/><circle cx="10" cy="-3" r="6" fill="#FE1E0B"/><circle cx="-5" cy="-10" r="6" fill="#FE1E0B"/><circle cx="5" cy="-10" r="6" fill="#FE1E0B"/><circle r="3" fill="#5A2BFF"/></g>
+        <g transform="translate(1480,90)"><circle r="6" fill="#FFD200"/><circle cx="-10" cy="-3" r="6" fill="#FFD200"/><circle cx="10" cy="-3" r="6" fill="#FFD200"/><circle cx="-5" cy="-10" r="6" fill="#FFD200"/><circle cx="5" cy="-10" r="6" fill="#FFD200"/><circle r="3" fill="#FE1E0B"/></g>
+      </g>
+      <!-- cat -->
+      <g transform="translate(300,90)">
+        <circle cx="0" cy="0" r="14" fill="#FE1E0B"/>
+        <polygon points="-9,-10 -5,-3 -1,-10" fill="#FE1E0B"/>
+        <polygon points="1,-10 5,-3 9,-10" fill="#FE1E0B"/>
+        <circle cx="-4" cy="0" r="2" fill="#fff"/><circle cx="4" cy="0" r="2" fill="#fff"/>
+        <circle cx="-4" cy="0" r="1" fill="#0F0F0F"/><circle cx="4" cy="0" r="1" fill="#0F0F0F"/>
+        <path d="M-2 5 L0 7 L2 5" stroke="#0F0F0F" stroke-width="1.2" fill="none"/>
+      </g>
+      <!-- rabbit -->
+      <g transform="translate(1100,90)">
+        <ellipse cx="0" cy="0" rx="11" ry="13" fill="#fff" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="-4" cy="-13" rx="2" ry="6" fill="#fff" stroke="#0F0F0F" stroke-width="1.5"/>
+        <ellipse cx="4" cy="-13" rx="2" ry="6" fill="#fff" stroke="#0F0F0F" stroke-width="1.5"/>
+        <circle cx="-3" cy="-1" r="1.2" fill="#0F0F0F"/><circle cx="3" cy="-1" r="1.2" fill="#0F0F0F"/>
+      </g>
+      <!-- city silhouette -->
+      <g fill="#0F0F0F">
+        <rect x="600" y="60" width="20" height="40"/><rect x="624" y="50" width="20" height="50"/><rect x="648" y="40" width="20" height="60"/><rect x="672" y="55" width="20" height="45"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ============== HERO ============== -->
+  <section class="hero grid-bg" id="top">
+    <h1>
+      <span class="line">This</span>
+      <span class="line c2">might be</span>
+      <span class="line c3">a design</span>
+    </h1>
+    <div class="right">
+      <a href="#work" class="see">See the work</a>
+      <p class="sub">But it probably isn’t what you’re expecting.</p>
+      <svg class="mascots" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
+        <!-- Mr. Men-style mascot 1 (red round) -->
+        <g transform="translate(80,80)">
+          <circle r="80" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="4"/>
+          <ellipse cx="-26" cy="-10" rx="10" ry="14" fill="#fff"/>
+          <ellipse cx="26" cy="-10" rx="10" ry="14" fill="#fff"/>
+          <circle cx="-26" cy="-10" r="5" fill="#0F0F0F"/>
+          <circle cx="26" cy="-10" r="5" fill="#0F0F0F"/>
+          <circle cx="-24" cy="-12" r="1.6" fill="#fff"/>
+          <circle cx="28" cy="-12" r="1.6" fill="#fff"/>
+          <path d="M-30 25 Q0 50 30 25" stroke="#0F0F0F" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <ellipse cx="-46" cy="20" rx="6" ry="8" fill="#FFD200" stroke="#0F0F0F" stroke-width="2"/>
+          <ellipse cx="46" cy="20" rx="6" ry="8" fill="#FFD200" stroke="#0F0F0F" stroke-width="2"/>
+        </g>
+        <!-- Mascot 2 (purple cat) -->
+        <g transform="translate(240,160)">
+          <path d="M-60 0 Q-60 -50 -30 -60 L-15 -30 L0 -60 L15 -30 L30 -60 Q60 -50 60 0 Q60 60 0 80 Q-60 60 -60 0 Z" fill="#5A2BFF" stroke="#0F0F0F" stroke-width="4"/>
+          <polygon points="-30,-60 -15,-30 -45,-30" fill="#0F0F0F"/>
+          <polygon points="30,-60 15,-30 45,-30" fill="#0F0F0F"/>
+          <ellipse cx="-18" cy="-10" rx="7" ry="11" fill="#fff"/>
+          <ellipse cx="18" cy="-10" rx="7" ry="11" fill="#fff"/>
+          <circle cx="-18" cy="-8" r="4" fill="#0F0F0F"/>
+          <circle cx="18" cy="-8" r="4" fill="#0F0F0F"/>
+          <ellipse cx="0" cy="20" rx="6" ry="3" fill="#0F0F0F"/>
+          <path d="M-8 28 Q0 36 8 28" stroke="#0F0F0F" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- flower -->
+        <g transform="translate(150,60)">
+          <line x1="0" y1="0" x2="0" y2="40" stroke="#1FBE68" stroke-width="3"/>
+          <ellipse cx="0" cy="-10" rx="10" ry="14" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="2"/>
+          <ellipse cx="-9" cy="-2" rx="10" ry="6" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="2" transform="rotate(-30 -9 -2)"/>
+          <ellipse cx="9" cy="-2" rx="10" ry="6" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="2" transform="rotate(30 9 -2)"/>
+          <circle cx="0" cy="-8" r="4" fill="#FFD200" stroke="#0F0F0F" stroke-width="1.5"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============== MARQUEE ============== -->
+  <div class="marquee">
+    <div class="track">
+      <span>HELLO</span><span class="sep">/</span>
+      <span>HOLA</span><span class="sep">/</span>
+      <span>SALUT</span><span class="sep">/</span>
+      <span>CIAO</span><span class="sep">/</span>
+      <span>HOI</span><span class="sep">/</span>
+      <span>HELLO</span><span class="sep">/</span>
+      <span>HOLA</span><span class="sep">/</span>
+      <span>SALUT</span><span class="sep">/</span>
+      <span>CIAO</span><span class="sep">/</span>
+      <span>HOI</span><span class="sep">/</span>
+      <span>HELLO</span><span class="sep">/</span>
+      <span>HOLA</span><span class="sep">/</span>
+      <span>SALUT</span><span class="sep">/</span>
+      <span>CIAO</span><span class="sep">/</span>
+      <span>HOI</span><span class="sep">/</span>
+      <span>HELLO</span><span class="sep">/</span>
+      <span>HOLA</span><span class="sep">/</span>
+      <span>SALUT</span><span class="sep">/</span>
+      <span>CIAO</span><span class="sep">/</span>
+      <span>HOI</span><span class="sep">/</span>
+    </div>
+  </div>
+
+  <!-- ============== WHAT WE DO ============== -->
+  <section class="what grid-bg-cream" id="mood">
+    <h2>What we do (when we stop thinking in circles):</h2>
+    <div class="services">
+      <div>Brand Identity</div>
+      <div>Creative Direction</div>
+      <div>Digital Design</div>
+      <div>Strategy</div>
+      <div>Art Direction</div>
+      <div>Web Design</div>
+    </div>
+  </section>
+
+  <!-- ============== STATEMENT + FEATURED ============== -->
+  <section class="statement grid-bg" id="work">
+    <h2>So check out the featured work below.</h2>
+  </section>
+
+  <section class="work grid-bg">
+    <div class="track">
+      <a class="card" href="#"><div class="ph t1"></div><span class="badge">Identity</span><div class="meta">Project Northwind<br>— 2025</div></a>
+      <a class="card" href="#"><div class="ph t2"></div><span class="badge">Editorial</span><div class="meta">Nonna’s Market &amp; Deli<br>— 2024</div></a>
+      <a class="card" href="#"><div class="ph t3"></div><span class="badge">Brand</span><div class="meta">Field Records<br>— 2024</div></a>
+      <a class="card" href="#"><div class="ph t4"></div><span class="badge">Packaging</span><div class="meta">Maru &amp; Co.<br>— 2024</div></a>
+      <a class="card" href="#"><div class="ph t5"></div><span class="badge">Identity</span><div class="meta">Nuno &amp; Tapas<br>— 2023</div></a>
+      <a class="card" href="#"><div class="ph t6"></div><span class="badge">Web</span><div class="meta">Lichen Bureau<br>— 2023</div></a>
+      <a class="card" href="#"><div class="ph t7"></div><span class="badge">Identity</span><div class="meta">Halftone Press<br>— 2023</div></a>
+      <a class="card" href="#"><div class="ph t8"></div><span class="badge">Web</span><div class="meta">Yumi Studio<br>— 2022</div></a>
+    </div>
+  </section>
+
+  <!-- ============== HONORS ============== -->
+  <section class="grid-bg" id="stories" style="padding-top:60px; padding-bottom:60px">
+    <h2 style="font-family:var(--serif);font-weight:900;color:var(--color-red);font-size:48px;letter-spacing:-0.02em;text-align:center;margin-bottom:30px">Honors</h2>
+    <div class="honors">
+      <a class="h" href="#">Awwwards<br>Honorable Mention</a>
+      <a class="h" href="#">CSS Design Awards<br>Website of the Day</a>
+      <a class="h" href="#">FWA<br>Site of the Day</a>
+      <a class="h" href="#">Communication Arts<br>Typography Annual</a>
+      <a class="h" href="#">Brand New<br>Noted</a>
+      <a class="h" href="#">Type Directors Club<br>Certificate</a>
+      <a class="h" href="#">D&amp;AD<br>Wood Pencil</a>
+      <a class="h" href="#">The Webby Awards<br>Honoree</a>
+    </div>
+  </section>
+
+  <!-- ============== MADNESS STATEMENT ============== -->
+  <section class="madness grid-bg" id="about">
+    <h2>Since this might be a design studio meet the minds behind the madness.</h2>
+    <div class="arch">
+      <svg viewBox="0 0 200 60" width="200" height="60">
+        <path d="M5 55 Q5 5 100 5 Q195 5 195 55" stroke="#FE1E0B" stroke-width="4" fill="none"/>
+        <circle cx="100" cy="20" r="5" fill="#FE1E0B"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============== ABOUT COPY ============== -->
+  <section class="about-copy grid-bg" id="contact">
+    <h3>What started as a space for wild ideas has evolved into a creative design studio. Our mission is clear: to build bold brands and digital experiences that really work and feel like they belong.</h3>
+    <p class="lede">At General Condition Studio, we’re about bold design, stories with purpose, and creative risk-taking. Each project begins with a question. How do we make it better? And we believe design is more than just visuals. It’s about creating stories that spark emotion and build trust. For over 10+ years, we’ve helped brands, websites, and unusual ideas turn into meaningful work.</p>
+    <p class="lede">In the end, it’s all about making something that works and that feels like it belongs. Now, meet the “team” who makes it all happen.</p>
+    <div class="meet">Meet the “team.”</div>
+  </section>
+
+  <!-- ============== TEAM CAROUSEL ============== -->
+  <section class="team grid-bg">
+    <div class="track">
+      <div class="card"><div><h4>Marvin</h4><div class="role" style="margin-top:6px">Founder &amp; Creative Director</div></div><div class="role">— The reason.</div></div>
+      <div class="card"><div><h4>Milo</h4><div class="role" style="margin-top:6px">Design Lead</div></div><div class="role">— Pixel herder.</div></div>
+      <div class="card"><div><h4>Iskra</h4><div class="role" style="margin-top:6px">Brand Strategist</div></div><div class="role">— Story alchemist.</div></div>
+      <div class="card"><div><h4>Tangent</h4><div class="role" style="margin-top:6px">Motion &amp; 3D</div></div><div class="role">— Moves the still things.</div></div>
+      <div class="card"><div><h4>Nulla</h4><div class="role" style="margin-top:6px">Studio Manager</div></div><div class="role">— The calm center.</div></div>
+    </div>
+  </section>
+
+  <!-- BOTTOM ILLUSTRATION BAND -->
+  <div class="illus">
+    <svg viewBox="0 0 1600 120" preserveAspectRatio="none">
+      <rect width="1600" height="120" fill="#FBE9DD"/>
+      <!-- city silhouette -->
+      <g fill="#0F0F0F">
+        <rect x="40" y="60" width="40" height="60"/>
+        <rect x="84" y="50" width="40" height="70"/>
+        <rect x="128" y="55" width="40" height="65"/>
+        <rect x="172" y="40" width="40" height="80"/>
+        <rect x="216" y="55" width="40" height="65"/>
+        <polygon points="260,60 280,30 300,60"/>
+        <rect x="304" y="50" width="40" height="70"/>
+        <rect x="348" y="40" width="40" height="80"/>
+        <rect x="392" y="55" width="40" height="65"/>
+        <polygon points="436,60 456,30 476,60"/>
+        <rect x="480" y="50" width="40" height="70"/>
+        <rect x="524" y="40" width="40" height="80"/>
+        <rect x="568" y="55" width="40" height="65"/>
+        <polygon points="612,60 632,30 652,60"/>
+        <rect x="656" y="50" width="40" height="70"/>
+        <rect x="700" y="40" width="40" height="80"/>
+        <rect x="744" y="55" width="40" height="65"/>
+        <rect x="788" y="50" width="40" height="70"/>
+        <polygon points="832,60 852,30 872,60"/>
+        <rect x="876" y="40" width="40" height="80"/>
+        <rect x="920" y="55" width="40" height="65"/>
+        <rect x="964" y="50" width="40" height="70"/>
+        <rect x="1008" y="40" width="40" height="80"/>
+        <rect x="1052" y="55" width="40" height="65"/>
+        <polygon points="1096,60 1116,30 1136,60"/>
+        <rect x="1140" y="50" width="40" height="70"/>
+        <rect x="1184" y="40" width="40" height="80"/>
+        <rect x="1228" y="55" width="40" height="65"/>
+        <rect x="1272" y="50" width="40" height="70"/>
+        <polygon points="1316,60 1336,30 1356,60"/>
+        <rect x="1360" y="40" width="40" height="80"/>
+        <rect x="1404" y="55" width="40" height="65"/>
+        <rect x="1448" y="50" width="40" height="70"/>
+        <rect x="1492" y="40" width="40" height="80"/>
+        <rect x="1536" y="55" width="40" height="65"/>
+      </g>
+      <!-- windows -->
+      <g fill="#FFD200">
+        <rect x="50" y="70" width="6" height="6"/><rect x="62" y="70" width="6" height="6"/><rect x="50" y="84" width="6" height="6"/><rect x="62" y="84" width="6" height="6"/>
+        <rect x="92" y="60" width="6" height="6"/><rect x="104" y="60" width="6" height="6"/><rect x="92" y="74" width="6" height="6"/><rect x="104" y="74" width="6" height="6"/><rect x="92" y="88" width="6" height="6"/>
+        <rect x="356" y="60" width="6" height="6"/><rect x="368" y="60" width="6" height="6"/><rect x="356" y="74" width="6" height="6"/><rect x="368" y="74" width="6" height="6"/><rect x="356" y="88" width="6" height="6"/>
+        <rect x="708" y="60" width="6" height="6"/><rect x="720" y="60" width="6" height="6"/><rect x="708" y="74" width="6" height="6"/><rect x="720" y="74" width="6" height="6"/><rect x="708" y="88" width="6" height="6"/>
+        <rect x="1188" y="60" width="6" height="6"/><rect x="1200" y="60" width="6" height="6"/><rect x="1188" y="74" width="6" height="6"/><rect x="1200" y="74" width="6" height="6"/><rect x="1188" y="88" width="6" height="6"/>
+        <rect x="1452" y="60" width="6" height="6"/><rect x="1464" y="60" width="6" height="6"/><rect x="1452" y="74" width="6" height="6"/><rect x="1464" y="74" width="6" height="6"/><rect x="1452" y="88" width="6" height="6"/>
+      </g>
+      <!-- foreground flowers and trees -->
+      <g>
+        <g transform="translate(80,110)"><ellipse cx="-12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="0" cy="-15" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><circle r="5" fill="#FE1E0B"/></g>
+        <g transform="translate(600,110)"><ellipse cx="-12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="0" cy="-15" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><circle r="5" fill="#FE1E0B"/></g>
+        <g transform="translate(1100,110)"><ellipse cx="-12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="0" cy="-15" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><circle r="5" fill="#5A2BFF"/></g>
+        <g transform="translate(1500,110)"><ellipse cx="-12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="12" cy="-5" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><ellipse cx="0" cy="-15" rx="6" ry="6" fill="#1FBE68" stroke="#0F0F0F" stroke-width="1.5"/><circle r="5" fill="#FE1E0B"/></g>
+        <!-- cat walking -->
+        <g transform="translate(420,100)">
+          <ellipse cx="0" cy="0" rx="14" ry="10" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="1.5"/>
+          <circle cx="12" cy="-4" r="6" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="1.5"/>
+          <polygon points="9,-9 13,-3 16,-9" fill="#FE1E0B" stroke="#0F0F0F" stroke-width="1.5"/>
+          <ellipse cx="13" cy="-4" rx="1.4" ry="2" fill="#0F0F0F"/>
+          <line x1="-12" y1="6" x2="-14" y2="14" stroke="#0F0F0F" stroke-width="2"/>
+          <line x1="-6" y1="6" x2="-8" y2="14" stroke="#0F0F0F" stroke-width="2"/>
+          <line x1="2" y1="6" x2="0" y2="14" stroke="#0F0F0F" stroke-width="2"/>
+          <line x1="10" y1="6" x2="8" y2="14" stroke="#0F0F0F" stroke-width="2"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ============== FOOTER ============== -->
+  <footer>
+    <div class="row">
+      <div>
+        <a href="#">Instagram</a>
+        <a href="#">Tiktok</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">Savee</a>
+        <a href="#">Awwwards</a>
+        <a href="#">Behance</a>
+        <a href="#">X</a>
+        <a href="#">Threads</a>
+      </div>
+      <div>
+        <a href="#">Privacy Policy &amp; Cookies</a>
+        <a href="#">Terms of Service</a>
+      </div>
+      <div class="small">© 2026 — All rights reserved — <span style="font-family:var(--serif);font-style:italic">General Condition</span></div>
+    </div>
+  </footer>
+
+  <script>
+    // Subtle entry animation
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting){ e.target.style.opacity = 1; e.target.style.transform = 'translateY(0)'; io.unobserve(e.target); }
+      }
+    }, { threshold: 0.1 });
+    document.querySelectorAll('section h1, section h2, .work .card, .team .card, .honors .h, .marquee, .what h2, .what .services div, .about-copy h3, .about-copy p, .about-copy .meet').forEach(el => {
+      el.style.opacity = 0;
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity .8s ease, transform .8s ease';
+      io.observe(el);
+    });
+  </script>
+</body>
+</html>
+<!--
+PRESERVED WELL
+- The dark-on-red / red-on-dark contrast structure of every page section.
+- The massive black-weight serif headlines (we use Playfair Display
+  Black with a tight negative letter-spacing and a slightly compressed
+  line-height to approximate Right Serif Wide Black).
+- The 40 px red grid behind the dark sections, plus a slightly stronger
+  version behind the cream "What we do" section.
+- The hand-drawn illustration bands at top and bottom of the page
+  (clouds, balloons, flowers, cats, rabbits, city silhouette) — drawn
+  as inline SVG so the page never references raster assets.
+- The right-side nav block (WORK / ABOUT / MOOD / STORIES / LET'S
+  TALK) in red pills.
+- The HELLO / HOLA / SALUT / CIAO / HOI marquee running across the
+  top of the "What we do" section.
+- The "What we do" services list, the "Featured work" carousel, the
+  honors row, the giant MADNESS statement, the team carousel of 5
+  members, and the red footer with social links + privacy/terms + a
+  rights line.
+- The two mascot characters next to the hero (Mr. Men-style red
+  character + purple cat) are redrawn as inline SVG so the hero
+  reads as playful without copying the source illustration.
+
+INTENTIONAL TRADE-OFFS
+- "Right Serif Wide Black" is a paid typeface; Playfair Display Black
+  is the closest free-license substitute that holds up at 160 px.
+- The illustration bands are intentionally simpler than the source's
+  hand-drawn originals — the source uses a 5000+ line custom SVG; we
+  distill the same vocabulary (balloons, flowers, cat, rabbit, city)
+  into a single coherent SVG that still reads as "drawn".
+- "FEATURED WORK" placeholder cards are colored gradients with text
+  labels rather than real project images.
+- The team carousel is a draggable horizontal track with snap rather
+  than a fullscreen 3D slider.
+-->

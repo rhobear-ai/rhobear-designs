@@ -1,0 +1,641 @@
+<!doctype html>
+<!--
+================================================================
+ORIGINAL URL : https://www.therobot.tv/
+
+KEY DESIGN OBSERVATIONS
+  - Bold editorial site for a Southern Africa production company.
+    Alternates between pure black sections (hero / work) and cream
+    paper sections (manifesto / contact). Hero text is stretched
+    all-caps industrial display type in red and white.
+  - Color palette (sampled live):
+      ink     #000000
+      paper   #f0ece5  (cream)
+      red     #fe0000  (CTA links, big display fills)
+      white   #ffffff
+      chip    rgba(255,255,255,.85)  (small chrome)
+  - Typography:
+      display   OTMediumSemiSqueezed — stand-in: "Big Shoulders Display"
+                weight 800, very tight leading, slight skew forward
+      mono      IBM Plex Mono / system mono for chrome + labels
+      body      Inter regular for paragraphs
+  - Persistent chrome (top, on every section):
+      [■ HH:MM (GMT+2)]                              [MENU]
+      Type is white on dark sections and dark on cream.
+  - ROBOT wordmark uses an industrial font with angled cuts (a
+    slanted R, clipped B/T) — we approximate with a custom font
+    "Big Shoulders Display Black" + selective transforms.
+  - Section pattern:
+      1) Hero (black) — centre video placeholder, ROBOT mark on top
+      2) Manifesto (cream) — vertical "WE DISRUPT / WE INSPIRE /
+         WE CREATE / THIS IS ROBOT" + giant red "MACHINE" with
+         ROBOT mark overlapping
+      3) About (cream) — large headline about experience + red CTA
+      4) Directors (cream→black) — angled triangular play-cards
+      5) Featured work (black) — large feature with vertical color
+         strips on left + right (like film leader)
+      6) Footer (cream) — ROBOT + SOUTHERN AFRICA PRODUCTION
+         SPECIALISTS, contact column, massive red ROBOT bg
+  - Red bracket links: "[ OUR DIRECTORS ]" — all caps with square
+    brackets, red mono.
+
+CHALLENGES SOLVED
+  - Recreated the angled, slightly skewed display feel by combining
+    Big Shoulders Display Black with a small rotateX/skewY transform
+    on the wordmark.
+  - Vertical color-strip thumbnails (film-leader motif) using
+    stacked CSS gradients with varied palette per strip.
+  - Massive red ROBOT background behind the footer with selective
+    cropping via clip-path so the bottom-left crop matches the
+    live site.
+  - Persistent clock "HH:MM (GMT+2)" updated every 30 seconds.
+  - Angular "play" cards built from clip-path triangles (instead
+    of placeholder images).
+================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Robot — Southern Africa Production Specialists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — pulled from live site
+     ============================================================ */
+  :root{
+    --ink:    #000000;
+    --paper:  #f0ece5;
+    --red:    #fe0000;
+    --white:  #ffffff;
+    --chrome: rgba(255,255,255,.85);
+    --hair:   rgba(0,0,0,.15);
+    --rule:   rgba(0,0,0,.5);
+
+    --display: 'Big Shoulders Display', 'Arial Black', system-ui, sans-serif;
+    --mono:    'IBM Plex Mono', Menlo, Consolas, monospace;
+    --body:    'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--ink);color:var(--white);
+    font-family:var(--body);-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* ============================================================
+     PERSISTENT CHROME
+     ============================================================ */
+  .chrome{
+    position:fixed;top:0;left:0;right:0;z-index:60;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1.4rem 1.6rem;font-family:var(--mono);font-size:.78rem;letter-spacing:.04em;
+    text-transform:uppercase;font-weight:500;pointer-events:none;
+  }
+  .chrome .left,.chrome .right{display:inline-flex;align-items:center;gap:.6rem;pointer-events:auto}
+  .chrome .dot{width:11px;height:11px;background:currentColor;display:inline-block}
+  .chrome.invert{color:var(--ink)}
+  .chrome.invert .dot{background:var(--ink)}
+
+  /* ============================================================
+     ROBOT WORDMARK
+     The original uses a custom industrial display with angled
+     cuts. We get close with Big Shoulders Display Black + skew.
+     ============================================================ */
+  .wordmark{
+    font-family:var(--display);
+    font-weight:900;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+    line-height:.85;
+    transform:skewX(-8deg);
+    display:inline-block;
+  }
+  .wordmark.sm{font-size:clamp(2rem,3.2vw,2.8rem)}
+  .wordmark.md{font-size:clamp(3rem,5.4vw,4.4rem)}
+  .wordmark.lg{font-size:clamp(5rem,11vw,9rem)}
+  .wordmark.xl{font-size:clamp(7rem,16vw,14rem)}
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero{
+    position:relative;min-height:100vh;background:var(--ink);color:var(--white);
+    display:flex;flex-direction:column;justify-content:flex-start;align-items:center;
+    padding:5.5rem 1.6rem 2rem;overflow:hidden;
+  }
+  .hero .mark-wrap{
+    position:relative;z-index:3;
+    display:flex;justify-content:center;margin-bottom:1.6rem;
+  }
+  .hero .mark{
+    color:var(--white);
+    text-shadow:0 0 14px rgba(0,0,0,.4);
+  }
+  .hero .feature{
+    position:relative;width:min(900px,92vw);aspect-ratio:16/10;
+    background:
+      radial-gradient(ellipse at 30% 50%, #b03e1a 0%, #2c1106 60%, #050000 100%),
+      linear-gradient(135deg,#702b14,#160806);
+    border-radius:6px;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);
+    z-index:2;
+  }
+  .hero .feature::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 22% 50%, rgba(255,140,60,.5), transparent 40%),
+      radial-gradient(circle at 70% 60%, rgba(255,90,30,.35), transparent 50%),
+      radial-gradient(circle at 50% 30%, rgba(255,200,150,.18), transparent 60%);
+    mix-blend-mode:screen;
+  }
+  .hero .feature::after{
+    content:"VIDEO";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:.8rem;letter-spacing:.4em;color:rgba(255,255,255,.4);
+  }
+  /* warm orange bokeh dots floating around */
+  .bokeh{position:absolute;inset:0;pointer-events:none;z-index:1}
+  .bokeh i{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,140,60,.9), rgba(255,90,30,.3) 40%, transparent 70%);
+    filter:blur(2px);
+    animation:float 12s ease-in-out infinite;
+  }
+  .bokeh i:nth-child(1){width:90px;height:90px;left:8%;top:25%;animation-delay:-2s}
+  .bokeh i:nth-child(2){width:140px;height:140px;left:5%;top:55%;animation-delay:-5s;width:120px;height:120px}
+  .bokeh i:nth-child(3){width:80px;height:80px;left:92%;top:25%;animation-delay:-7s}
+  .bokeh i:nth-child(4){width:110px;height:110px;left:90%;top:65%;animation-delay:-9s}
+  .bokeh i:nth-child(5){width:60px;height:60px;left:50%;top:88%;animation-delay:-3s;opacity:.6}
+  @keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.6}50%{transform:translateY(-30px) scale(1.1);opacity:.9}}
+
+  .hero .scroll-cue{
+    position:absolute;left:50%;bottom:1.6rem;transform:translateX(-50%);
+    font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;color:var(--white);
+    z-index:4;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:.4rem;
+  }
+  .hero .scroll-cue::after{
+    content:"";width:1px;height:30px;background:var(--white);
+    animation:line 1.6s ease-in-out infinite;transform-origin:top;
+  }
+  @keyframes line{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+
+  /* ============================================================
+     MANIFESTO / "MACHINE" SECTION
+     ============================================================ */
+  section.paper{background:var(--paper);color:var(--ink);padding:6rem 1.6rem;position:relative;overflow:hidden}
+
+  .manifest-grid{
+    display:grid;grid-template-columns:240px 1fr;gap:2rem;align-items:flex-start;
+    max-width:1400px;margin:0 auto;
+  }
+  .side-rail{font-family:var(--mono);font-size:.95rem;font-weight:500;letter-spacing:.02em;display:flex;flex-direction:column;gap:1.2rem}
+  .side-rail .label{text-transform:uppercase;font-size:.78rem;letter-spacing:.18em;margin-bottom:.5rem;font-weight:500}
+  .side-rail a{display:block;line-height:1.3;color:var(--ink);padding:.15rem 0;transition:opacity .2s}
+  .side-rail a:hover{opacity:.5}
+  .side-rail .this-is{margin-top:1rem;font-weight:500}
+  .side-rail .bracket{color:var(--red);text-transform:uppercase;letter-spacing:.18em;font-size:.78rem;margin-top:1rem;font-weight:500}
+
+  .machine-wrap{position:relative;width:100%;overflow:hidden}
+  .machine{
+    font-family:var(--display);font-weight:900;color:var(--red);
+    font-size:clamp(8rem,22vw,24rem);line-height:.85;letter-spacing:-.04em;
+    text-transform:uppercase;text-align:center;margin:0;
+    transform:scaleX(.92);
+  }
+  .machine .o-replace{
+    display:inline-block;width:.85em;height:.85em;border-radius:14px;
+    background:linear-gradient(135deg, var(--red) 0%, #6e0000 100%);
+    vertical-align:-.05em;margin:0 .04em;
+    position:relative;overflow:hidden;
+  }
+  .machine .o-replace::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), transparent 40%),
+      radial-gradient(circle at 70% 70%, rgba(0,0,0,.4), transparent 40%);
+  }
+  .machine-overlay{
+    position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);
+    z-index:3;
+    color:var(--ink);
+    mix-blend-mode:normal;
+  }
+  .machine-overlay .wordmark{color:var(--ink);transform:skewX(-8deg);font-size:clamp(2rem,3.6vw,3rem)}
+
+  /* ============================================================
+     ABOUT SECTION
+     ============================================================ */
+  section.about{background:var(--paper);color:var(--ink);padding:6rem 1.6rem;position:relative}
+  .about .lead{
+    font-family:var(--display);font-weight:800;text-transform:uppercase;
+    font-size:clamp(2.4rem,6.2vw,5.6rem);line-height:.95;letter-spacing:-.02em;
+    max-width:18ch;color:var(--ink);margin:0 0 3rem 0;
+  }
+  .about .body-copy{
+    font-family:var(--body);font-weight:500;
+    font-size:clamp(1rem,1.4vw,1.25rem);line-height:1.5;
+    max-width:48ch;color:var(--ink);margin-left:auto;
+  }
+  .about .body-copy.center{text-align:center;margin:2rem auto 0;max-width:34ch;font-size:clamp(1.05rem,1.6vw,1.4rem)}
+  .about .cta{
+    display:inline-block;margin-top:1.6rem;
+    color:var(--red);font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+    text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:.1rem;
+  }
+  .about .cta-wrap{text-align:center;margin-top:2.4rem}
+  .about .mark-center{
+    position:absolute;left:50%;top:1rem;transform:translateX(-50%);
+  }
+
+  /* ============================================================
+     DIRECTORS — angular triangular play cards
+     ============================================================ */
+  section.directors{
+    background:var(--paper);color:var(--ink);
+    padding:5rem 1.6rem 7rem;position:relative;
+  }
+  .directors h2{
+    font-family:var(--display);font-weight:800;text-transform:uppercase;
+    font-size:clamp(1.6rem,3vw,2.4rem);margin:0 0 1rem 0;color:var(--ink);letter-spacing:-.01em;
+  }
+  .directors .bracket{color:var(--red);font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase}
+
+  .directors-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem;margin-top:3rem;
+  }
+  .director{
+    aspect-ratio:3/4;position:relative;cursor:pointer;
+    background:#0a0a0a;
+    clip-path:polygon(0 25%, 50% 0, 100% 25%, 100% 100%, 0 100%);
+    transition:clip-path .4s cubic-bezier(.5,.2,.2,1), transform .4s;
+    overflow:hidden;
+  }
+  .director::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255,255,255,.18), transparent 60%),
+      linear-gradient(180deg, var(--c1) 0%, var(--c2) 100%);
+  }
+  .director::after{
+    content:"▶";position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);
+    font-size:2.5rem;color:rgba(255,255,255,.95);
+    text-shadow:0 2px 14px rgba(0,0,0,.4);
+    z-index:2;
+  }
+  .director .meta{
+    position:absolute;left:1rem;bottom:1rem;color:#fff;z-index:3;
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+    text-shadow:0 2px 6px rgba(0,0,0,.5);
+  }
+  .director .meta b{display:block;font-family:var(--display);font-weight:800;font-style:italic;letter-spacing:-.01em;font-size:1.4rem;text-transform:uppercase;margin-bottom:.1rem;text-shadow:none}
+  .director:hover{clip-path:polygon(0 0, 100% 0, 100% 100%, 0 100%);transform:translateY(-6px)}
+
+  /* ============================================================
+     FEATURED WORK — vertical color strips + feature image
+     ============================================================ */
+  section.work{background:var(--ink);color:var(--white);padding:5rem 0;position:relative}
+  section.work .mark-row{display:flex;justify-content:center;margin-bottom:1.6rem}
+  section.work .top-row{
+    display:flex;justify-content:space-between;align-items:center;padding:0 1.6rem;margin-bottom:1.4rem;
+    font-family:var(--mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;
+  }
+  section.work .top-row .left{color:var(--white);opacity:.9}
+  .work-feature{
+    display:grid;grid-template-columns:80px 1fr 80px;align-items:stretch;gap:0;min-height:520px;
+  }
+  .work-feature .strips{display:flex;flex-direction:column;justify-content:stretch;overflow:hidden}
+  .work-feature .strips .row{
+    flex:1;display:flex;flex-direction:column;
+  }
+  .work-feature .strips .row .swatch{
+    flex:1;min-height:18px;
+  }
+  .work-feature .feature-main{
+    background:
+      radial-gradient(circle at 30% 40%, #6e8a8a 0%, #2c3a3a 60%, #0c1212 100%);
+    position:relative;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .work-feature .feature-main::before{
+    content:"";position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.04) 0 6px, transparent 6px 12px);
+    mix-blend-mode:screen;
+  }
+  .work-feature .feature-main .caption{
+    position:absolute;bottom:1.4rem;left:1.4rem;right:1.4rem;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:#fff;
+  }
+
+  /* ============================================================
+     FOOTER — massive red ROBOT background
+     ============================================================ */
+  footer{
+    position:relative;background:var(--paper);color:var(--ink);
+    padding:6rem 1.6rem 2rem;overflow:hidden;
+  }
+  .footer-mark-row{
+    display:flex;justify-content:center;align-items:flex-start;position:relative;margin-bottom:2rem;
+  }
+  .footer-mark-row .center{flex:none}
+  .footer-mark-row .right{
+    position:absolute;right:1.6rem;top:0;
+    font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:-.01em;
+    line-height:1;font-size:clamp(1rem,2vw,1.6rem);
+    text-align:right;color:var(--ink);
+  }
+  .footer-mark-row .right .row{display:block}
+  .footer-mark-row .right .row.accent{color:var(--ink)}
+
+  /* huge cropped ROBOT background */
+  .robot-bg{
+    position:absolute;left:-5%;bottom:-12%;width:90%;height:120%;
+    color:var(--red);
+    font-family:var(--display);font-weight:900;font-style:italic;
+    text-transform:uppercase;letter-spacing:-.02em;line-height:.85;
+    font-size:clamp(20rem,46vw,40rem);
+    z-index:1;pointer-events:none;
+    transform:skewX(-8deg);
+    transform-origin:left bottom;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .footer-grid{
+    position:relative;z-index:2;
+    display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:900px;margin-left:auto;margin-top:6rem;
+    font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;font-weight:500;
+  }
+  .footer-grid h4{font-family:var(--mono);font-size:.85rem;margin:0 0 .8rem 0;font-weight:600;letter-spacing:.18em;color:var(--ink)}
+  .footer-grid a{display:block;color:var(--ink);padding:.15rem 0;transition:opacity .2s}
+  .footer-grid a:hover{opacity:.5}
+  .footer-bottom{
+    position:relative;z-index:2;margin-top:3rem;display:flex;justify-content:space-between;
+    font-family:var(--mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
+  }
+  .footer-bottom .right{text-align:right}
+
+  /* ============================================================
+     SECTION-CROSSING LOGO (cream)
+     ============================================================ */
+  .overlap-mark{position:absolute;left:50%;transform:translateX(-50%);top:-1.2rem;z-index:5}
+
+  /* ============================================================
+     RED BRACKET LINK
+     ============================================================ */
+  .red-link{
+    color:var(--red);font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+    text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:.1rem;
+  }
+  .red-link::before{content:"[ ";color:var(--red)}
+  .red-link::after{content:" ]";color:var(--red)}
+
+  /* responsive */
+  @media (max-width: 860px){
+    .manifest-grid{grid-template-columns:1fr;gap:1.4rem}
+    .directors-grid{grid-template-columns:repeat(2,1fr)}
+    .work-feature{grid-template-columns:30px 1fr 30px}
+    .footer-grid{grid-template-columns:1fr;gap:1.4rem}
+    .footer-mark-row .right{position:static;text-align:center;margin-bottom:1rem}
+    .footer-bottom{flex-direction:column;gap:.6rem}
+  }
+</style>
+</head>
+<body>
+
+  <!-- PERSISTENT CHROME -->
+  <div class="chrome" id="chrome">
+    <div class="left">
+      <span class="dot"></span>
+      <span id="clock">14:54 (GMT+2)</span>
+    </div>
+    <div class="right">Menu</div>
+  </div>
+
+  <!-- ============== HERO ============== -->
+  <section class="hero">
+    <div class="bokeh" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="mark-wrap">
+      <div class="mark wordmark md" style="color:var(--white)">Robot</div>
+    </div>
+    <div class="feature" aria-label="Featured video placeholder"></div>
+    <div class="scroll-cue">Scroll</div>
+  </section>
+
+  <!-- ============== MANIFESTO / MACHINE ============== -->
+  <section class="paper">
+    <div class="manifest-grid">
+      <div class="side-rail">
+        <div class="label">// Manifesto</div>
+        <a>We Disrupt.</a>
+        <a>We Inspire.</a>
+        <a>We Create.</a>
+        <div class="this-is" style="margin-top:1.4rem">This Is Robot.</div>
+        <a class="bracket" href="#directors">[ Our Directors ]</a>
+      </div>
+      <div class="machine-wrap">
+        <h1 class="machine">R<span class="o-replace"></span>b<span class="o-replace"></span>t</h1>
+        <div class="machine-overlay">
+          <div class="wordmark">Robot</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== ABOUT ============== -->
+  <section class="about">
+    <div class="mark-center">
+      <div class="wordmark sm" style="color:var(--ink)">Robot</div>
+    </div>
+    <div style="max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:flex-start">
+      <h2 class="lead">And relentlessly get it right.</h2>
+      <p class="body-copy">
+        Trusted by top production companies and creative agencies worldwide, we
+        deliver bold, world-class work at any scale. With years of hands-on
+        experience, deep respect for the creative process, and unmatched local
+        knowledge backed by global reach, we bring craft to every frame. From
+        capturing the epic landscapes of Southern Africa to executing campaigns for
+        global brands, we work where culture, story, and precision meet. We solve
+        problems, push boundaries, and thrive in the unknown. We get it done.
+      </p>
+    </div>
+    <p class="body-copy center">Sleep can wait. The work comes first.</p>
+    <div class="cta-wrap">
+      <a class="red-link" href="#about">Learn More About Us</a>
+    </div>
+  </section>
+
+  <!-- ============== DIRECTORS ============== -->
+  <section class="directors" id="directors">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <h2>Featured Directors</h2>
+      <a class="red-link" href="#directors">All Directors</a>
+    </div>
+    <div class="directors-grid">
+      <article class="director" style="--c1:#1d4d4f;--c2:#0a1f1f">
+        <div class="meta"><b>Mia</b>Reels · 2024</div>
+      </article>
+      <article class="director" style="--c1:#5a1a1a;--c2:#1d0606">
+        <div class="meta"><b>Kabelo</b>Commercials</div>
+      </article>
+      <article class="director" style="--c1:#1a3a1a;--c2:#0a1a0a">
+        <div class="meta"><b>Sipho</b>Music Videos</div>
+      </article>
+      <article class="director" style="--c1:#3a1a4d;--c2:#100622">
+        <div class="meta"><b>Lerato</b>Documentary</div>
+      </article>
+      <article class="director" style="--c1:#4d3a1a;--c2:#1d1408">
+        <div class="meta"><b>Themba</b>Fashion</div>
+      </article>
+      <article class="director" style="--c1:#1a2e4d;--c2:#070e1a">
+        <div class="meta"><b>Zanele</b>Branded</div>
+      </article>
+      <article class="director" style="--c1:#4d1a1a;--c2:#1a0606">
+        <div class="meta"><b>Marco</b>Adventure</div>
+      </article>
+      <article class="director" style="--c1:#1a1a1a;--c2:#000000">
+        <div class="meta"><b>Neo</b>Documentary</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============== FEATURED WORK ============== -->
+  <section class="work">
+    <div class="mark-row">
+      <div class="wordmark md" style="color:var(--white)">Robot</div>
+    </div>
+    <div class="top-row">
+      <div class="left">Featured Work <span style="opacity:.4">//</span> View All</div>
+      <div class="right" style="opacity:.7">2024 — 2025</div>
+    </div>
+    <div class="work-feature">
+      <div class="strips">
+        <div class="row">
+          <div class="swatch" style="background:#3a4a52"></div>
+          <div class="swatch" style="background:#6e7e84"></div>
+          <div class="swatch" style="background:#1a2a32"></div>
+          <div class="swatch" style="background:#9aa4a8"></div>
+          <div class="swatch" style="background:#2c3a42"></div>
+          <div class="swatch" style="background:#5a6a72"></div>
+          <div class="swatch" style="background:#0e1a20"></div>
+          <div class="swatch" style="background:#3a4650"></div>
+          <div class="swatch" style="background:#7e888e"></div>
+          <div class="swatch" style="background:#1a242a"></div>
+        </div>
+      </div>
+      <div class="feature-main">
+        <div style="font-family:var(--mono);font-size:.78rem;letter-spacing:.4em;color:rgba(255,255,255,.5);text-transform:uppercase">Project Reel · 02:48</div>
+        <div class="caption">
+          <div>Smirnoff · "Neon Atlas"</div>
+          <div style="opacity:.7">↗</div>
+        </div>
+      </div>
+      <div class="strips">
+        <div class="row">
+          <div class="swatch" style="background:#6e4a3a"></div>
+          <div class="swatch" style="background:#a8765e"></div>
+          <div class="swatch" style="background:#2c1a14"></div>
+          <div class="swatch" style="background:#c89a82"></div>
+          <div class="swatch" style="background:#4d3528"></div>
+          <div class="swatch" style="background:#8e5e44"></div>
+          <div class="swatch" style="background:#1a0e08"></div>
+          <div class="swatch" style="background:#6e4a36"></div>
+          <div class="swatch" style="background:#b48a72"></div>
+          <div class="swatch" style="background:#3a261c"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer>
+    <div class="footer-mark-row">
+      <div class="center">
+        <div class="wordmark md" style="color:var(--ink)">Robot</div>
+      </div>
+      <div class="right">
+        <span class="row">Southern Africa</span>
+        <span class="row accent">Production Specialists.</span>
+      </div>
+    </div>
+
+    <!-- huge red ROBOT bg -->
+    <div class="robot-bg" aria-hidden="true">Robot</div>
+
+    <div class="footer-grid">
+      <div>
+        <h4>Get In Touch</h4>
+        <p style="margin:0 0 .4rem 0;text-transform:none;letter-spacing:.02em;font-weight:500">Liam Johnson<br/>Executive Producer</p>
+        <a href="mailto:liam@therobot.tv">liam@therobot.tv</a>
+        <a href="tel:+27715642286">+27 71 564 2286</a>
+      </div>
+      <div>
+        <h4>HQ</h4>
+        <p style="margin:0 0 .4rem 0;text-transform:none;letter-spacing:.02em;font-weight:500">32 Jamieson Street<br/>Gardens, Cape Town<br/>South Africa 8001</p>
+      </div>
+      <div>
+        <h4>Socials</h4>
+        <a href="#">Instagram ↗</a>
+        <a href="#">LinkedIn ↗</a>
+        <a href="#">LBB ↗</a>
+        <a href="#">Ididthat.co ↗</a>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <a href="#">Process</a>
+        <a href="#">Press Kit</a>
+        <a href="#">Newsletter</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>©2025 Robot <span style="opacity:.5">/</span> All Rights Reserved <span style="opacity:.5">/</span> Made By Malva</div>
+      <div class="right">Terms &amp; Conditions</div>
+    </div>
+  </footer>
+
+  <!-- ============== SCRIPT ============== -->
+  <script>
+    // Persistent clock — GMT+2
+    function tick(){
+      const now = new Date();
+      // Convert to GMT+2
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60_000);
+      const gmt2 = new Date(utc + 2 * 3600_000);
+      const hh = String(gmt2.getHours()).padStart(2,'0');
+      const mm = String(gmt2.getMinutes()).padStart(2,'0');
+      document.getElementById('clock').textContent = `${hh}:${mm} (GMT+2)`;
+    }
+    tick();
+    setInterval(tick, 1000 * 30);
+
+    // Invert chrome text color based on which section is under it
+    const chrome = document.getElementById('chrome');
+    const sections = Array.from(document.querySelectorAll('section, footer'));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          // pick the most-visible section's bg color
+          const bg = getComputedStyle(en.target).backgroundColor;
+          // very dark bg → keep white; otherwise invert
+          const rgb = bg.match(/\d+/g);
+          let bright = 0;
+          if (rgb) bright = (parseInt(rgb[0]) + parseInt(rgb[1]) + parseInt(rgb[2])) / 3;
+          chrome.classList.toggle('invert', bright > 130);
+        }
+      });
+    }, { rootMargin: '-10% 0px -85% 0px', threshold: 0 });
+    sections.forEach(s => s && observer.observe(s));
+  </script>
+</body>
+</html>

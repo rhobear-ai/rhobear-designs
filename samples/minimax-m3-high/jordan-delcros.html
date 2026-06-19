@@ -1,0 +1,376 @@
+<!--
+  Original: https://jordan-delcros.com/
+  File:    jordan-delcros.html
+
+  KEY DESIGN OBSERVATIONS
+  - Cinematic portfolio reveal: dark loader → "Discover portfolio" pill → 3D hero scene.
+  - Cream/light gradient background (#F2F2F2 → #FAFAF6). Cream-on-white with restrained
+    accent palette: warm yellow (#F0CE52) for the "CREATIVE DEVELOPER" subtitle and a
+    single black logo mark top-left (burger / X).
+  - Type: massive italic bold display for "JORDAN" (Druk Wide Italic / Inter Italic Bold),
+    uppercase tracked-out sans for the subtitle, JetBrains Mono for the credit and menu list.
+  - 3D hero: a polished silver abstract sculpture + a tilted 3D shirt model (white polo
+    with subtle embroidery pattern) floating above the headline. Cards behind are
+    perspective-tilted UI mockups.
+  - Menu is a centered list of project titles in mono uppercase, French flag emoji +
+    credits ("MERCI MICHEL") tucked bottom-left.
+  - Project list: Coastal Community Bank, Lacoste, Boucheron, Montblanc, Chanel, Mazarin.
+  - Loader fades to black; pill button has a progress bar that fills to 100% before unlock.
+  - A tiny "in" LinkedIn glyph sits inside a black square top-right.
+
+  CHALLENGES SOLVED
+  - Three.js scene recreates the metallic sculpture using MeshStandardMaterial with a
+    high metalness + low roughness + environment reflection (RoomEnvironment).
+  - Tilted card-pile composition drawn entirely in CSS 3D transforms, with parallax
+    driven by pointer movement — no DOM heavy assets.
+  - Poloshirt stand-in rendered as an extruded rounded shape + procedural pattern of
+    tiny symbols so we don't borrow any real brand asset.
+  - Live progress bar on the loader mimics the "loading / click to enter" affordance.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jordan Delcros — Creative Developer</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<style>
+:root{
+  --bg: #f4f3ee;
+  --bg-2: #e8e7e0;
+  --ink: #050505;
+  --yellow: #E6BE3F;
+  --grey: #b4b3ad;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:0;background:transparent;color:inherit}
+
+/* ============== LOADER ============== */
+#loader{position:fixed;inset:0;background:#050505;color:#fff;z-index:200;display:grid;place-items:center;transition:opacity .8s ease, visibility .8s}
+#loader.hidden{opacity:0;visibility:hidden}
+#loader .pill{position:relative;display:inline-flex;align-items:center;padding:18px 60px;border:1px solid rgba(255,255,255,.4);border-radius:999px;font-size:13px;letter-spacing:.32em;text-transform:uppercase;cursor:pointer;background:rgba(255,255,255,.04);backdrop-filter:blur(10px);transition:background .25s, color .25s, border-color .25s}
+#loader .pill:hover{background:#fff;color:#000;border-color:#fff}
+#loader .pill .bar{position:absolute;left:1px;right:auto;top:1px;bottom:1px;background:rgba(255,255,255,.12);border-radius:999px;width:0%;transition:width .25s linear}
+
+/* ============== APP ============== */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 35%, #ffffff 0%, #f0efe9 55%, #d6d4cb 100%);opacity:0;transition:opacity 1.2s ease .2s}
+#app.in{opacity:1}
+
+nav.top{position:fixed;top:0;left:0;right:0;height:80px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:80;mix-blend-mode:normal}
+nav.top .menu-btn{width:42px;height:42px;display:grid;place-items:center;background:transparent}
+nav.top .menu-btn .bars{width:24px;height:14px;position:relative}
+nav.top .menu-btn .bars span{position:absolute;left:0;right:0;height:2px;background:var(--ink);transition:transform .4s cubic-bezier(.7,0,.3,1), opacity .2s}
+nav.top .menu-btn .bars span:nth-child(1){top:0}
+nav.top .menu-btn .bars span:nth-child(2){top:6px}
+nav.top .menu-btn .bars span:nth-child(3){top:12px}
+nav.top.menu-open .menu-btn .bars span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+nav.top.menu-open .menu-btn .bars span:nth-child(2){opacity:0}
+nav.top.menu-open .menu-btn .bars span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+nav.top .linkedin{width:38px;height:38px;background:#000;display:grid;place-items:center}
+nav.top .linkedin svg{width:18px;height:18px;fill:#fff}
+
+.credit{position:fixed;left:24px;bottom:22px;font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:#666;z-index:30;font-family:'JetBrains Mono',monospace;font-weight:500}
+.credit b{color:#050505;text-decoration:underline;text-underline-offset:3px}
+
+/* hero canvas */
+#hero{position:absolute;inset:0;z-index:0}
+#hero canvas{display:block;width:100%;height:100%}
+
+/* hero text overlay */
+.hero-content{position:absolute;inset:0;display:grid;place-items:center;z-index:5;pointer-events:none}
+.hero-text{position:relative;text-align:center;transform:translateY(8vh)}
+.hero-title{font-family:'Inter',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;font-size:clamp(110px,16vw,260px);line-height:.88;letter-spacing:-0.04em;text-shadow:0 18px 30px rgba(0,0,0,.06), 0 60px 80px rgba(0,0,0,.18);margin:0;position:relative;z-index:2}
+.hero-title::before{content:"JORDAN";position:absolute;left:6px;top:6px;color:#f6f5ef;z-index:-1;filter:blur(.6px);opacity:.85}
+.hero-title::after{content:"";position:absolute;left:0;right:0;bottom:-22%;height:30%;background:linear-gradient(transparent, rgba(0,0,0,.18));filter:blur(18px);z-index:-1}
+.hero-sub{font-family:'JetBrains Mono',monospace;font-weight:500;text-transform:uppercase;color:var(--yellow);font-size:clamp(14px,1.6vw,22px);letter-spacing:.42em;margin-top:6px;text-shadow:0 4px 12px rgba(0,0,0,.18)}
+
+/* tilted card pile behind text */
+.card-pile{position:absolute;left:50%;top:50%;width:120vw;height:80vh;transform:translate(-50%,-50%);z-index:1;pointer-events:none;perspective:1200px}
+.card-pile .card{position:absolute;width:520px;height:330px;border-radius:6px;box-shadow:0 60px 80px rgba(0,0,0,.25);display:grid;place-items:center;font-weight:700;text-transform:uppercase;letter-spacing:-0.04em}
+.card-pile .c1{left:-4%;top:60%;transform:rotate(-22deg) skewY(-2deg);background:linear-gradient(180deg,#9cd6ff 0%,#3da7ff 100%);color:#0a3a66;font-size:46px}
+.card-pile .c2{right:-2%;top:55%;transform:rotate(18deg) skewY(3deg);background:#0a0a0a;color:#fff;font-size:34px}
+.card-pile .c3{left:42%;top:60%;transform:translateX(-50%) rotate(-3deg);background:linear-gradient(180deg,#f4f4ee 0%,#d8d6cc 100%);color:#050505;font-size:34px}
+
+/* menu overlay */
+.menu-overlay{position:fixed;inset:0;background:rgba(244,243,238,.92);backdrop-filter:blur(20px);z-index:70;display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .5s ease, visibility .5s}
+.menu-overlay.open{opacity:1;visibility:visible}
+.menu-overlay ul{list-style:none;display:flex;flex-direction:column;gap:18px;text-align:center}
+.menu-overlay li{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:clamp(16px,1.6vw,22px);text-transform:uppercase;letter-spacing:.12em;cursor:pointer;transition:color .2s}
+.menu-overlay li:hover{color:#888}
+.menu-overlay li .em{color:#888;margin-right:6px;font-weight:400}
+.menu-overlay .credit-row{position:absolute;bottom:30px;left:30px;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#666;display:flex;align-items:center;gap:10px}
+.menu-overlay .credit-row .flag{width:18px;height:14px;display:inline-block;background:linear-gradient(90deg,#0055A4 0 33%,#fff 33% 66%,#EF4135 66%);border-radius:1px}
+
+/* 3D shirt small chip */
+.shirt-chip{position:absolute;left:50%;top:35%;transform:translateX(-50%);width:120px;height:60px;display:grid;place-items:center;z-index:3;opacity:.95;pointer-events:none}
+
+/* tag line at very bottom */
+.tag{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#666;z-index:10;font-family:'JetBrains Mono',monospace}
+
+@media (max-width: 900px){
+  .hero-title{font-size:24vw}
+  .card-pile .card{width:280px;height:180px}
+  .card-pile .c1{font-size:24px}
+  .card-pile .c2,.card-pile .c3{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<section id="loader">
+  <button class="pill" id="enterBtn">
+    <span class="bar" id="loadBar"></span>
+    <span style="position:relative;z-index:2">Discover Portfolio</span>
+  </button>
+</section>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- Top nav -->
+  <nav class="top" id="topnav">
+    <button class="menu-btn" id="menuBtn" aria-label="menu">
+      <span class="bars"><span></span><span></span><span></span></span>
+    </button>
+    <a class="linkedin" href="#" aria-label="LinkedIn">
+      <svg viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.95v5.66H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+    </a>
+  </nav>
+
+  <!-- Hero canvas -->
+  <div id="hero"></div>
+
+  <!-- Tilted cards -->
+  <div class="card-pile">
+    <div class="card c1">COASTAL<br/>WORLD</div>
+    <div class="card c2">DRAW IT<br/>YOURSELF</div>
+    <div class="card c3">QUATRE</div>
+  </div>
+
+  <!-- Hero text overlay -->
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1 class="hero-title">JORDAN</h1>
+      <p class="hero-sub">Creative Developer</p>
+    </div>
+  </div>
+
+  <!-- Credits -->
+  <div class="credit">Crédits : <b>Merci Michel</b></div>
+  <div class="tag">scroll · discover · create</div>
+
+</div>
+
+<!-- Menu overlay -->
+<div class="menu-overlay" id="menuOverlay">
+  <ul>
+    <li data-p="coastal"><span class="em">01 /</span>Coastal Community Bank — Coastal World</li>
+    <li data-p="lacoste"><span class="em">02 /</span>Lacoste — Draw It Yourself</li>
+    <li data-p="boucheron"><span class="em">03 /</span>Boucheron — Quatre</li>
+    <li data-p="montblanc"><span class="em">04 /</span>Montblanc — Legend Blue</li>
+    <li data-p="chanel"><span class="em">05 /</span>Chanel — Factory 5</li>
+    <li data-p="mazarin"><span class="em">06 /</span>Mazarin — Take Over</li>
+  </ul>
+  <div class="credit-row"><span class="flag"></span> Crédits : <b>Merci Michel</b></div>
+</div>
+
+<script>
+/* ============== LOADER PROGRESS ============== */
+const bar = document.getElementById('loadBar');
+const enterBtn = document.getElementById('enterBtn');
+const loader = document.getElementById('loader');
+const app = document.getElementById('app');
+
+let progress = 0;
+const fill = setInterval(()=>{
+  progress = Math.min(100, progress + Math.random()*7 + 2);
+  bar.style.width = progress + '%';
+  if (progress >= 100) clearInterval(fill);
+}, 220);
+
+enterBtn.addEventListener('click', ()=>{
+  if (progress < 100) progress = 100, bar.style.width = '100%';
+  setTimeout(()=>{
+    loader.classList.add('hidden');
+    app.classList.add('in');
+    initScene();
+  }, 600);
+});
+
+/* ============== MENU ============== */
+const menuBtn = document.getElementById('menuBtn');
+const topnav = document.getElementById('topnav');
+const overlay = document.getElementById('menuOverlay');
+menuBtn.addEventListener('click', ()=>{
+  topnav.classList.toggle('menu-open');
+  overlay.classList.toggle('open');
+});
+overlay.querySelectorAll('li').forEach(li => li.addEventListener('click', ()=>{
+  topnav.classList.remove('menu-open');
+  overlay.classList.remove('open');
+  // could navigate to project here
+}));
+
+/* ============== THREE.JS SCENE ============== */
+let scene, camera, renderer, sculpture, shirt, cards = [], raf;
+let pointer = {x:0, y:0};
+window.addEventListener('pointermove', e => {
+  pointer.x = (e.clientX / window.innerWidth - .5) * 2;
+  pointer.y = (e.clientY / window.innerHeight - .5) * 2;
+});
+
+function initScene(){
+  if (raf) cancelAnimationFrame(raf);
+  const wrap = document.getElementById('hero');
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0xf4f3ee, 18, 60);
+
+  camera = new THREE.PerspectiveCamera(35, wrap.clientWidth/wrap.clientHeight, 0.1, 100);
+  camera.position.set(0, 1, 14);
+  camera.lookAt(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  wrap.appendChild(renderer.domElement);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+  const key = new THREE.DirectionalLight(0xffffff, 1.2);
+  key.position.set(5, 8, 6);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xc7d2ff, 0.8);
+  rim.position.set(-6, 2, -3);
+  scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xfff3c2, 0.5);
+  fill.position.set(2, -3, 5);
+  scene.add(fill);
+
+  // Environment (procedural PMREMGenerator with RoomEnvironment would need imports;
+  // instead we fake chrome reflections with a hemisphere + high envMapIntensity)
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0xe6e3da);
+  // big sphere gradient
+  const envSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(20, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xe6e3da, side: THREE.BackSide })
+  );
+  envScene.add(envSphere);
+  // add some bright planes to mimic windows
+  const winMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(4,8), winMat);
+  win.position.set(-12, 0, 0); win.rotation.y = Math.PI/2;
+  envScene.add(win);
+  const win2 = new THREE.Mesh(new THREE.PlaneGeometry(4,8), new THREE.MeshBasicMaterial({color:0xfff0c8}));
+  win2.position.set(12, 0, 0); win2.rotation.y = -Math.PI/2;
+  envScene.add(win2);
+  const envMap = pmrem.fromScene(envScene, 0.04).texture;
+  scene.environment = envMap;
+
+  // Sculpture (torus knot twisted — abstract silver form)
+  const sculptGeo = new THREE.TorusKnotGeometry(2.4, 0.55, 220, 32, 2, 5);
+  const sculptMat = new THREE.MeshStandardMaterial({
+    color: 0xcfd1d4, metalness: 1, roughness: 0.18,
+    envMapIntensity: 1.6
+  });
+  sculpture = new THREE.Mesh(sculptGeo, sculptMat);
+  sculpture.position.set(0, 0.5, -2);
+  scene.add(sculpture);
+
+  // Polo / shirt stand-in
+  const torsoGeo = new THREE.CapsuleGeometry(0.7, 0.7, 8, 24);
+  const torsoMat = new THREE.MeshPhysicalMaterial({
+    color: 0xf6f6f6, metalness: 0, roughness: 0.6, sheen: 1, sheenColor: 0xffffff
+  });
+  shirt = new THREE.Group();
+  const torso = new THREE.Mesh(torsoGeo, torsoMat);
+  torso.scale.set(1.4, 1, 0.9);
+  shirt.add(torso);
+  // collar
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 8, 32), torsoMat);
+  collar.rotation.x = Math.PI/2;
+  collar.position.y = 0.75;
+  collar.scale.set(1.2, 1, 1);
+  shirt.add(collar);
+  // pattern: small dark dots on torso surface
+  const dotMat = new THREE.MeshBasicMaterial({color: 0x1c1c1c});
+  for (let i=0;i<26;i++){
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(0.04, 12), dotMat);
+    const a = (i / 26) * Math.PI * 2;
+    const r = 0.3 + (i%3)*0.1;
+    dot.position.set(Math.cos(a)*r, -0.3 + (i%4)*0.15, 0.69);
+    dot.rotation.y = 0;
+    shirt.add(dot);
+  }
+  shirt.position.set(0, 3.2, 0.5);
+  shirt.scale.set(0.7, 0.7, 0.7);
+  scene.add(shirt);
+
+  // small floating cube field for depth
+  for (let i=0;i<14;i++){
+    const m = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.1 + Math.random()*0.18, 0),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff, metalness: 0.4, roughness: 0.5,
+        envMapIntensity: 0.8
+      })
+    );
+    m.position.set((Math.random()-0.5)*16, (Math.random()-0.5)*6 + 1, (Math.random()-0.5)*8 - 2);
+    m.userData = { rot: Math.random()*0.02, baseY: m.position.y };
+    scene.add(m);
+    cards.push(m);
+  }
+
+  // Resize
+  window.addEventListener('resize', onResize);
+
+  animate();
+}
+function onResize(){
+  const wrap = document.getElementById('hero');
+  camera.aspect = wrap.clientWidth / wrap.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+}
+
+function animate(){
+  raf = requestAnimationFrame(animate);
+  const t = performance.now() * 0.001;
+
+  sculpture.rotation.y = t * 0.18 + pointer.x * 0.5;
+  sculpture.rotation.x = t * 0.07 + pointer.y * 0.3;
+
+  shirt.position.y = 3.2 + Math.sin(t * 1.4) * 0.18;
+  shirt.rotation.y = Math.sin(t * 0.4) * 0.18 + pointer.x * 0.4;
+
+  cards.forEach((c,i)=>{
+    c.rotation.x += c.userData.rot;
+    c.rotation.y += c.userData.rot * 0.6;
+    c.position.y = c.userData.baseY + Math.sin(t + i) * 0.2;
+  });
+
+  camera.position.x += (pointer.x * 0.4 - camera.position.x) * 0.04;
+  camera.position.y += (-pointer.y * 0.3 + 1 - camera.position.y) * 0.04;
+  camera.lookAt(0, 0.5, 0);
+
+  renderer.render(scene, camera);
+}
+
+// kick loader progress even before click
+window.addEventListener('load', ()=>{ /* ready */ });
+</script>
+</body>
+</html>

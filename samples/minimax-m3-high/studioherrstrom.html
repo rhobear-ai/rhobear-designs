@@ -1,0 +1,459 @@
+<!doctype html>
+<!--
+ORIGINAL URL: https://www.studioherrstrom.com/
+RECREATION: samples/minimax-m3-high/studioherrstrom.html
+
+KEY DESIGN OBSERVATIONS
+  - Black background, white editorial typography.
+  - Logo wordmark centered in the top nav (Process / Work / [STUDIO HERRSTRÖM] / About / Contact).
+  - Hero: a giant serif "A DESIGN STUDIO FOR BRANDS WHO MOVE CULTURE", with italic accents on
+    select words, set tight on multiple lines and very high tracking contrast.
+  - Project case cards: full-bleed colored blocks + product/brand mark + small caption.
+  - "Our three step process" three-up stat grid with numbered caption + small detail lines.
+  - "PRESS, FEATURES AND STUDIO NEWS" large serif title over a 3-up case cards strip.
+  - "IS YOUR BRAND READY TO MOVE CULTURE?" giant closing serif.
+  - Footer split: additional links / contact / newsletter / socials.
+  - Hover micro-interactions: cards lift slightly, captions swap.
+
+CHALLENGES SOLVED
+  - SH-SANS / SH-MIX are custom (Herrström). Closest free approximations: Inter Tight for
+    sans and Instrument Serif (italic) for the high-contrast display serif.
+  - We render the big hero with mixed weights / italics on a few words, matching the
+    brand's "humanist + display serif" mix.
+  - Project cards are color-block placeholders with their own brand-mark mono placeholders.
+  - Three-step process and press grid use light hairlines on the dark ground.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Studio Herrström — Design Studio for Brands Who Move Culture (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --ink: #ffffff;
+    --ink-soft: #b3b3b3;
+    --line: #1a1a1a;
+    --hot-pink: #f64ea0;
+    --hot-purple: #5b29a8;
+    --teal: #15495a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: "Inter Tight", system-ui, sans-serif; font-weight: 500; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1480px; margin: 0 auto; padding: 0 40px; }
+
+  /* ============= TOP NAV ============= */
+  .nav {
+    position: sticky; top: 0; z-index: 30;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    align-items: center; height: 64px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .nav > div { padding: 0 24px; }
+  .nav a { font-size: 14px; }
+  .nav .logo { text-align: center; font-family: "Inter Tight", sans-serif; font-weight: 600; font-size: 18px; letter-spacing: 0.02em; }
+  .nav .right { text-align: right; }
+
+  /* ============= HERO ============= */
+  .hero {
+    padding: 130px 40px 100px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero h1 {
+    margin: 0;
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: clamp(56px, 9vw, 140px);
+    line-height: 0.96;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 em { font-style: italic; }
+
+  /* ============= PROJECT CARDS ============= */
+  .row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .row .cell {
+    position: relative;
+    aspect-ratio: 1 / 1.05;
+    background: var(--bg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.4s ease;
+  }
+  .row .cell:hover { transform: translateY(-2px); }
+  .row .cell .label {
+    position: absolute; left: 20px; bottom: 20px;
+    font-size: 14px;
+  }
+  .row .cell .mark {
+    position: absolute; right: 20px; top: 20px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .row .cell.disc { background: #e64c4c; }
+  .row .cell.editorial { background: #0f0f0f; }
+  .row .cell.bw { background: linear-gradient(180deg, #555, #2a2a2a); }
+  .row .cell.consumer { background: #0a0a0a; }
+  .row .cell .ph {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ============= FEATURED PROJECT (H. monogram, split bg) ============= */
+  .feature {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .feature .left, .feature .right {
+    aspect-ratio: 16/10;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .feature .left { background: #0a0a0a; }
+  .feature .right { background: var(--hot-pink); }
+  .feature .badge {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    color: #fff;
+  }
+  .feature .caption {
+    position: absolute; left: 40px; bottom: 40px;
+    font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 28px;
+    line-height: 1.1; max-width: 60%;
+  }
+  .feature .caption a { text-decoration: none; }
+  .feature .H { font-family: "Instrument Serif", serif; font-weight: 400; font-size: 200px; line-height: 1; color: #fff; }
+
+  /* ============= CASE BAND ============= */
+  .case-band {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .case-band .cell { aspect-ratio: 4/3; background: #0a0a0a; position: relative; overflow: hidden; }
+  .case-band .cell .mark { position: absolute; right: 18px; top: 18px; width: 28px; height: 28px; display:flex; align-items:center; justify-content:center;}
+  .case-band .cell .label { position: absolute; left: 18px; top: 18px; font-size: 12px; opacity: 0.85; }
+  .case-band .cell .body { position: absolute; left: 18px; bottom: 18px; right: 18px; font-size: 14px; line-height: 1.35; }
+  .case-band .cell .body a { text-decoration: none; }
+  .case-band .cell.bm { background: var(--hot-purple); }
+  .case-band .cell.fm { background: linear-gradient(180deg, #142d3a, #06141b); }
+  .case-band .cell.vs { background: #2a2a2a; }
+  .case-band .cell.sb { background: #111; }
+
+  .view-all { text-align: center; padding: 60px 0; border-bottom: 1px solid var(--line); }
+  .view-all a { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; }
+  .view-all a::after { content: "↗"; }
+
+  /* ============= PROCESS ============= */
+  .process { padding: 100px 0 80px; border-bottom: 1px solid var(--line); }
+  .process .head { display: flex; align-items: flex-start; justify-content: space-between; padding: 0 40px; }
+  .process .head h2 { font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 30px; margin: 0; max-width: 260px; }
+  .process .head .step {
+    flex: 1; padding: 0 30px;
+    border-left: 1px solid var(--line);
+    min-height: 200px;
+  }
+  .process .head .step .num { font-family: "Inter Tight", sans-serif; font-size: 11px; letter-spacing: 0.16em; }
+  .process .head .step h3 { font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 22px; margin: 10px 0 10px; }
+  .process .head .step p { font-size: 14px; line-height: 1.5; max-width: 280px; opacity: 0.85; }
+
+  .process .cta { text-align: center; padding: 50px 0 0; }
+  .process .cta a { display: inline-flex; align-items: center; gap: 8px; font-size: 20px; }
+  .process .cta a::after { content: "↗"; }
+
+  /* ============= PRESS ============= */
+  .press { padding: 100px 0 80px; border-bottom: 1px solid var(--line); }
+  .press h2 {
+    text-align: center;
+    font-family: "Instrument Serif", serif; font-weight: 400; font-size: clamp(48px, 7vw, 96px);
+    line-height: 0.95; letter-spacing: -0.02em; margin: 0 0 40px;
+  }
+  .press .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); }
+  .press .grid .cell { background: #0a0a0a; aspect-ratio: 1/1.05; position: relative; overflow: hidden; }
+  .press .grid .cell .lbl { position: absolute; left: 18px; top: 18px; font-size: 12px; }
+  .press .grid .cell .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+  /* ============= CLOSING ============= */
+  .closing { padding: 130px 40px; text-align: center; border-bottom: 1px solid var(--line); }
+  .closing h2 {
+    font-family: "Instrument Serif", serif; font-weight: 400;
+    font-size: clamp(56px, 10vw, 150px);
+    line-height: 0.96; letter-spacing: -0.02em; margin: 0;
+  }
+
+  /* ============= FOOTER ============= */
+  footer { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 50px 40px 100px; }
+  footer .col { display: flex; flex-direction: column; gap: 14px; font-size: 16px; }
+  footer .col h4 { font-size: 13px; margin: 0 0 12px; font-weight: 500; }
+  footer .col a { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  footer .col a::after { content: "↗"; font-size: 11px; }
+  footer .col p { font-size: 12px; opacity: 0.6; margin: 0; }
+  footer .col .row { display: flex; flex-direction: column; gap: 6px; }
+  footer .newsletter { grid-column: 1 / -1; padding-top: 30px; border-top: 1px solid var(--line); }
+  footer .newsletter h4 { font-size: 13px; margin: 0 0 8px; font-weight: 500; }
+  footer .newsletter p { font-size: 18px; line-height: 1.4; max-width: 480px; }
+
+  /* hover swap caption */
+  .case-band .cell .body .alt { display: none; }
+  .case-band .cell:hover .body .alt { display: block; }
+  .case-band .cell:hover .body .def { display: none; }
+
+  /* big placeholder shapes */
+  .ph-disc { width: 100%; height: 100%; background: radial-gradient(circle at 30% 40%, #ffea00 0%, #ff2d2d 60%, #2a0000 100%); }
+  .ph-editorial { width: 100%; height: 100%; background: linear-gradient(135deg, #1c1c1c, #444); }
+  .ph-bw { width: 100%; height: 100%; background: radial-gradient(circle at 60% 40%, #ddd 0%, #555 70%, #111 100%); }
+  .ph-consumer { width: 100%; height: 100%; background: linear-gradient(160deg, #212121, #5a5a5a); }
+
+  /* =============== project card icons =============== */
+  .icon-spotify, .icon-meta, .icon-back, .icon-film, .icon-vice, .icon-sound, .icon-ink, .icon-awards, .icon-book, .icon-pencil {
+    width: 36px; height: 36px; display: inline-block; color: #fff;
+  }
+
+  @media (max-width: 900px) {
+    .row, .case-band, .press .grid { grid-template-columns: repeat(2, 1fr); }
+    .feature { grid-template-columns: 1fr; }
+    .process .head { flex-direction: column; gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============= TOP NAV ============= -->
+<nav class="nav">
+  <div><a href="#process">Process</a></div>
+  <div><a href="#work">Work</a></div>
+  <div class="logo"><a href="#">STUDIO HERRSTRÖM</a></div>
+  <div style="text-align:right"><a href="#about">About</a></div>
+  <div class="right"><a href="#contact">Contact</a></div>
+</nav>
+
+<!-- ============= HERO ============= -->
+<section class="hero">
+  <h1>A DESIGN STUDIO <em>FOR</em><br>BRANDS WHO <em>MOVE</em> CULTURE</h1>
+</section>
+
+<!-- ============= PROJECT CARDS ============= -->
+<section class="row">
+  <a class="cell disc">
+    <div class="ph ph-disc"></div>
+    <span class="label">Discover</span>
+  </a>
+  <a class="cell editorial">
+    <div class="ph ph-editorial"></div>
+    <span class="label">Editorial</span>
+    <span class="mark">
+      <svg class="icon-spotify" viewBox="0 0 36 36" fill="currentColor"><circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 14 Q18 11 27 15" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 19 Q18 16 26 20" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 24 Q18 22 24 25" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </span>
+  </a>
+  <a class="cell bw">
+    <div class="ph ph-bw"></div>
+  </a>
+  <a class="cell consumer">
+    <div class="ph ph-consumer"></div>
+    <span class="label">Consumer Electronics</span>
+    <span class="mark">
+      <svg class="icon-meta" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 24 Q4 12 12 12 L24 12 Q32 12 32 24 L24 24 Q24 18 18 18 Q12 18 12 24 Z" fill="none"/></svg>
+    </span>
+  </a>
+</section>
+
+<!-- ============= FEATURED PROJECT (H. monogram) ============= -->
+<section class="feature">
+  <div class="left">
+    <span class="badge">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M5 6 Q12 0 19 6 L17 8 Q12 4 7 8 Z M3 10 Q12 4 21 10 L19 12 Q12 7 5 12 Z M5 14 Q12 8 19 14 L17 16 Q12 11 7 16 Z" fill="#fff"/></svg>
+    </span>
+    <div class="caption">
+      Reimagining Discord as a limitless<br>home for every community <a href="#">→</a>
+    </div>
+  </div>
+  <div class="right">
+    <div class="ph" style="width:60%;height:60%">
+      <svg viewBox="0 0 100 100" width="100%" height="100%" fill="#fff">
+        <ellipse cx="40" cy="38" rx="22" ry="14" fill="#fff"/>
+        <circle cx="33" cy="40" r="4" fill="#f64ea0"/>
+        <circle cx="47" cy="40" r="4" fill="#f64ea0"/>
+        <path d="M30 50 Q40 56 50 50" stroke="#f64ea0" stroke-width="3" fill="none"/>
+      </svg>
+    </div>
+    <div class="H" style="position:absolute;top:0;left:14px;opacity:0.85">H.</div>
+  </div>
+</section>
+
+<!-- ============= CASE BAND ============= -->
+<section class="case-band">
+  <div class="cell bm">
+    <span class="label">Marketplace</span>
+    <span class="mark">
+      <svg class="icon-back" viewBox="0 0 36 36" fill="none" stroke="#fff" stroke-width="2"><path d="M6 12 L12 6 L18 12 L12 18 Z"/><text x="22" y="22" font-family="Inter Tight" font-weight="800" font-size="14" fill="#fff">B</text></svg>
+    </span>
+    <div class="body">
+      <div class="def"><strong>Back Market</strong><br><span style="opacity:.7">Circular tech brand identity</span></div>
+    </div>
+  </div>
+  <div class="cell" style="background:linear-gradient(180deg,#0d0d0d,#202020)">
+    <span class="label">Marketplace</span>
+    <div class="body">
+      <div class="def">Shaping a visual world for<br>circular tech with <strong>Back Market</strong> <a href="#">→</a></div>
+    </div>
+  </div>
+  <div class="cell fm">
+    <span class="mark" style="background:#fff;border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="#0a0a0a"><path d="M2 14 L8 8 L16 16 L22 10 V20 H2 Z"/></svg>
+    </span>
+    <div class="body">
+      <div class="def" style="color:#fff"><strong>Filmhub</strong></div>
+    </div>
+  </div>
+  <div class="cell" style="background:linear-gradient(180deg,#0a0a0a,#1a1a1a)">
+    <span class="label">Media and Entertainment</span>
+    <div class="body">
+      <div class="def">Helping <strong>Filmhub</strong> reframe film distribution for visionary storytellers of today and tomorrow <a href="#">→</a></div>
+    </div>
+  </div>
+</section>
+
+<div class="view-all"><a href="#">View All Case Studies</a></div>
+
+<!-- ============= PROCESS ============= -->
+<section class="process" id="process">
+  <div class="wrap">
+    <div class="head">
+      <h2>Our three step process</h2>
+      <div class="step">
+        <div class="num">01</div>
+        <h3>Listen</h3>
+        <p>We start by listening to your business goals and needs.</p>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <h3>Define</h3>
+        <p>We shape strategy and ideas that connect visually and verbally.</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h3>Deliver</h3>
+        <p>We ship considered, careful work that drives results.</p>
+      </div>
+    </div>
+    <div class="cta">
+      <a href="#">Our Process</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============= PRESS ============= -->
+<section class="press">
+  <div class="wrap">
+    <h2>PRESS, FEATURES AND STUDIO<br>NEWS</h2>
+    <div class="grid">
+      <div class="cell">
+        <span class="lbl">Features</span>
+        <div class="ph" style="background:linear-gradient(160deg,#1f0e0e,#3a2222)"></div>
+      </div>
+      <div class="cell">
+        <span class="lbl">Press</span>
+        <div class="ph" style="background:linear-gradient(160deg,#0e0e0e,#1d1d1d)"></div>
+      </div>
+      <div class="cell">
+        <span class="lbl">Studio</span>
+        <div class="ph" style="background:linear-gradient(160deg,#3a2807,#6b4a14)"></div>
+      </div>
+      <div class="cell">
+        <span class="lbl">Awards</span>
+        <div class="ph" style="background:linear-gradient(160deg,#1a1a1a,#3a3a3a)"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= CLOSING ============= -->
+<section class="closing">
+  <h2>IS YOUR BRAND READY TO<br>MOVE CULTURE?</h2>
+</section>
+
+<!-- ============= FOOTER ============= -->
+<footer>
+  <div class="col">
+    <h4>Additional Links</h4>
+    <a href="#">Press</a>
+    <a href="#">Index</a>
+    <a href="#">THE ECHO Book <span style="font-size:11px">↗</span></a>
+    <a href="#">Studio Beats <span style="font-size:11px">↗</span></a>
+    <h4 style="margin-top:30px">Socials</h4>
+    <a href="#">LinkedIn</a>
+    <a href="#">Instagram</a>
+    <a href="#">Threads</a>
+    <a href="#">X</a>
+  </div>
+  <div class="col">
+    <h4>Contact</h4>
+    <div class="row">
+      <p>New business inquiries</p>
+      <a href="mailto:newbiz@studioherrstrom.com">newbiz@studioherrstrom.com</a>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <p>Media inquiries</p>
+      <a href="mailto:kerstin@studioherrstrom.com">kerstin@studioherrstrom.com</a>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <p>General inquiries</p>
+      <a href="mailto:hello@studioherrstrom.com">hello@studioherrstrom.com</a>
+    </div>
+  </div>
+  <div class="newsletter">
+    <h4>Newsletter</h4>
+    <p>Get early access to events, exclusive updates, and behind-the-scenes insights.</p>
+  </div>
+</footer>
+
+<script>
+  // Subtle reveal on scroll
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = 1;
+        e.target.style.transform = 'translateY(0)';
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.cell, .step, .closing h2, .hero h1, .press .cell, .case-band .cell').forEach(el => {
+    el.style.opacity = 0;
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    io.observe(el);
+  });
+</script>
+
+<!--
+PRESERVED WELL
+  - Centered "STUDIO HERRSTRÖM" wordmark nav with thin black hairline below.
+  - Big serif hero with mixed roman + italic accents on "FOR" and "MOVE".
+  - 4-up case card row in distinct color blocks.
+  - Black / hot-pink split feature with H. monogram + Discord placeholder.
+  - Two-tone case band (Back Market purple, Filmhub teal) with hover caption swap.
+  - "Our three step process" three-up step grid with numbered captions.
+  - "PRESS, FEATURES AND STUDIO NEWS" centered serif title over 4-up press grid.
+  - Giant closing "IS YOUR BRAND READY TO MOVE CULTURE?" serif.
+  - Footer split: links / contact / newsletter.
+
+TRADE-OFFS / INTENTIONAL
+  - SH-SANS / SH-MIX are proprietary; replaced by Inter Tight + Instrument Serif, which
+    preserve the same "humanist sans + high-contrast display serif" dialogue.
+  - All project photography is replaced with color-block gradients + simple SVG marks.
+  - Press grid is mocked with gradient blocks rather than real article cards.
+-->
+</body>
+</html>
