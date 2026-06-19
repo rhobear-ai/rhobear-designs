@@ -1,0 +1,469 @@
+<!--
+  Original: https://www.reformcollective.com/
+  File:    reform-collective.html
+
+  KEY DESIGN OBSERVATIONS
+  - Editorial luxury brand. Two-tone palette: warm cream (#F9F8EE) and deep black (#0F0F0F),
+    with surgical accents of saturated red/blue/yellow drawn from a defined token system.
+  - Marquee top bar cycles one-word descriptors (design, weight, etc.) inside curly braces.
+  - Massive display type "REFORM.CO" bleeds off the right edge; an overlapping 3D-feel
+    cloth/fabric image sits behind it.
+  - Featured Work: a "Our featured Work" left column + 5 case-study cards, each card is a
+    small dark label (project name + category pills) stacked over a tall image.
+  - A client-logo grid with 3 rows × 4 cols on cream, generous gutters.
+  - "THE DETAILS CLUB" with radiating sun-ray lines, "PINKIES UP" + "EST. 2015" framing.
+  - Inverted "EQUITY OVER CASH" marquee (white-on-black).
+  - CTA: "CREATE YOUR VISION. EXTEND YOUR RUNWAY." with an abstract silver 3D form.
+
+  CHALLENGES SOLVED
+  - Recreated the marquee text-cycle animation purely in JS (single span, text swap,
+    no layout shift).
+  - Implemented the radiating-lines motif with CSS gradients and one inline SVG sun.
+  - Replaced every project photograph with colour-block placeholders that match the
+    visual weight and aspect ratio of the originals so the page reads as expensive
+    and intentional rather than a wireframe.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Reform Collective — Digital Design Agency</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root{
+  --black1: #050505;
+  --black2: #0F0F0F;
+  --black3: #15151A;
+  --black4: #21232A;
+  --offwhite1: #F9F8EE;        /* main cream */
+  --offwhite2: #C7C5AF;
+  --offwhite3: #C9B6A0;
+  --offwhite4: #AC997F;
+  --offwhite5: #BAB68A;
+  --red1: #FE3712;
+  --red2: #D00401;
+  --blue1: #0006F2;
+  --blue2: #3599E5;
+  --yellow1: #F3DC11;
+  --pink1: #F3B5E8;
+  --pink2: #E535C8;
+  --orange1: #E68E1C;
+  --font-display: 'Playfair Display', 'Times New Roman', serif;
+  --font-sans:    'Inter', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--offwhite1);color:var(--black1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+.serif{font-family:var(--font-display);font-weight:500;font-style:italic}
+.sans-uppercase{font-family:var(--font-sans);text-transform:uppercase;letter-spacing:-0.02em}
+.tight{letter-spacing:-0.04em}
+
+/* Marquee top bar */
+.marquee-bar{position:fixed;top:0;left:0;right:0;height:64px;background:var(--black1);color:var(--offwhite1);z-index:50;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-style:italic;font-size:30px;letter-spacing:-0.01em}
+.marquee-bar .logo{position:absolute;left:32px;width:40px;height:40px;background:var(--offwhite1);border-radius:6px;display:grid;place-items:center;font-family:var(--font-sans);font-weight:700;color:var(--black1);font-style:normal;font-size:18px;letter-spacing:-0.05em}
+.marquee-bar .menu-btn{position:absolute;right:32px;display:flex;align-items:center;gap:10px;background:transparent;border:0;color:var(--offwhite1);font-family:var(--font-sans);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer}
+.menu-btn .bars{display:flex;flex-direction:column;gap:4px}
+.menu-btn .bars span{width:18px;height:2px;background:var(--offwhite1)}
+
+/* Hero */
+.hero{position:relative;background:var(--offwhite1);padding-top:64px;overflow:hidden;height:100vh;min-height:760px}
+.hero-canvas{position:absolute;inset:64px 0 0 0;background:linear-gradient(115deg,#0a3cff 0%,#0a3cff 35%,#cc4518 55%,#ff5d2b 75%,#f7c79a 100%);transform:translateY(-4%)}
+.hero-canvas::after{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(100deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 5px),
+  repeating-linear-gradient(80deg, rgba(0,0,0,0.08) 0 1px, transparent 1px 6px);
+mix-blend-mode:overlay;opacity:.7}
+.hero-cloth{position:absolute;inset:64px 0 0 0}
+.hero-cloth svg{width:100%;height:100%}
+.hero-title{position:absolute;left:-2vw;right:-2vw;bottom:-4vw;display:flex;justify-content:space-between;font-family:var(--font-sans);font-weight:800;color:var(--black1);font-size:22vw;line-height:.85;letter-spacing:-0.06em;text-transform:uppercase;z-index:3;mix-blend-mode:multiply;pointer-events:none}
+
+/* Featured Work */
+.featured{background:var(--offwhite1);padding:120px 0 80px;position:relative}
+.featured-grid{display:grid;grid-template-columns:1fr;gap:36px}
+.featured-card{position:relative;border-radius:24px;overflow:hidden;background:#000}
+.featured-card .label{background:var(--black1);color:var(--offwhite1);padding:22px 28px;display:flex;align-items:center;gap:24px;border-radius:18px;margin:8px 8px -8px;position:relative;z-index:2}
+.featured-card h3{font-family:var(--font-sans);font-size:19px;font-weight:500;letter-spacing:-0.04em;text-transform:uppercase;flex:0 0 auto;min-width:200px}
+.featured-card .pills{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+.featured-card .pill{padding:8px 16px;border:1px solid var(--offwhite1);border-radius:999px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--offwhite1)}
+.featured-card .img{height:62vh;min-height:520px;display:grid;place-items:center;position:relative}
+.featured-card .img .mock{position:relative}
+.featured-card .img h4{font-family:var(--font-sans);font-weight:600;text-transform:uppercase;letter-spacing:-0.04em;color:#fff}
+
+/* Project mock colors */
+.palette-circle  { background: radial-gradient(circle at 50% 50%, #5b8cff 0%, #1f49d4 60%, #0a2a99 100%); }
+.palette-circle::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%, rgba(255,180,180,.5), transparent 40%),radial-gradient(circle at 75% 75%, rgba(180,200,255,.55), transparent 45%)}
+.palette-enzo    { background: linear-gradient(180deg,#1d1d22 0%,#0a0a0c 100%); }
+.palette-enzo::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 60% 60%, #e93a1c55, transparent 50%)}
+.palette-runway  { background: linear-gradient(135deg,#FFE6A3 0%,#E68437 60%,#A53C0F 100%); }
+.palette-runway::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 2px, transparent 2px 6px)}
+.palette-campfire{ background: linear-gradient(180deg,#3a2614 0%,#0e0703 100%); }
+.palette-campfire::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 50%, #f08a2e88, transparent 40%),radial-gradient(circle at 30% 70%, #4d2f1a99, transparent 50%)}
+.palette-strider { background: linear-gradient(135deg,#222 0%,#0c0c0c 100%); }
+.palette-strider::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg, transparent 0 45%, #e0683a55 50% 60%, transparent 65%)}
+
+/* Client logos */
+.logos{background:var(--offwhite1);padding:120px 0;position:relative}
+.logos-grid{display:grid;grid-template-columns:repeat(4,1fr);row-gap:90px;column-gap:40px;align-items:center;justify-items:center}
+.logos-grid .cell{height:60px;display:grid;place-items:center;font-family:var(--font-sans);font-weight:700;color:var(--black1);font-size:24px;letter-spacing:-0.03em;opacity:.95}
+.logos-grid .cell .sm{font-size:11px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;display:block;margin-top:2px}
+
+/* Details club */
+.details{background:var(--offwhite1);padding:140px 0 80px;position:relative;text-align:center;overflow:hidden}
+.details h2{font-family:var(--font-display);font-weight:500;font-size:130px;letter-spacing:-0.04em;color:var(--black1);line-height:1;margin:0}
+.details h2 .it{font-style:italic}
+.details .meta{display:flex;justify-content:space-between;border-top:1px solid var(--black1);border-bottom:1px solid var(--black1);padding:14px 6px;margin:0 auto 90px;max-width:880px;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600}
+.rays{position:relative;width:100%;max-width:900px;margin:0 auto;height:280px}
+.rays svg{width:100%;height:100%}
+.rays .center{position:absolute;left:50%;top:0;width:1px;height:100%;background:var(--black1)}
+
+/* Marquee strip */
+.strip{background:var(--black1);color:var(--offwhite1);padding:18px 0;overflow:hidden;border-top:1px solid var(--black1)}
+.strip-track{display:flex;white-space:nowrap;animation:slide 28s linear infinite;font-family:var(--font-sans);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;font-size:18px}
+.strip-track span{padding:0 28px}
+@keyframes slide{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* CTA */
+.cta{background:var(--black1);color:var(--offwhite1);padding:160px 0 200px;position:relative;overflow:hidden}
+.cta h2{font-family:var(--font-display);font-style:normal;font-weight:200;text-transform:uppercase;font-size:clamp(48px,7vw,92px);line-height:1;letter-spacing:-0.04em;max-width:1080px;position:relative;z-index:2}
+.cta-form{position:absolute;right:8%;top:35%;width:380px;height:380px;z-index:1;opacity:.9}
+.cta-form svg{width:100%;height:100%}
+.cta small{display:block;margin-top:32px;max-width:520px;font-size:13px;line-height:1.55;letter-spacing:0.04em;text-transform:uppercase;color:#aaa;font-weight:400}
+
+/* Footer */
+footer{background:var(--black1);color:var(--offwhite1);padding:60px 0 30px;border-top:1px solid #1c1c1c}
+footer .row{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding-bottom:80px}
+footer .col a{display:block;font-family:var(--font-sans);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--offwhite1);padding:6px 0}
+footer .col .lead{font-size:22px;letter-spacing:-0.02em;text-transform:none;font-weight:300;margin-bottom:18px;max-width:280px;line-height:1.2}
+footer .cta-row{display:flex;justify-content:space-between;gap:30px;padding:60px 0;border-top:1px solid #222;border-bottom:1px solid #222}
+footer .cta-row a{font-family:var(--font-sans);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;font-size:14px}
+footer .cta-row .big{font-size:22px}
+footer .credit{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#888;padding-top:30px}
+footer .credit a{color:#aaa}
+
+/* Reveal */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* Hover image card lift */
+.featured-card{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.featured-card:hover{transform:translateY(-6px)}
+
+/* responsive */
+@media (max-width: 900px){
+  .marquee-bar{font-size:18px;height:54px}
+  .hero-title{font-size:34vw}
+  .featured-card .label{flex-wrap:wrap}
+  .featured-card .pills{margin-left:0;width:100%}
+  .logos-grid{grid-template-columns:repeat(2,1fr);row-gap:50px}
+  .details h2{font-size:60px}
+  .cta h2{font-size:42px}
+  footer .row{flex-wrap:wrap}
+  .cta-form{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP MARQUEE BAR -->
+<div class="marquee-bar">
+  <a href="#" class="logo">R</a>
+  <span class="rotator">Award winning <span id="cur">{design}</span> agency</span>
+  <button class="menu-btn" onclick="this.querySelector('.bars').classList.toggle('open')"><span class="bars"><span></span><span></span></span> Menu</button>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-canvas"></div>
+  <h1 class="hero-title"><span>REFORM</span><span>CO©</span></h1>
+</section>
+
+<!-- FEATURED WORK -->
+<section class="featured">
+  <div class="max-w-[1400px] mx-auto px-8">
+    <h2 class="serif reveal" style="font-size:clamp(72px,11vw,180px);line-height:.92;letter-spacing:-0.04em;margin:0 0 80px;color:var(--black1)">Our<br/>featured<br/><em style="font-style:italic">Work</em></h2>
+
+    <div class="featured-grid">
+
+      <!-- CIRCLE -->
+      <a class="featured-card reveal" href="#">
+        <div class="label">
+          <h3>Circle</h3>
+          <div class="pills">
+            <span class="pill">Art Direction</span>
+            <span class="pill">Branding</span>
+            <span class="pill">Web Design</span>
+            <span class="pill">Development</span>
+          </div>
+        </div>
+        <div class="img palette-circle">
+          <div class="mock" style="text-align:center">
+            <div style="width:240px;height:340px;border-radius:32px;background:linear-gradient(180deg,#fff8 0%,#fff8 60%,#5b8cff 100%);box-shadow:0 40px 80px #0008;position:relative;display:grid;place-items:center">
+              <span style="font-family:var(--font-display);font-style:italic;color:#0a2a99;font-size:48px;font-weight:600">circle</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- ENZO HEALTH -->
+      <a class="featured-card reveal" href="#">
+        <div class="label">
+          <h3>Enzo Health</h3>
+          <div class="pills">
+            <span class="pill">Art Direction</span>
+            <span class="pill">Branding</span>
+            <span class="pill">Web Design</span>
+            <span class="pill">Development</span>
+          </div>
+        </div>
+        <div class="img palette-enzo">
+          <div class="mock" style="text-align:center">
+            <div style="width:380px;height:240px;border-radius:18px;background:linear-gradient(135deg,#0a0a0c 0%,#1c1c22 100%);box-shadow:0 40px 100px #000a;border:1px solid #222;display:grid;place-items:center">
+              <span style="font-family:var(--font-display);font-style:italic;color:#e93a1c;font-size:44px;font-weight:500">enzo</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- RUNWAY -->
+      <a class="featured-card reveal" href="#">
+        <div class="label">
+          <h3>Runway</h3>
+          <div class="pills">
+            <span class="pill">Art Direction</span>
+            <span class="pill">Branding</span>
+            <span class="pill">Web Design</span>
+            <span class="pill">Web Development</span>
+          </div>
+        </div>
+        <div class="img palette-runway">
+          <div class="mock" style="text-align:center">
+            <div style="width:280px;height:520px;border-radius:48px;background:#0a0a0c;border:8px solid #1c1c1c;box-shadow:0 40px 100px #0008;display:grid;place-items:center">
+              <div style="text-align:center">
+                <div style="font-size:36px;color:#E68437;font-family:var(--font-sans);font-weight:800;letter-spacing:-0.04em">runway</div>
+                <div style="font-size:11px;color:#E68437;letter-spacing:0.1em;text-transform:uppercase;margin-top:8px">AI · video</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- CAMPFIRE -->
+      <a class="featured-card reveal" href="#">
+        <div class="label">
+          <h3>Campfire</h3>
+          <div class="pills">
+            <span class="pill">Art Direction</span>
+            <span class="pill">Branding</span>
+            <span class="pill">Web Design</span>
+            <span class="pill">Development</span>
+          </div>
+        </div>
+        <div class="img palette-campfire">
+          <div class="mock" style="text-align:center">
+            <div style="width:520px;height:320px;border-radius:14px;background:linear-gradient(120deg,#3a2614 0%,#7e4622 50%,#f08a2e 100%);box-shadow:0 40px 100px #000a;display:grid;place-items:center;position:relative">
+              <span style="font-family:var(--font-sans);font-weight:700;font-size:54px;color:#f5e0c8;letter-spacing:-0.03em">campfire</span>
+              <div style="position:absolute;top:14px;left:18px;width:10px;height:10px;background:#f08a2e;border-radius:50%;box-shadow:0 0 16px #f08a2e"></div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- STRIDER -->
+      <a class="featured-card reveal" href="#">
+        <div class="label">
+          <h3>Strider</h3>
+          <div class="pills">
+            <span class="pill">Art Direction</span>
+            <span class="pill">Branding</span>
+            <span class="pill">Web Design</span>
+            <span class="pill">Web Development</span>
+          </div>
+        </div>
+        <div class="img palette-strider">
+          <div class="mock" style="text-align:center">
+            <div style="width:380px;height:540px;border-radius:18px;background:linear-gradient(160deg,#2a2a2a 0%,#0a0a0a 100%);box-shadow:0 50px 100px #000c;border:1px solid #222;display:grid;place-items:center">
+              <div style="font-family:var(--font-sans);font-weight:800;color:#e0683a;font-size:60px;letter-spacing:-0.04em">strider</div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- EXPLORE BUTTON -->
+    <div class="mt-20 text-center reveal">
+      <a href="#" style="display:inline-block;padding:22px 56px;border:1px solid var(--black1);border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;font-size:13px;color:var(--black1)">Explore our work ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS -->
+<section class="logos">
+  <div class="max-w-[1400px] mx-auto px-8">
+    <div class="logos-grid">
+      <div class="cell"><div><div style="display:flex;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="#000" stroke-width="2"/><circle cx="10" cy="10" r="3" fill="#000"/></svg>pipe</div></div></div>
+      <div class="cell"><div style="font-style:italic;font-family:var(--font-display)">runway<sup style="font-size:10px">.</sup></div></div>
+      <div class="cell"><div style="font-style:italic;font-family:var(--font-display);font-weight:400">le Mond</div></div>
+      <div class="cell"><div style="display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 20 20"><polygon points="10,2 18,17 2,17" fill="none" stroke="#000" stroke-width="2"/></svg>AERODOME</div></div>
+
+      <div class="cell"><div><b>RRE</b><span class="sm">VENTURES</span></div></div>
+      <div class="cell"><div style="display:flex;align-items:center;gap:10px"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="none" stroke="#000" stroke-width="1" stroke-dasharray="2 2"/></svg>hume</div></div>
+      <div class="cell"><div style="font-style:italic;font-family:var(--font-display);font-weight:700">ERIC<span style="font-weight:400">RIES</span></div></div>
+      <div class="cell"><div style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16"><polygon points="2,8 14,2 14,14" fill="none" stroke="#000" stroke-width="1.5"/></svg>SANDBOX<sup>VR</sup></div></div>
+
+      <div class="cell"><div style="font-weight:800;letter-spacing:0.04em">BLOCK</div></div>
+      <div class="cell"><div style="display:flex;align-items:center;gap:10px"><svg width="20" height="14" viewBox="0 0 20 14"><path d="M2 7 L18 7" stroke="#000" stroke-width="1.5"/></svg>elementary</div></div>
+      <div class="cell"><div style="font-style:italic;font-family:var(--font-display);font-weight:700">L<span style="font-weight:300">VT</span></div></div>
+      <div class="cell"><div style="display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2 L16 9 L9 16 L2 9 Z" fill="none" stroke="#000" stroke-width="1.5"/></svg>galileo</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DETAILS CLUB -->
+<section class="details">
+  <div class="max-w-[1100px] mx-auto px-8">
+    <div class="meta reveal">
+      <span>The</span>
+      <span></span>
+      <span>Club</span>
+    </div>
+    <h2 class="reveal">The <span class="it">Details</span> Club</h2>
+    <div class="meta reveal" style="margin:30px auto 0;max-width:880px">
+      <span>Pinkies Up</span>
+      <span></span>
+      <span>EST. 2015</span>
+    </div>
+
+    <div class="rays reveal">
+      <svg viewBox="0 0 900 280" preserveAspectRatio="none">
+        <g stroke="#050505" stroke-width="1.2" fill="none">
+          <line x1="450" y1="0" x2="450" y2="280"/>
+          <line x1="450" y1="0" x2="540" y2="280"/>
+          <line x1="450" y1="0" x2="360" y2="280"/>
+          <line x1="450" y1="0" x2="640" y2="280"/>
+          <line x1="450" y1="0" x2="260" y2="280"/>
+          <line x1="450" y1="0" x2="730" y2="280"/>
+          <line x1="450" y1="0" x2="170" y2="280"/>
+          <line x1="450" y1="0" x2="820" y2="280"/>
+          <line x1="450" y1="0" x2="80" y2="280"/>
+          <line x1="450" y1="0" x2="900" y2="240"/>
+          <line x1="450" y1="0" x2="0" y2="240"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- EQUITY MARQUEE -->
+<div class="strip">
+  <div class="strip-track">
+    <span>• Equity over cash</span><span>• Equity over cash</span><span>• Equity over cash</span>
+    <span>• Equity over cash</span><span>• Equity over cash</span><span>• Equity over cash</span>
+    <span>• Equity over cash</span><span>• Equity over cash</span><span>• Equity over cash</span>
+    <span>• Equity over cash</span><span>• Equity over cash</span><span>• Equity over cash</span>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="max-w-[1400px] mx-auto px-8">
+    <h2 class="reveal">Create your<br/>vision. Extend<br/>your runway.</h2>
+    <small class="reveal">Reform Nova isn't just another service. Nova is a partnership we trade world-class design equity for in the brands we help grow.</small>
+    <div class="cta-form">
+      <svg viewBox="0 0 400 400">
+        <defs>
+          <radialGradient id="g1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#cfcfcf"/>
+            <stop offset="100%" stop-color="#0a0a0a"/>
+          </radialGradient>
+          <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#444"/>
+            <stop offset="100%" stop-color="#0a0a0a"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="200" cy="200" rx="160" ry="160" fill="url(#g1)"/>
+        <path d="M0 200 Q200 0 400 200" stroke="#fff" stroke-width="1" fill="none" opacity=".6"/>
+        <path d="M0 240 Q200 60 400 240" stroke="#fff" stroke-width="1" fill="none" opacity=".4"/>
+        <path d="M0 180 Q200 -20 400 180" stroke="#fff" stroke-width="1" fill="none" opacity=".5"/>
+        <ellipse cx="200" cy="240" rx="120" ry="40" fill="#fff" opacity=".15"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="max-w-[1400px] mx-auto px-8">
+    <div class="row">
+      <div class="col">
+        <div class="lead">A small team of designers &amp; developers building brands for ambitious founders.</div>
+        <a href="#" class="big">↗ Webby Award Winner</a>
+        <a href="#" class="big" style="margin-top:20px">↗ Let's build your brand</a>
+      </div>
+      <div class="col"><a href="#">Our Work</a><a href="#">About Us</a><a href="#">Reform Nova</a></div>
+      <div class="col"><a href="#">Contact</a><a href="#">Careers</a></div>
+      <div class="col" style="text-align:right">
+        <a href="#">LinkedIn</a><a href="#">Instagram</a><a href="#">Awwwards</a><a href="#">X</a><a href="#">Dribbble</a>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <a href="#" style="color:var(--offwhite1);font-size:14px;text-transform:uppercase">Home</a>
+      <div style="display:flex;gap:30px">
+        <a href="#" style="color:var(--offwhite1)">Start a Project</a>
+        <a href="#" style="color:var(--offwhite1)">hello@reformcollective.com</a>
+      </div>
+    </div>
+
+    <div class="credit">
+      <span>© Reform Collective 2025</span>
+      <span>Pinkies Up · EST. 2015 · Brooklyn · NYC</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Rotator word cycle in top marquee
+const words = ['design','weight','weign','bjjk!ting','digital','chkx;x)','eklcix;)'];
+let wi = 0;
+const el = document.getElementById('cur');
+setInterval(()=>{
+  wi = (wi+1) % words.length;
+  el.style.opacity = 0;
+  setTimeout(()=>{ el.textContent = '{'+words[wi]+'}'; el.style.opacity = 1; }, 250);
+}, 2200);
+
+// GSAP reveals
+gsap.registerPlugin(ScrollTrigger);
+document.querySelectorAll('.reveal').forEach(el => {
+  gsap.to(el, {
+    opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+    scrollTrigger: { trigger: el, start: 'top 85%', once: true }
+  });
+});
+
+// subtle parallax on hero
+gsap.to('.hero-canvas', {
+  yPercent: 12, ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+gsap.to('.hero-title', {
+  yPercent: -22, ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// title letter spacing animation on hover cards
+document.querySelectorAll('.featured-card').forEach(card => {
+  card.addEventListener('mouseenter', () => gsap.to(card.querySelector('h3'), { letterSpacing: '-0.02em', duration: .4 }));
+  card.addEventListener('mouseleave', () => gsap.to(card.querySelector('h3'), { letterSpacing: '-0.04em', duration: .4 }));
+});
+</script>
+</body>
+</html>

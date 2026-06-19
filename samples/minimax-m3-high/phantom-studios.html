@@ -1,0 +1,357 @@
+<!--
+  Original: https://www.phantom.land/
+  File:    phantom-studios.html
+
+  KEY DESIGN OBSERVATIONS
+  - Pure black canvas (rgb(0,0,0)) with white "Helvetica Now" type.
+  - Persistent HUD:
+      · Top-left: a wobbly white ghost outline logo (inline SVG).
+      · Top-centre: a multi-line tagline that wraps in a tight column.
+      · Top-right: clock stack (London / Auckland local times) + a "Let's Talk" pill.
+  - Hero: a 3D "cinema cylinder" carousel — multiple rows of project tiles wrap
+    around an invisible cylinder so the centre column recedes while the edges
+    curve forward. Mouse position drives a gentle rotation.
+  - Floating chrome:
+      · Bottom-centre pill with segmented control "Work | About | Careers".
+      · Bottom-left: square grid-icon + hamburger menu icon.
+      · Bottom-right: "Filter" pill.
+  - Each tile is a colour-rich mock (no real brand asset) with a small caption
+    strip below ("DESIGN / WEB", "2026", "AI COMPASS", "PETA", etc.).
+  - A cookie modal pinned bottom-right with oversized "Accept" / "Decline".
+
+  CHALLENGES SOLVED
+  - The cylindrical carousel is built with CSS 3D transforms on each row of
+    tiles — every row has its own radius + z-offset and the whole stack is
+    wrapped in a perspective container that responds to mouse position.
+  - 30+ hand-built tile colour palettes provide the visual rhythm that real
+    brand imagery would normally supply, all in tasteful placeholders.
+  - Live clocks update every second using Intl.DateTimeFormat with explicit
+    timeZone for London and Auckland.
+  - Tab switching animates with a slide-fade transition.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Phantom Studios — Technology Creative Agency</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root{
+  --black: #050505;
+  --ink: #f6f6f6;
+  --grey: #6a6a6a;
+  --grey-2: #2a2a2a;
+  --pill: #ffffff;
+  --radius: 999px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--black);color:var(--ink);font-family:'Inter','Helvetica Now',system-ui,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased;overflow-x:hidden;height:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ============== TOP HUD ============== */
+.hud{position:fixed;top:0;left:0;right:0;z-index:60;padding:24px 32px;display:grid;grid-template-columns:1fr auto 1fr;gap:30px;align-items:start;pointer-events:none}
+.hud > *{pointer-events:auto}
+.hud .logo{width:54px;height:60px;display:block}
+.hud .center{display:flex;gap:30px;align-items:flex-start;font-size:12px;font-weight:400;letter-spacing:.02em}
+.hud .center .snd{display:flex;align-items:center;gap:14px;color:#c8c8c8;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.hud .center .snd .bars{display:flex;gap:2px}
+.hud .center .snd .bars span{width:3px;height:10px;background:#888;border-radius:1px}
+.hud .center .snd .bars span:nth-child(odd){height:14px}
+.hud .center .snd .bars span:nth-child(3n){height:7px}
+.hud .center p{max-width:380px;line-height:1.4;color:#c8c8c8}
+.hud .right{justify-self:end;display:flex;align-items:center;gap:24px}
+.hud .right .clock{font-size:11px;color:#bbb;line-height:1.5;text-align:right}
+.hud .right .clock .city{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px;color:#e6e6e6;font-weight:500}
+.hud .right .clock .city .dot{width:6px;height:6px;background:#e6e6e6;border-radius:50%}
+.hud .right .talk{padding:11px 22px;background:var(--pill);color:var(--black);border-radius:var(--radius);font-size:13px;font-weight:500;letter-spacing:-0.01em;cursor:pointer;transition:transform .2s}
+.hud .right .talk:hover{transform:scale(1.04)}
+
+/* ============== STAGE ============== */
+.stage{position:fixed;inset:0;perspective:1400px;perspective-origin:50% 50%;overflow:hidden;background:radial-gradient(ellipse at 50% 50%, #0a0a0a 0%, #050505 60%)}
+.stage-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .12s ease-out}
+
+/* Each row is a strip that wraps around a cylinder */
+.row{position:absolute;left:50%;display:flex;gap:18px;transform-style:preserve-3d;transform:translateX(-50%)}
+.tile{flex:0 0 220px;height:160px;border-radius:6px;background:#222;position:relative;overflow:hidden;box-shadow:0 30px 60px #000c;cursor:pointer;transition:transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s}
+.tile:hover{transform:scale(1.07);box-shadow:0 50px 80px #000d}
+.tile .label{position:absolute;left:0;right:0;bottom:0;padding:8px 12px;background:linear-gradient(transparent, #000000d0);font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:#dcdcdc;display:flex;justify-content:space-between}
+.tile .label .left{color:#fff}
+.tile .bg{position:absolute;inset:0;display:grid;place-items:center;font-family:'Inter';font-weight:700;color:#fff}
+
+/* tile palettes — replace real brand imagery with tasteful placeholders */
+.t1{background:linear-gradient(135deg,#7a3aab 0%,#22124e 100%)}
+.t2{background:radial-gradient(circle at 40% 30%, #ff8c5a 0%, #c0301c 70%, #2b0a08 100%)}
+.t3{background:linear-gradient(180deg,#7a3a2a 0%,#1a0e0a 100%)}
+.t4{background:linear-gradient(135deg,#fff3d6 0%,#f7b733 60%,#c97a1a 100%)}
+.t5{background:linear-gradient(135deg,#1e2a3a 0%,#0a1018 100%)}
+.t6{background:linear-gradient(180deg,#e8eaee 0%,#aab0bb 100%);color:#000}
+.t7{background:linear-gradient(135deg,#ffb89e 0%,#e85d3a 60%,#5a1810 100%)}
+.t8{background:radial-gradient(circle at 30% 30%, #ffe08a 0%, #f59e0b 50%, #1f1303 100%)}
+.t9{background:linear-gradient(135deg,#a8c5e8 0%,#365880 100%)}
+.t10{background:linear-gradient(180deg,#cbb78e 0%,#8a724a 100%)}
+.t11{background:radial-gradient(circle at 50% 50%, #74d4f0 0%, #2c89a8 50%, #062a3a 100%)}
+.t12{background:linear-gradient(135deg,#222 0%,#080808 100%)}
+.t13{background:linear-gradient(135deg,#c4e6ff 0%,#5b9ee0 100%)}
+.t14{background:linear-gradient(180deg,#3a1a4a 0%,#0a0410 100%)}
+.t15{background:linear-gradient(135deg,#fff 0%,#e6e6e6 100%);color:#000}
+.t16{background:linear-gradient(135deg,#c8e090 0%,#5a8a30 100%)}
+.t17{background:linear-gradient(180deg,#f8b88b 0%,#c26030 100%)}
+.t18{background:radial-gradient(circle at 50% 30%, #ff7e5f 0%, #8e2c1a 60%, #1a0606 100%)}
+.t19{background:linear-gradient(135deg,#e8e0d0 0%,#a89c80 100%);color:#000}
+.t20{background:linear-gradient(135deg,#a06030 0%,#2a1408 100%)}
+.t21{background:linear-gradient(180deg,#f4d4b0 0%,#a8805a 100%);color:#000}
+.t22{background:radial-gradient(circle at 30% 70%, #5099e8 0%, #1a4a8a 70%, #061830 100%)}
+.t23{background:linear-gradient(135deg,#ff8a4a 0%,#d63a1a 100%)}
+.t24{background:linear-gradient(180deg,#1c8a8a 0%,#06302f 100%)}
+.t25{background:linear-gradient(135deg,#ffe6a3 0%,#f6a800 100%);color:#000}
+.t26{background:linear-gradient(135deg,#909090 0%,#202020 100%)}
+.t27{background:linear-gradient(135deg,#a06080 0%,#4a1830 100%)}
+.t28{background:linear-gradient(180deg,#9ad0ff 0%,#1f5a9a 100%)}
+.t29{background:linear-gradient(135deg,#e84040 0%,#600 100%)}
+.t30{background:linear-gradient(135deg,#202020 0%,#000 100%)}
+
+/* ============== FLOATING CHROME ============== */
+.bottom-bar{position:fixed;left:0;right:0;bottom:24px;z-index:50;display:flex;justify-content:center;align-items:center;gap:18px;padding:0 24px;pointer-events:none}
+.bottom-bar > *{pointer-events:auto}
+.tabs{display:flex;background:#0d0d0d;border:1px solid #ffffff14;border-radius:var(--radius);padding:4px;backdrop-filter:blur(20px)}
+.tabs .tab{padding:10px 22px;border-radius:var(--radius);font-size:13px;color:#aaa;font-weight:500;cursor:pointer;transition:background .2s, color .2s}
+.tabs .tab.active{background:#fff;color:#000}
+
+.corners{position:fixed;left:24px;bottom:24px;display:flex;gap:8px;z-index:55}
+.corners .btn{width:46px;height:46px;background:#0d0d0d;border:1px solid #ffffff14;border-radius:12px;display:grid;place-items:center;color:#aaa;cursor:pointer;backdrop-filter:blur(20px);transition:background .2s,color .2s}
+.corners .btn:hover{background:#fff;color:#000}
+.corners .btn svg{width:18px;height:18px}
+
+.filter{position:fixed;right:24px;bottom:24px;z-index:55}
+.filter .pill{padding:12px 26px;background:#0d0d0d;border:1px solid #ffffff14;border-radius:var(--radius);font-size:13px;color:#aaa;cursor:pointer;backdrop-filter:blur(20px);transition:all .2s}
+.filter .pill:hover{background:#fff;color:#000}
+
+/* ============== COOKIE ============== */
+.cookies{position:fixed;right:24px;bottom:90px;width:340px;background:#fff;color:#000;padding:28px 28px 26px;border-radius:6px;z-index:80;display:flex;flex-direction:column;gap:18px;font-size:13px;line-height:1.45}
+.cookies .text{color:#1a1a1a;text-transform:uppercase;font-size:11px;letter-spacing:.04em;line-height:1.55}
+.cookies .text a{text-decoration:underline;font-weight:600}
+.cookies .actions{display:flex;flex-direction:column;gap:8px}
+.cookies .actions button{font-family:'Inter';font-size:32px;font-weight:600;text-align:left;letter-spacing:-0.03em;color:#000;transition:opacity .2s;padding:0}
+.cookies .actions button:nth-child(2){color:#888}
+.cookies .actions button:hover{opacity:.6}
+.cookies.hidden{display:none}
+
+/* project detail overlay */
+.project-info{position:fixed;left:32px;bottom:100px;z-index:40;max-width:300px;font-size:13px;color:#c8c8c8;line-height:1.5}
+.project-info h3{color:#fff;font-size:16px;font-weight:600;margin-bottom:6px}
+
+/* responsive */
+@media (max-width: 900px){
+  .hud{grid-template-columns:1fr 1fr;font-size:11px;padding:18px}
+  .hud .center{display:none}
+  .hud .right .clock{display:none}
+  .stage{perspective:800px}
+  .tile{flex:0 0 130px;height:96px}
+  .cookies{width:90vw;right:5vw;bottom:80px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP HUD -->
+<div class="hud">
+  <!-- Logo -->
+  <a href="#" class="logo" aria-label="Phantom">
+    <svg viewBox="0 0 60 70" fill="none">
+      <path d="M30 6 C14 6 6 22 6 38 C6 50 14 58 18 62 C18 58 18 52 22 50 C26 56 32 56 34 50 C36 52 38 56 38 62 C42 58 54 50 54 38 C54 22 46 6 30 6 Z" stroke="#fff" stroke-width="2" fill="none"/>
+      <circle cx="24" cy="32" r="3" fill="#fff"/>
+      <circle cx="36" cy="32" r="3" fill="#fff"/>
+      <ellipse cx="30" cy="44" rx="6" ry="3" stroke="#fff" stroke-width="1.5" fill="none"/>
+    </svg>
+  </a>
+  <!-- Center -->
+  <div class="center">
+    <div class="snd">
+      <div class="bars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <span>SOUND [OFF]</span>
+    </div>
+    <p>PHANTOM IS A TECHNOLOGY-LED<br/>CREATIVE AGENCY CRAFTING<br/>EXPERIENCES FOR GLOBAL<br/>BRANDS.</p>
+  </div>
+  <!-- Right -->
+  <div class="right">
+    <div class="clock">
+      <div class="city"><span class="dot"></span>London, UK</div>
+      <div class="mono" id="clock-ldn">16:04 GMT+1</div>
+      <div class="city" style="margin-top:8px"><span class="dot"></span>Auckland, NZ</div>
+      <div class="mono" id="clock-akl">03:04 GMT+12</div>
+    </div>
+    <button class="talk">Let's Talk</button>
+  </div>
+</div>
+
+<!-- 3D CAROUSEL STAGE -->
+<div class="stage" id="stage">
+  <div class="stage-inner" id="stageInner"></div>
+</div>
+
+<!-- PROJECT INFO -->
+<div class="project-info">
+  <h3>All Projects · 91</h3>
+  <p>Hover or scroll to explore the reel. Click any tile to open the case study.</p>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="corners">
+  <button class="btn" aria-label="grid">
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="6" height="6"/><rect x="10" y="2" width="6" height="6"/><rect x="2" y="10" width="6" height="6"/><rect x="10" y="10" width="6" height="6"/></svg>
+  </button>
+  <button class="btn" aria-label="menu">
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/></svg>
+  </button>
+</div>
+
+<div class="bottom-bar">
+  <div class="tabs">
+    <button class="tab active" data-tab="work">Work</button>
+    <button class="tab" data-tab="about">About</button>
+    <button class="tab" data-tab="careers">Careers</button>
+  </div>
+</div>
+
+<div class="filter">
+  <button class="pill">Filter</button>
+</div>
+
+<!-- COOKIES -->
+<div class="cookies" id="cookies">
+  <div class="text">We use cookies to analyse our traffic. For more info, read our <a href="#">Privacy Policy</a></div>
+  <div class="actions">
+    <button id="acceptBtn">Accept</button>
+    <button id="declineBtn">Decline</button>
+  </div>
+</div>
+
+<script>
+// =============== BUILD THE CYLINDER CAROUSEL ===============
+const stage = document.getElementById('stage');
+const stageInner = document.getElementById('stageInner');
+
+const tilePalettes = ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11','t12','t13','t14','t15','t16','t17','t18','t19','t20','t21','t22','t23','t24','t25','t26','t27','t28','t29','t30'];
+const labels = [
+  ['DESIGN · WEB','2026'],['CAMPAIGN','2026'],['MOBILE','2025'],['BRAND','2025'],['INTERACTIVE','2026'],
+  ['SYSTEM','2024'],['AI · FILM','2025'],['GAME','2026'],['PLATFORM','2025'],['IDENTITY','2024'],
+  ['AUGMENTED','2026'],['INSTALLATION','2025'],['MOBILE · OS','2026'],['STORY','2025'],['STRATEGY','2024'],
+  ['PRODUCT','2026'],['EXPERIENCE','2025'],['FILM','2025'],['TOOLING','2024'],['GAME · WEB','2026'],
+  ['AI · COMPASS','2025'],['HEALTH','2026'],['CULTURE','2025'],['MARINE','2024'],['IDEA · LAB','2026'],
+  ['VR','2025'],['BANK','2026'],['EVENT','2025'],['FINTECH','2025'],['LIVE · MUSIC','2024']
+];
+
+// 5 rows of 8 tiles, each row on its own circular arc
+const ROWS = 5;
+const TILES_PER_ROW = 9;
+
+function buildRow(rowIdx, total, palette){
+  const row = document.createElement('div');
+  row.className = 'row';
+  // arc radius shrinks as we go up/down (top & bottom rows wrap on smaller cylinders)
+  const radius = 1400 + rowIdx * 200;
+  // vertical placement
+  const top = 90 + rowIdx * 130;
+  row.style.top = top + 'px';
+  row.style.transform = `translateX(-50%) rotateY(${rowIdx % 2 === 0 ? -2 : 2}deg)`;
+
+  for (let i = 0; i < TILES_PER_ROW; i++) {
+    const t = document.createElement('div');
+    const paletteIdx = (rowIdx * TILES_PER_ROW + i) % tilePalettes.length;
+    t.className = 'tile ' + tilePalettes[paletteIdx];
+    const [l, y] = labels[paletteIdx];
+    t.innerHTML = `
+      <div class="bg">${(rowIdx + 1).toString().padStart(2,'0')}</div>
+      <div class="label"><span class="left">${l}</span><span>${y}</span></div>
+    `;
+    // each tile sits on the cylinder arc
+    const angle = (i / TILES_PER_ROW) * Math.PI * 2;
+    const x = Math.sin(angle) * radius;
+    const z = Math.cos(angle) * radius - radius;
+    const rotY = (angle * 180 / Math.PI);
+    t.style.transform = `translate3d(${x}px, 0, ${z}px) rotateY(${rotY}deg)`;
+    row.appendChild(t);
+  }
+  return row;
+}
+
+const rowsBuilt = [];
+for (let r = 0; r < ROWS; r++) rowsBuilt.push(buildRow(r, ROWS, tilePalettes));
+rowsBuilt.forEach(r => stageInner.appendChild(r));
+
+// =============== POINTER-DRIVEN ROTATION ===============
+let pointer = { x: 0, y: 0 };
+let targetRot = { x: 0, y: 0 };
+let currentRot = { x: 0, y: 0 };
+stage.addEventListener('pointermove', e => {
+  pointer.x = (e.clientX / window.innerWidth - .5);
+  pointer.y = (e.clientY / window.innerHeight - .5);
+  targetRot.y = pointer.x * 8;
+  targetRot.x = -pointer.y * 4;
+});
+stage.addEventListener('pointerleave', () => { targetRot.x = 0; targetRot.y = 0; });
+
+function tick(){
+  currentRot.x += (targetRot.x - currentRot.x) * 0.06;
+  currentRot.y += (targetRot.y - currentRot.y) * 0.06;
+  stageInner.style.transform = `rotateX(${currentRot.x}deg) rotateY(${currentRot.y}deg)`;
+  requestAnimationFrame(tick);
+}
+tick();
+
+// =============== CLOCKS ===============
+const clockLdn = document.getElementById('clock-ldn');
+const clockAkl = document.getElementById('clock-akl');
+const fmt = (tz, label) => {
+  const d = new Date();
+  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tz, hour12: false }).format(d) + ' GMT' + label;
+};
+function updateClocks(){
+  clockLdn.textContent = fmt('Europe/London', '+0');
+  // approximate London offset live
+  const d = new Date();
+  const offsetMin = -d.getTimezoneOffset();
+  const londonOffset = (() => {
+    const f = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' }).formatToParts(d).find(p => p.type === 'timeZoneName');
+    return f ? f.value : 'GMT+0';
+  })();
+  clockLdn.textContent = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London', hour12: false }).format(d) + ' ' + londonOffset;
+  clockAkl.textContent = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Pacific/Auckland', hour12: false }).format(d) + ' GMT+12';
+}
+setInterval(updateClocks, 1000); updateClocks();
+
+// =============== COOKIES ===============
+const cookies = document.getElementById('cookies');
+document.getElementById('acceptBtn').addEventListener('click', () => cookies.classList.add('hidden'));
+document.getElementById('declineBtn').addEventListener('click', () => cookies.classList.add('hidden'));
+
+// =============== TABS ===============
+document.querySelectorAll('.tabs .tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// =============== GSAP ENTRANCE ===============
+gsap.from('.hud > *', { opacity: 0, y: -16, duration: .8, stagger: .08, ease: 'power3.out', delay: .2 });
+gsap.from('.row .tile', { opacity: 0, scale: .8, duration: .8, stagger: { from: 'random', amount: .6 }, ease: 'power3.out', delay: .5 });
+gsap.from('.bottom-bar, .corners, .filter', { opacity: 0, y: 20, duration: .8, stagger: .08, ease: 'power3.out', delay: 1.1 });
+gsap.from('.cookies', { opacity: 0, x: 30, duration: .8, ease: 'power3.out', delay: 1.5 });
+
+// subtle continuous drift
+gsap.to(stageInner, { rotationY: '+=360', duration: 240, ease: 'none', repeat: -1, modifiers: { rotationY: gsap.utils.unitize(v => parseFloat(v) % 360) } });
+</script>
+</body>
+</html>
