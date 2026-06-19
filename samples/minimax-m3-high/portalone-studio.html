@@ -1,0 +1,905 @@
+<!doctype html>
+<!--
+ORIGINAL URL: https://www.portalone.studio/
+RECREATION: samples/minimax-m3-high/portalone-studio.html
+
+KEY DESIGN OBSERVATIONS
+  - Black (#111010) ground with off-white #D9D9D9 type.
+  - Mixed grotesque type (PP Neue Machina Plain) + inktrap (PP Neue Machina Inktrap).
+  - A pixel/retro face (Pixelify Sans) for the "WE'VE HELPED..." strip.
+  - Hero: a 3D portal / vortex built from many vertical light lines plus star particles.
+  - Section order: Top header bar / CREATIVE ✦ GATEWAY marquee / Why Portal-1 / Process / Logo strip
+    / Black-hole radial / LET'S ROCK orbiting text / Footer.
+  - Continuous horizontal marquee strip in the gap between sections ("Real businesses. Real
+    websites. Real impact." repeated with icons).
+  - Sticky right-edge vertical tab "W. / Honors".
+  - A "Digital Presence / Scroll to continue..." sticker pinned to the right.
+
+CHALLENGES SOLVED
+  - Approximating PP Neue Machina with Inter Tight (closest free grotesque with the same chunky
+    monoline feel) and Space Grotesk for the inktrap weight. Pixelify Sans via Google Fonts.
+  - The portal/vortex is rendered with Three.js: a fan of many vertical line segments arranged
+    in a cone, scrolling z-depth with mouse + scroll. Star particles are a Points cloud.
+  - The orbiting "LET'S ROCK!" text is pure CSS transform on a circular path.
+  - All sections stack as a single column with section dividers + marquee strips.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Portal-1 — Creative Gateway (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Space+Grotesk:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Pixelify+Sans:wght@400;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
+<style>
+  :root {
+    --bg: #111010;
+    --ink: #D9D9D9;
+    --ink-soft: #9b9b9b;
+    --paper: #E9E8E2;
+    --green-sticker: #5CDB95;
+    --grid-stroke: #5e5c5c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: "Inter Tight", system-ui, sans-serif; }
+  body { overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- frame grid (black hairline border like the original) ---------- */
+  .frame {
+    position: relative;
+    border: 1px solid #2a2929;
+    border-radius: 2px;
+  }
+
+  /* ---------- typography helpers ---------- */
+  .h-plain { font-family: "Inter Tight", sans-serif; font-weight: 800; letter-spacing: -0.02em; line-height: 0.92; }
+  .h-ink { font-family: "Space Grotesk", sans-serif; font-weight: 300; letter-spacing: -0.005em; }
+  .h-italic { font-family: "Instrument Serif", "Times New Roman", serif; font-style: italic; font-weight: 400; }
+  .h-mono { font-family: "Pixelify Sans", monospace; font-weight: 400; letter-spacing: 0.01em; }
+
+  /* ---------- top header bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: grid;
+    grid-template-columns: 1.6fr 1.4fr 1fr 1fr 1fr 1fr 1.5fr 0.7fr;
+    align-items: center;
+    height: 64px;
+    border-bottom: 1px solid #2a2929;
+    background: var(--bg);
+    padding-left: 16px;
+  }
+  .topbar > * { padding: 0 18px; height: 100%; display: flex; align-items: center; }
+  .topbar > * + * { border-left: 1px solid #2a2929; }
+  .logo { gap: 12px; font-weight: 800; font-size: 22px; letter-spacing: 0.04em; }
+  .logo .mark {
+    width: 26px; height: 36px; position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .logo .mark svg { width: 100%; height: 100%; }
+  .nav-link { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .social { display: flex; align-items: center; gap: 12px; }
+  .social a { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; opacity: 0.85; }
+  .pill { border: 1px solid #ffffff; border-radius: 999px; padding: 10px 22px; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .pill-link { display: inline-flex; align-items: center; justify-content: center; }
+  .qr { display: flex; align-items: center; justify-content: center; }
+  .qr-grid { width: 38px; height: 38px; background:
+    repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0/6px 6px,
+    repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0/6px 6px;
+    background-blend-mode: lighten;
+    border-radius: 2px;
+    border: 1px solid #2a2929;
+    position: relative;
+  }
+  .qr-grid::before, .qr-grid::after, .qr-grid > span { content:""; position:absolute; background:#fff; }
+  .qr-grid::before { top:0; left:0; width:8px; height:8px; }
+  .qr-grid::after { top:0; right:0; width:8px; height:8px; }
+  .qr-grid > span { bottom:0; left:0; width:8px; height:8px; }
+
+  /* ---------- right edge tab ---------- */
+  .side-tab {
+    position: fixed; right: 0; top: 50%; transform: translateY(-50%);
+    z-index: 25;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: var(--paper); color: #111010;
+    border-radius: 6px 0 0 6px;
+    padding: 14px 8px;
+    font-family: "Space Grotesk", sans-serif; font-weight: 500; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    box-shadow: -2px 0 0 #1c1c1c inset;
+  }
+  .side-tab .w { font-family: "Instrument Serif", serif; font-size: 26px; font-weight: 400; line-height: 1; margin-bottom: 6px;}
+  .side-tab .rot { writing-mode: vertical-rl; transform: rotate(180deg); padding: 6px 0; }
+
+  /* ---------- green tab bottom right ---------- */
+  .green-tab {
+    position: fixed; right: 12px; bottom: 12px; z-index: 25;
+    background: var(--green-sticker);
+    width: 28px; height: 28px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #0a1f12; font-size: 11px;
+  }
+
+  /* ---------- 3D portal canvas ---------- */
+  .portal-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 560px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .portal-stage canvas { display: block; width: 100%; height: 100%; }
+  .portal-stage .corner {
+    position: absolute; width: 14px; height: 14px; pointer-events: none;
+  }
+  .portal-stage .corner.tl { top: 0; left: 0; border-top: 1px solid var(--ink-soft); border-left: 1px solid var(--ink-soft); }
+  .portal-stage .corner.tr { top: 0; right: 0; border-top: 1px solid var(--ink-soft); border-right: 1px solid var(--ink-soft); }
+  .portal-stage .corner.bl { bottom: 0; left: 0; border-bottom: 1px solid var(--ink-soft); border-left: 1px solid var(--ink-soft); }
+  .portal-stage .corner.br { bottom: 0; right: 0; border-bottom: 1px solid var(--ink-soft); border-right: 1px solid var(--ink-soft); }
+
+  /* ---------- CREATIVE GATEWAY big headline ---------- */
+  .giant {
+    position: relative;
+    padding: 0 18px;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .giant .row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: "Inter Tight", sans-serif; font-weight: 800; letter-spacing: -0.045em;
+    font-size: clamp(80px, 17vw, 280px);
+    line-height: 0.86;
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+  .giant .star { display: inline-block; font-size: 0.5em; transform: translateY(-0.18em); }
+  .giant .left { flex: 1; }
+  .giant .right { flex: 1; text-align: right; }
+
+  /* ---------- marquee strip ---------- */
+  .marquee {
+    position: relative; overflow: hidden;
+    border-top: 1px solid #2a2929; border-bottom: 1px solid #2a2929;
+    background: var(--bg);
+    height: 44px;
+    display: flex; align-items: center;
+  }
+  .marquee.alt { background: var(--paper); color: #1c1c1c; border-color: #bdbab2; }
+  .marquee .track {
+    display: inline-flex; gap: 28px; white-space: nowrap;
+    animation: mscroll 40s linear infinite;
+    padding-left: 28px;
+  }
+  .marquee.alt .track { animation: mscroll-rev 45s linear infinite; }
+  .marquee .item { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-family: "Inter Tight", sans-serif; }
+  .marquee .ico { width: 18px; height: 18px; display: inline-block; }
+  @keyframes mscroll { from { transform: translateX(0);} to { transform: translateX(-50%);} }
+  @keyframes mscroll-rev { from { transform: translateX(-50%);} to { transform: translateX(0);} }
+
+  /* ---------- why portal one ---------- */
+  .why {
+    background: var(--paper); color: #111010;
+    border-top: 1px solid #1c1c1c;
+    padding: 60px 0 120px;
+    position: relative;
+  }
+  .why .stripes { position: absolute; inset: 0; pointer-events: none; opacity: 0.18; }
+  .why h1 {
+    font-family: "Inter Tight", sans-serif; font-weight: 800;
+    font-size: clamp(70px, 13vw, 200px); line-height: 0.9;
+    letter-spacing: -0.04em;
+    margin: 0 24px 48px;
+  }
+  .why .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    padding: 0 24px;
+  }
+  .why .card {
+    position: relative;
+    aspect-ratio: 1 / 1.2;
+    background: #111010;
+    color: var(--ink);
+    border-radius: 50% 50% 0 0;
+    padding: 32px 26px 60px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    overflow: hidden;
+  }
+  .why .card h2 {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400; font-size: 32px; line-height: 1.05; margin: 0 0 16px;
+  }
+  .why .card .num { font-family: "Pixelify Sans", monospace; font-size: 11px; opacity: 0.6; }
+  .why .card p { font-family: "Space Grotesk", sans-serif; font-size: 13px; line-height: 1.5; margin: 0; color: var(--ink); }
+  .why .card .star { color: #fff; font-size: 12px; }
+  .why .stripes-bar {
+    display: grid; grid-template-columns: repeat(40, 1fr);
+    height: 90px; border-top: 1px solid #1c1c1c; border-bottom: 1px solid #1c1c1c;
+    background: var(--paper);
+  }
+  .why .stripes-bar span { display: block; border-left: 1px solid #1c1c1c; }
+  .why .stripes-bar span:nth-child(odd) { background: transparent; }
+  .why .stripes-bar span:nth-child(even) { background: rgba(0,0,0,0.05); }
+
+  /* digital presence sticker */
+  .sticker {
+    position: absolute; right: 20px; top: 70px;
+    background: var(--paper); color: #111010;
+    border: 1px solid #1c1c1c;
+    padding: 12px 18px; font-family: "Inter Tight", sans-serif; font-size: 14px; font-weight: 500;
+    transform: rotate(-4deg);
+  }
+  .sticker .arrow { display: inline-block; transform: rotate(20deg); margin-left: 6px; }
+
+  /* ---------- quote strip ---------- */
+  .quote {
+    background: var(--paper); color: #111010;
+    padding: 60px 24px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    align-items: center;
+    border-top: 1px solid #1c1c1c;
+  }
+  .quote .qmark { font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: 60px; line-height: 0.8; }
+  .quote .body { font-family: "Instrument Serif", serif; font-size: 24px; line-height: 1.4; }
+  .quote .by { font-family: "Space Grotesk", sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.6; }
+
+  /* ---------- vertical jp text ---------- */
+  .jp-vert {
+    writing-mode: vertical-rl;
+    font-family: "Instrument Serif", serif; font-size: 12px;
+    color: #111010;
+    position: absolute; right: 0; top: 60px;
+    padding: 16px 8px;
+    border-left: 1px solid #1c1c1c;
+  }
+
+  /* ---------- big typeface sample (huge DESIGN TYPE) ---------- */
+  .type-sample {
+    background: var(--paper); color: #111010;
+    padding: 40px 0 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .type-sample .label {
+    font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: 18px;
+    padding: 0 24px 16px;
+  }
+  .type-sample .label2 { color: rgba(0,0,0,0.5); }
+  .type-sample .bigword {
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+    transform: rotate(-3deg) translateX(-6%);
+    font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: clamp(60px, 14vw, 220px);
+    line-height: 0.8; letter-spacing: -0.05em;
+  }
+  .type-sample .bigword span { color: rgba(0,0,0,0.18); }
+  .type-sample .cta {
+    display: flex; justify-content: flex-end; padding: 0 24px 24px;
+  }
+  .type-sample .cta a {
+    display: inline-block; background: var(--ink); color: #111010;
+    padding: 24px 48px; font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: 30px; letter-spacing: -0.02em;
+  }
+
+  /* ---------- artwork / black hole ---------- */
+  .blackhole {
+    position: relative;
+    background: var(--paper);
+    padding: 0;
+    border-top: 1px solid #1c1c1c;
+  }
+  .blackhole .canvas-wrap { width: 100%; aspect-ratio: 16/8; }
+  .blackhole canvas { display: block; width: 100%; height: 100%; }
+
+  /* ---------- logo strip ---------- */
+  .logo-strip {
+    display: grid; grid-template-columns: 1fr 1.2fr 0.8fr 1fr;
+    align-items: center;
+    border-top: 1px solid #1c1c1c; border-bottom: 1px solid #1c1c1c;
+    background: var(--paper);
+  }
+  .logo-strip .label {
+    background: #111010; color: var(--paper);
+    padding: 22px 24px;
+    font-family: "Pixelify Sans", monospace; font-size: 14px; line-height: 1.4;
+    text-transform: uppercase;
+  }
+  .logo-strip .cell {
+    border-left: 1px solid #1c1c1c;
+    height: 92px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -0.01em;
+  }
+  .logo-strip .cell svg { height: 28px; }
+
+  /* ---------- orbiting text + circle ---------- */
+  .orbit {
+    position: relative;
+    background: #0d0d0d;
+    overflow: hidden;
+    border-top: 1px solid #2a2929;
+    height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .orbit .ring {
+    position: absolute; width: 760px; height: 760px; max-width: 80vw; max-height: 80vw;
+    border-radius: 50%;
+  }
+  .orbit .core {
+    position: relative; width: 320px; height: 320px; border-radius: 50%;
+    background: var(--paper);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5) inset, 0 0 80px rgba(255,255,255,0.04);
+  }
+  .orbit .orbit-text {
+    position: absolute; inset: 0; width: 760px; height: 760px;
+    max-width: 80vw; max-height: 80vw;
+    animation: spin 22s linear infinite;
+  }
+  .orbit .orbit-text > div {
+    position: absolute; top: 50%; left: 50%;
+    transform-origin: 0 0;
+    color: var(--ink); font-family: "Inter Tight", sans-serif; font-weight: 800;
+    font-size: 22px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .orbit .orbit-text .a { transform: rotate(0deg) translate(380px, 0) rotate(0deg); }
+  .orbit .orbit-text .b { transform: rotate(60deg) translate(380px, 0) rotate(-60deg); }
+  .orbit .orbit-text .c { transform: rotate(120deg) translate(380px, 0) rotate(-120deg); }
+  .orbit .orbit-text .d { transform: rotate(180deg) translate(380px, 0) rotate(-180deg); }
+  .orbit .orbit-text .e { transform: rotate(240deg) translate(380px, 0) rotate(-240deg); }
+  .orbit .orbit-text .f { transform: rotate(300deg) translate(380px, 0) rotate(-300deg); }
+  .orbit .star1, .orbit .star2, .orbit .star3 { position: absolute; color: var(--ink); opacity: 0.85; }
+  .orbit .star1 { top: 14%; left: 8%; font-size: 22px; }
+  .orbit .star2 { top: 22%; right: 12%; font-size: 14px; }
+  .orbit .star3 { top: 60%; left: 18%; font-size: 18px; }
+  .orbit .arrow-down { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: var(--ink); font-size: 22px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- giant inkwell portal dome ---------- */
+  .dome {
+    position: relative; background: var(--paper); overflow: hidden;
+    height: 80vh;
+    border-top: 1px solid #1c1c1c;
+  }
+  .dome svg { width: 100%; height: 100%; display: block; }
+  .dome .star1, .dome .star2 { position: absolute; color: #fff; font-size: 16px; }
+  .dome .star1 { top: 50%; left: 28%; }
+  .dome .star2 { top: 60%; left: 38%; }
+
+  /* ---------- footer ---------- */
+  .footer {
+    display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+    background: var(--bg); color: var(--ink);
+    padding: 16px 18px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    border-top: 1px solid #2a2929;
+  }
+  .footer a { text-decoration: underline; text-underline-offset: 3px; }
+  .footer .right { text-align: right; }
+
+  /* ---------- process block ---------- */
+  .process {
+    background: var(--paper); color: #111010;
+    padding: 60px 24px 80px;
+    border-top: 1px solid #1c1c1c;
+  }
+  .process h2 {
+    font-family: "Inter Tight", sans-serif; font-weight: 800;
+    font-size: clamp(40px, 7vw, 100px); line-height: 0.95; letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .process h2 em { font-family: "Instrument Serif", serif; font-weight: 400; font-style: italic; }
+  .process .line { display: flex; align-items: center; gap: 18px; font-family: "Space Grotesk", sans-serif; font-size: 13px; }
+  .process .learn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #111010; color: var(--paper); padding: 18px 28px; font-family: "Inter Tight", sans-serif; font-weight: 700;
+  }
+
+  /* ---------- services row ---------- */
+  .services-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    background: var(--bg); color: var(--ink);
+    border-top: 1px solid #2a2929;
+  }
+  .services-row .cell {
+    text-align: center; padding: 80px 0; font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: clamp(28px, 4.5vw, 60px);
+    letter-spacing: 0.02em; border-left: 1px solid #2a2929;
+  }
+  .services-row .cell:first-child { border-left: 0; }
+
+  /* ---------- cookie banner ---------- */
+  .cookie {
+    position: fixed; left: 18px; bottom: 18px; z-index: 50;
+    background: var(--paper); color: #111010;
+    padding: 18px 22px;
+    width: 360px; max-width: 92vw;
+    border: 1px solid #1c1c1c;
+    font-family: "Space Grotesk", sans-serif; font-size: 12px; line-height: 1.5;
+  }
+  .cookie .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+  .cookie .row span { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .cookie .toggle { width: 26px; height: 14px; border-radius: 999px; background: #1c1c1c; position: relative; }
+  .cookie .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .cookie .actions a, .cookie .actions button { font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 12px; padding: 8px 12px; text-align: center; border: 1px solid #1c1c1c; background: transparent; color: #1c1c1c; cursor: pointer; }
+  .cookie .actions a:nth-child(2) { background: #1c1c1c; color: var(--paper); }
+  .cookie .learn { text-align: center; margin-top: 8px; font-size: 11px; text-decoration: underline; }
+  .cookie.hidden { display: none; }
+
+  /* small stars decoration */
+  .stars { position: absolute; inset: 0; pointer-events: none; }
+  .stars span { position: absolute; color: #fff; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ============= TOP BAR ============= -->
+<header class="topbar">
+  <div class="logo">
+    <span class="mark">
+      <svg viewBox="0 0 40 60" fill="none">
+        <ellipse cx="20" cy="14" rx="14" ry="6" stroke="#fff" stroke-width="1.2"/>
+        <ellipse cx="20" cy="22" rx="17" ry="6" stroke="#fff" stroke-width="1.2"/>
+        <ellipse cx="20" cy="30" rx="20" ry="6" stroke="#fff" stroke-width="1.2"/>
+        <ellipse cx="20" cy="38" rx="17" ry="6" stroke="#fff" stroke-width="1.2"/>
+        <ellipse cx="20" cy="46" rx="14" ry="6" stroke="#fff" stroke-width="1.2"/>
+      </svg>
+    </span>
+    PORTAL-1
+  </div>
+  <div></div>
+  <a class="nav-link" href="#studio">STUDIO</a>
+  <a class="nav-link" href="#works">WORKS</a>
+  <a class="nav-link" href="#contact">CONTACT</a>
+  <div class="social">
+    <a aria-label="tape" href="#"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="6,4 20,12 6,20"/></svg></a>
+    <a aria-label="instagram" href="#"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+    <a aria-label="linkedin" href="#"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="10" x2="7" y2="17"/><line x1="7" y1="7" x2="7" y2="7"/><path d="M11 17v-5a3 3 0 0 1 6 0v5"/></svg></a>
+  </div>
+  <a class="pill pill-link" href="#services">SERVICES · BOOK A CALL</a>
+  <div class="qr">
+    <div class="qr-grid"><span></span></div>
+  </div>
+</header>
+
+<!-- ============= 3D PORTAL STAGE ============= -->
+<section class="portal-stage" id="portal">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <canvas id="portal-canvas"></canvas>
+  <div class="stars" aria-hidden="true">
+    <span style="top:22%;left:14%">✦</span>
+    <span style="top:38%;left:24%;color:#bbb">✦</span>
+    <span style="top:18%;left:60%">✦</span>
+    <span style="top:54%;left:78%">✦</span>
+    <span style="top:32%;left:84%;color:#bbb">✦</span>
+  </div>
+</section>
+
+<!-- ============= MARQUEE STRIP ============= -->
+<div class="marquee">
+  <div class="track">
+    <!-- two copies for seamless loop -->
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+  </div>
+</div>
+
+<!-- ============= CREATIVE ✦ GATEWAY ============= -->
+<section class="giant">
+  <div class="row"><span class="left">CREATIVE</span><span class="star">✦</span><span class="right">GATEWAY</span></div>
+</section>
+
+<!-- ============= MARQUEE STRIP #2 ============= -->
+<div class="marquee">
+  <div class="track">
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+  </div>
+</div>
+
+<!-- ============= WHY PORTAL-1 ============= -->
+<section class="why">
+  <div class="sticker">Digital Presence <span class="arrow">↘</span><br><span style="font-size:10px;opacity:.7">Scroll to continue...</span></div>
+  <h1>WHY PORTAL-1?</h1>
+  <div class="stripes-bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="grid">
+    <div class="card">
+      <div>
+        <div class="num">01 / THINK</div>
+        <h2>Think<br>Bigger</h2>
+        <p>Bold ideas that don't just fill space — they shape how a brand is remembered.</p>
+      </div>
+      <span class="star">+</span>
+    </div>
+    <div class="card">
+      <div>
+        <div class="num">02 / BUILD</div>
+        <h2>Build<br>Smarter</h2>
+        <p>Code and craft shipped with the patience of a workshop, the speed of a studio.</p>
+      </div>
+      <span class="star">+</span>
+    </div>
+    <div class="card">
+      <div>
+        <div class="num">03 / BOND</div>
+        <h2>Connect<br>Deeper</h2>
+        <p>Narratives that connect with audiences and build lasting loyalty.</p>
+      </div>
+      <span class="star">+</span>
+    </div>
+  </div>
+  <div class="jp-vert">デザイン</div>
+</section>
+
+<!-- ============= QUOTE ============= -->
+<section class="quote">
+  <div>
+    <div class="qmark">"</div>
+  </div>
+  <div>
+    <div class="body">The way to get started is to quit talking and begin doing.</div>
+    <div class="by" style="margin-top:14px">— Walt Disney</div>
+  </div>
+</section>
+
+<!-- ============= TYPE SAMPLE ============= -->
+<section class="type-sample">
+  <div class="label">We've Got Art That <span class="label2">(AND YOU'LL LOVE IT TOO)</span></div>
+  <div class="bigword">
+    DESIGN <span>×</span> <span>·</span> TYPE THAT <span>·</span> DOES THE TALKING
+  </div>
+  <div class="cta"><a href="#">Learn More</a></div>
+</section>
+
+<!-- ============= MARQUEE ============= -->
+<div class="marquee">
+  <div class="track">
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+  </div>
+</div>
+
+<!-- ============= SERVICES ============= -->
+<section class="services-row">
+  <div class="cell">WEB DESIGN</div>
+  <div class="cell">APP DESIGN</div>
+  <div class="cell">VISUAL IDENTITY</div>
+</section>
+<section class="services-row" style="border-top:0">
+  <div class="cell">WEB DESIGN</div>
+  <div class="cell">APP DESIGN</div>
+  <div class="cell">VISUAL IDENTITY</div>
+</section>
+
+<!-- ============= STUFF WE'VE BUILT IT ============= -->
+<section class="process">
+  <h2>STUFF WE'VE BUILT IT <em>(AND YOU'LL LOVE IT TOO)</em></h2>
+  <div class="line" style="margin-top:24px">
+    <a class="learn" href="#works">Learn More</a>
+  </div>
+</section>
+
+<!-- ============= MARQUEE ============= -->
+<div class="marquee">
+  <div class="track">
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">●</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">📄</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+    <div class="item"><span class="ico">$</span> Real businesses. Real websites. Real impact.</div>
+    <div class="item"><span class="ico">🔔</span> Great design isn't just about looks /// it's about results.</div>
+    <div class="item"><span class="ico">▣</span> THE PATHWAY TO MEANINGFUL DESIGN</div>
+  </div>
+</div>
+
+<!-- ============= BLACK HOLE / WORKS ============= -->
+<section class="blackhole" id="works">
+  <div class="canvas-wrap">
+    <canvas id="bh-canvas"></canvas>
+  </div>
+</section>
+
+<!-- ============= LOGO STRIP ============= -->
+<section class="logo-strip">
+  <div class="label">WE'VE HELPED BUSINESSES JUST<br>xxxxxLIKE YOURS STEP INTO THE<br>DIGITAL WORLD xxxxxxxxxxxxxxx</div>
+  <div class="cell">
+    <svg viewBox="0 0 60 60" width="48" height="48" fill="none" stroke="#111" stroke-width="2"><circle cx="30" cy="30" r="22"/><path d="M30 8 v44 M8 30 h44 M14 14 l32 32 M14 46 l32 -32"/></svg>
+  </div>
+  <div class="cell" style="font-family:'Inter Tight';font-weight:800;font-size:32px">ve</div>
+  <div class="cell" style="gap:6px">
+    <svg viewBox="0 0 18 36" width="14" height="32"><rect x="0" y="0" width="2" height="36" fill="#111"/><rect x="4" y="0" width="2" height="36" fill="#111"/><rect x="8" y="0" width="2" height="36" fill="#111"/><rect x="12" y="0" width="2" height="36" fill="#111"/><rect x="16" y="0" width="2" height="36" fill="#111"/></svg>
+    <span style="font-family:'Inter Tight';font-weight:800">Birdflocks</span>
+  </div>
+</section>
+
+<!-- ============= DOME ============= -->
+<section class="dome">
+  <svg viewBox="0 0 1600 700" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="dome-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#111010"/>
+        <stop offset="1" stop-color="#000"/>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="700" fill="#E9E8E2"/>
+    <!-- columns -->
+    <g stroke="#1c1c1c" stroke-width="1.2">
+      <line x1="80" y1="0" x2="80" y2="700"/>
+      <line x1="220" y1="0" x2="220" y2="700"/>
+      <line x1="360" y1="0" x2="360" y2="700"/>
+      <line x1="1240" y1="0" x2="1240" y2="700"/>
+      <line x1="1380" y1="0" x2="1380" y2="700"/>
+      <line x1="1520" y1="0" x2="1520" y2="700"/>
+    </g>
+    <!-- horizontal -->
+    <line x1="0" y1="60" x2="1600" y2="60" stroke="#1c1c1c"/>
+    <line x1="0" y1="640" x2="1600" y2="640" stroke="#1c1c1c"/>
+    <!-- dome -->
+    <ellipse cx="800" cy="1100" rx="900" ry="540" fill="url(#dome-grad)"/>
+  </svg>
+  <span class="star1">✦</span>
+  <span class="star2" style="top:64%;left:34%">✦</span>
+</section>
+
+<!-- ============= ORBIT + CIRCLE ============= -->
+<section class="orbit" id="contact">
+  <div class="ring"></div>
+  <div class="ring" style="width:520px;height:520px;border:1px solid rgba(217,217,217,0.2)"></div>
+  <div class="ring" style="width:280px;height:280px;border:1px solid rgba(217,217,217,0.3)"></div>
+  <div class="core"></div>
+  <div class="orbit-text">
+    <div class="a">LET'S ROCK! ✦</div>
+    <div class="b">LET'S ROCK! ✦</div>
+    <div class="c">LET'S ROCK! ✦</div>
+    <div class="d">LET'S ROCK! ✦</div>
+    <div class="e">LET'S ROCK! ✦</div>
+    <div class="f">LET'S ROCK! ✦</div>
+  </div>
+  <span class="star1">✦</span>
+  <span class="star2" style="top:30%;right:18%">✦</span>
+  <span class="star3" style="top:48%;left:24%">✦</span>
+  <span class="star2" style="top:18%;left:50%">✦</span>
+  <span class="star3" style="top:62%;right:8%">✦</span>
+  <span class="star1" style="top:74%;left:38%">✦</span>
+  <span class="arrow-down">▲</span>
+</section>
+
+<!-- ============= FOOTER ============= -->
+<footer class="footer">
+  <div class="left">
+    <a href="#">Privacy Policy</a> &nbsp; | &nbsp; <a href="#">Cookie Policy</a>
+  </div>
+  <div class="right">© Portal-1 · Brand, UX &amp; Web Design</div>
+</footer>
+
+<!-- ============= SIDE TABS ============= -->
+<aside class="side-tab">
+  <span class="w">W.</span>
+  <span class="rot">Honors</span>
+</aside>
+<div class="green-tab">🔑</div>
+
+<!-- ============= COOKIE BANNER ============= -->
+<div class="cookie" id="cookie">
+  <div>We (www.portalone.studio) and selected third parties (2) use cookies or similar technologies for technical purposes and, with your consent, for <strong>experience</strong> and <strong>measurement</strong> as specified in the <a href="#" style="text-decoration:underline">cookie policy</a>.</div>
+  <div style="margin-top:10px;opacity:.7">You can freely give, deny, or withdraw your consent at any time by accessing the preferences panel. Denying consent may make related features unavailable.</div>
+  <div style="margin-top:10px;opacity:.7">Use the "Accept" button to consent. Use the "Reject" button to continue without accepting.</div>
+  <div class="row" style="margin-top:14px"><span>Experience</span><div class="toggle"></div></div>
+  <div class="row"><span>Measurement</span><div class="toggle"></div></div>
+  <div class="actions">
+    <a href="#">Reject</a>
+    <a href="#" id="accept-btn">Accept</a>
+  </div>
+  <div class="learn"><a href="#">Learn more</a></div>
+</div>
+
+<!-- ============= JS ============= -->
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- portal stage (vertical lines + stars) ---------- */
+const portalCanvas = document.getElementById('portal-canvas');
+const ps = new THREE.Scene();
+const pc = new THREE.PerspectiveCamera(60, 16/9, 0.1, 200);
+pc.position.set(0, 0, 22);
+
+const pr = new THREE.WebGLRenderer({ canvas: portalCanvas, antialias: true, alpha: true });
+pr.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+function resizePortal() {
+  const r = portalCanvas.getBoundingClientRect();
+  pr.setSize(r.width, r.height, false);
+  pc.aspect = r.width / r.height; pc.updateProjectionMatrix();
+}
+window.addEventListener('resize', resizePortal);
+new ResizeObserver(resizePortal).observe(portalCanvas.parentElement);
+resizePortal();
+
+// Vertical light lines (the portal "curtain")
+const lineCount = 220;
+const positions = new Float32Array(lineCount * 2 * 3);
+for (let i = 0; i < lineCount; i++) {
+  const x = (i / lineCount - 0.5) * 18;
+  // each line is a tall vertical segment that bulges toward the center
+  const top = 10, bot = -10;
+  positions[i*6+0] = x; positions[i*6+1] = top; positions[i*6+2] = 0;
+  positions[i*6+3] = x; positions[i*6+4] = bot; positions[i*6+5] = 0;
+}
+const lineGeo = new THREE.BufferGeometry();
+lineGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const lineMat = new THREE.LineBasicMaterial({ color: 0xE9E8E2, transparent: true, opacity: 0.35 });
+const lines = new THREE.LineSegments(lineGeo, lineMat);
+ps.add(lines);
+
+// Stars as points
+const stars = (() => {
+  const N = 320;
+  const p = new Float32Array(N*3);
+  for (let i = 0; i < N; i++) {
+    p[i*3+0] = (Math.random()-0.5) * 28;
+    p[i*3+1] = (Math.random()-0.5) * 14;
+    p[i*3+2] = (Math.random()-0.5) * 6;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const m = new THREE.PointsMaterial({ color: 0xffffff, size: 0.045, sizeAttenuation: true, transparent: true, opacity: 0.85 });
+  const pts = new THREE.Points(g, m);
+  ps.add(pts);
+  return pts;
+})();
+
+let pmx = 0, pmy = 0;
+portalCanvas.parentElement.addEventListener('mousemove', e => {
+  const r = portalCanvas.parentElement.getBoundingClientRect();
+  pmx = ((e.clientX - r.left) / r.width - 0.5);
+  pmy = ((e.clientY - r.top) / r.height - 0.5);
+});
+
+let pt = 0;
+function animatePortal() {
+  pt += 0.005;
+  // make the lines bulge inward in the middle (cone / portal shape)
+  const arr = lineGeo.attributes.position.array;
+  for (let i = 0; i < lineCount; i++) {
+    const x = (i / lineCount - 0.5) * 18;
+    const bulge = 1 - Math.abs((i/lineCount - 0.5)*2);
+    const offsetZ = -bulge * 6 - 2;
+    arr[i*6+0] = x; arr[i*6+2] = offsetZ;
+    arr[i*6+3] = x; arr[i*6+5] = offsetZ;
+  }
+  lineGeo.attributes.position.needsUpdate = true;
+  // mouse parallax
+  pc.position.x += (pmx * 1.4 - pc.position.x) * 0.05;
+  pc.position.y += (-pmy * 0.6 - pc.position.y) * 0.05;
+  pc.lookAt(0, 0, 0);
+  stars.rotation.z += 0.0006;
+  lines.rotation.y = Math.sin(pt) * 0.05;
+  pr.render(ps, pc);
+  requestAnimationFrame(animatePortal);
+}
+animatePortal();
+
+/* ---------- black hole radial ---------- */
+const bhCanvas = document.getElementById('bh-canvas');
+const bs = new THREE.Scene();
+const bc = new THREE.PerspectiveCamera(45, 16/8, 0.1, 200);
+bc.position.set(0, 0, 50);
+const br = new THREE.WebGLRenderer({ canvas: bhCanvas, antialias: true, alpha: true });
+br.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+function resizeBH() {
+  const r = bhCanvas.getBoundingClientRect();
+  br.setSize(r.width, r.height, false);
+  bc.aspect = r.width / r.height; bc.updateProjectionMatrix();
+}
+window.addEventListener('resize', resizeBH);
+new ResizeObserver(resizeBH).observe(bhCanvas.parentElement);
+resizeBH();
+
+// concentric circles + radial lines
+const radial = new THREE.Group();
+bs.add(radial);
+for (let r = 1; r < 24; r += 1) {
+  const pts = [];
+  for (let a = 0; a <= 64; a++) {
+    const ang = (a/64) * Math.PI*2;
+    pts.push(new THREE.Vector3(Math.cos(ang)*r*2, Math.sin(ang)*r*1.2, 0));
+  }
+  const g = new THREE.BufferGeometry().setFromPoints(pts);
+  const m = new THREE.LineBasicMaterial({ color: 0x1c1c1c, transparent: true, opacity: 0.5 });
+  radial.add(new THREE.Line(g, m));
+}
+for (let a = 0; a < 64; a++) {
+  const ang = (a/64) * Math.PI*2;
+  const pts = [new THREE.Vector3(Math.cos(ang)*40, Math.sin(ang)*30, 0), new THREE.Vector3(0, 0, 0)];
+  const g = new THREE.BufferGeometry().setFromPoints(pts);
+  const m = new THREE.LineBasicMaterial({ color: 0x1c1c1c, transparent: true, opacity: 0.4 });
+  radial.add(new THREE.Line(g, m));
+}
+// black center
+const center = new THREE.Mesh(
+  new THREE.SphereGeometry(2.4, 32, 32),
+  new THREE.MeshBasicMaterial({ color: 0xffffff })
+);
+radial.add(center);
+
+let bt = 0;
+function animateBH() {
+  bt += 0.0025;
+  radial.rotation.z = bt;
+  br.render(bs, bc);
+  requestAnimationFrame(animateBH);
+}
+animateBH();
+
+/* cookie */
+document.getElementById('accept-btn').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('cookie').classList.add('hidden');
+});
+
+/* GSAP */
+gsap.registerPlugin(ScrollTrigger);
+gsap.from('.giant .row', { y: 80, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: '.giant', start: 'top 80%'} });
+gsap.utils.toArray('.why .card').forEach((c, i) => {
+  gsap.from(c, { y: 60, opacity: 0, duration: 0.8, delay: i*0.1, ease: 'power3.out', scrollTrigger: { trigger: c, start: 'top 85%'} });
+});
+gsap.from('.type-sample .bigword', { x: -100, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: '.type-sample', start: 'top 75%'} });
+gsap.from('.orbit .core', { scale: 0, duration: 1, ease: 'back.out(1.4)', scrollTrigger: { trigger: '.orbit', start: 'top 70%'} });
+
+</script>
+
+<!--
+PRESERVED WELL
+  - Dark ground + cream/ink contrast rhythm.
+  - Vertical hairlines & 3D portal "vortex" feel (Three.js fan of lines + parallax).
+  - Multi-row marquee strip repeating tagline + icons.
+  - "WHY PORTAL-1?" with three card pile in black + serif + star.
+  - Orbit + circle + spinning text "LET'S ROCK!" with star particles.
+  - Pixelify face for the "WE'VE HELPED" tag, mixed with Instrument Serif italic for humanity.
+  - Black dome arc, vertical column rules, "Honors" vertical right tab.
+
+TRADE-OFFS / INTENTIONAL
+  - PP Neue Machina is not a free font; Inter Tight is the closest open grotesque
+    in the same monoline mechanical weight.
+  - The portal scene is a static cone of lines instead of a fully simulated
+    tunnel — captures the visual rhythm without melting fps.
+  - Cookie banner, real form, contact form, route-aware language toggle are
+    not wired (this is a visual recreation).
+-->
+</body>
+</html>

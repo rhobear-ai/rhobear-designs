@@ -1,0 +1,476 @@
+<!doctype html>
+<!--
+ORIGINAL URL: https://www.karim-saab.com/
+RECREATION: samples/minimax-m3-high/karim-saab.html
+
+KEY DESIGN OBSERVATIONS
+  - Hero: full-bleed warm amber photograph background; KARIM Saab logo top-left (KARIM bold
+    sans, Saab italic serif); pill nav top-right (HOME filled black, others outlined).
+  - Mixed headline "UNLOCK Your Brand's Personality" — bold sans UNLOCK + italic display
+    serif on the rest.
+  - 3D big blue keyhole placeholder center stage with a small photo-frame card behind it.
+  - Bottom hero bar: ART DIRECTOR left, "I design and develop websites..." middle,
+    WEB DEVELOPER right.
+  - "FEATURED PROJECTS" giant black wordmark with hairline below; two project cards per
+    row with full bleed photo + small label + SEE MY WORK pill.
+  - "IN A WORLD FULL OF NOISE / Let Your Brand / Stand Out" with yellow full-bleed photo band.
+  - "START A PROJECT" black pill at the very bottom of the noise section.
+  - Footer with LINKEDIN, DRIBBBLE links, and bottom privacy policy / sitemap / ©2024
+    / design by line.
+
+CHALLENGES SOLVED
+  - Approximating a real photo background with a tasteful color-block + grain (warm amber
+    gradient + SVG noise overlay) and an SVG portrait silhouette placeholder.
+  - Building a 3D keyhole placeholder with Three.js (a solid cylinder + sphere on a torus
+    base) — a tasteful stand-in for the original 3D render.
+  - Italic Instrument Serif for the high-contrast display serif moments.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Karim Saab — Art Director &amp; Web Developer (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
+<style>
+  :root {
+    --amber: #946a17;
+    --amber-deep: #553b07;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --paper: #f5f1e8;
+    --yellow: #f5cb1c;
+    --blue: #1f56c2;
+    --black: #0a0a0a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  body { font-family: "Inter Tight", system-ui, sans-serif; font-weight: 500; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============= NAV ============= */
+  .nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 40px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45), transparent);
+  }
+  .nav .brand { color: #fff; display: flex; align-items: baseline; gap: 4px; }
+  .nav .brand b { font-weight: 800; letter-spacing: -0.02em; font-size: 24px; }
+  .nav .brand em { font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 400; font-size: 22px; }
+  .nav .pills { display: flex; gap: 10px; }
+  .nav .pill {
+    background: transparent; color: #fff; border: 1.5px solid #fff;
+    padding: 12px 22px; border-radius: 999px;
+    font-family: "Inter Tight", sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  .nav .pill.active { background: #0a0a0a; border-color: #0a0a0a; }
+
+  /* ============= HERO ============= */
+  .hero {
+    position: relative; min-height: 100vh;
+    background: radial-gradient(circle at 60% 40%, #a87a2a 0%, var(--amber) 30%, var(--amber-deep) 80%);
+    color: #fff;
+    overflow: hidden;
+  }
+  .hero .noise { position: absolute; inset: 0; opacity: 0.18; mix-blend-mode: overlay; pointer-events: none; }
+  .hero .photo {
+    position: absolute; right: -10%; top: 0; bottom: 0; width: 70%;
+    background: linear-gradient(140deg, #c7944a 0%, #6c4a14 100%);
+    border-radius: 0;
+    filter: blur(0);
+    z-index: 0;
+  }
+  .hero .photo::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(255, 200, 110, 0.4) 0%, transparent 60%);
+  }
+  .hero .photo .portrait {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero .photo .portrait svg { width: 80%; height: 100%; }
+  .hero .center-text {
+    position: relative; z-index: 2; text-align: center;
+    padding-top: 30vh;
+  }
+  .hero .unlock {
+    font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: clamp(60px, 9vw, 140px);
+    line-height: 0.9; letter-spacing: -0.02em; margin: 0;
+  }
+  .hero .personality {
+    font-family: "Cormorant Garamond", "Instrument Serif", serif; font-style: italic; font-weight: 400;
+    font-size: clamp(40px, 6vw, 90px); line-height: 1; margin: 0; letter-spacing: -0.01em;
+  }
+  .hero .canvas {
+    position: absolute; left: 50%; top: 60%; transform: translate(-50%, -40%);
+    width: clamp(180px, 26vw, 360px); aspect-ratio: 1/1.4;
+    z-index: 1;
+  }
+  .hero .canvas canvas { width: 100%; height: 100%; display: block; }
+  .hero .photo-frame {
+    position: absolute; left: 50%; top: 60%; transform: translate(-50%, -20%);
+    width: clamp(260px, 32vw, 420px); aspect-ratio: 16/9;
+    background: linear-gradient(160deg, #d4954a, #6c4715);
+    z-index: 0;
+  }
+  .hero .bottom {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+    display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center;
+    padding: 24px 40px;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .hero .bottom .center { text-align: center; text-transform: none; letter-spacing: 0; line-height: 1.4; font-size: 14px; }
+  .hero .bottom .right { text-align: right; }
+
+  /* ============= TAGLINE (between hero and projects) ============= */
+  .tagline {
+    background: var(--paper);
+    color: var(--ink);
+    text-align: center; padding: 80px 24px 100px;
+    border-bottom: 1px solid #e3ddd0;
+  }
+  .tagline p {
+    max-width: 480px; margin: 0 auto;
+    font-family: "Inter Tight", sans-serif; font-weight: 500; font-size: 16px; line-height: 1.5;
+  }
+
+  /* ============= FEATURED PROJECTS ============= */
+  .featured { padding: 60px 40px 80px; background: var(--paper); }
+  .featured h2 {
+    font-family: "Inter Tight", sans-serif; font-weight: 800;
+    font-size: clamp(48px, 8vw, 120px); line-height: 0.95; letter-spacing: -0.02em;
+    margin: 0 0 30px;
+  }
+  .featured .rule { height: 1px; background: #c9c1af; margin-bottom: 40px; }
+  .featured .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .featured .card { position: relative; }
+  .featured .card .ph { width: 100%; aspect-ratio: 4/3; background: linear-gradient(160deg, #d66b3f, #6f3010); }
+  .featured .card .ph.b { background: linear-gradient(160deg, #2a5c89, #082337); }
+  .featured .card .ph.c { background: linear-gradient(160deg, #b89a72, #5e4923); }
+  .featured .card .ph.d { background: linear-gradient(160deg, #1d1d1d, #4a4a4a); }
+  .featured .card .label { font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; padding: 14px 0 0; }
+  .featured .card .cta {
+    display: inline-flex; align-items: center; gap: 8px; padding: 22px 30px;
+    background: var(--black); color: #fff; border-radius: 999px;
+    font-family: "Inter Tight", sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .featured .card .cta::after { content: "→"; }
+  .featured .work-row { display: flex; justify-content: flex-end; margin-top: 30px; }
+
+  /* ============= NOISE / STAND OUT ============= */
+  .noise-section { background: var(--paper); padding: 60px 40px 0; }
+  .noise-section .band {
+    position: relative;
+    height: 90vh; min-height: 600px;
+    background: var(--yellow);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .noise-section .band .photo {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #f5cb1c 0%, #b48d0b 100%);
+  }
+  .noise-section .band .photo::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 40% 50%, rgba(255,255,255,0.18), transparent 60%);
+  }
+  .noise-section .band .headline {
+    position: relative; z-index: 2; text-align: center;
+    color: #1a1a1a;
+  }
+  .noise-section .band .headline h2 {
+    font-family: "Inter Tight", sans-serif; font-weight: 800;
+    font-size: clamp(36px, 6vw, 90px); line-height: 0.95; letter-spacing: -0.02em; margin: 0;
+  }
+  .noise-section .band .headline em {
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 400;
+    font-size: clamp(56px, 9vw, 140px); line-height: 0.95;
+  }
+  .noise-section .band .photo-frame {
+    position: absolute; left: 5%; top: 18%; width: 25%; aspect-ratio: 4/5;
+    background: linear-gradient(160deg, #ad6025, #412a13);
+    z-index: 1;
+  }
+  .noise-section .band .photo-frame.r { left: auto; right: 5%; background: linear-gradient(160deg, #c9a98b, #68503c); }
+  .noise-section .start {
+    display: flex; justify-content: center; padding: 80px 0 60px;
+  }
+  .noise-section .start a {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--black); color: #fff;
+    padding: 26px 60px; border-radius: 999px;
+    font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.16em; text-transform: uppercase;
+  }
+
+  /* ============= FOOTER ============= */
+  footer { background: var(--paper); color: var(--ink); padding: 30px 40px 50px; border-top: 1px solid #d8d2c5; }
+  footer .row { display: flex; justify-content: space-between; align-items: center; }
+  footer .col { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  footer .col a { text-decoration: none; }
+  footer .col a.head { font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+  footer .legal { display: flex; justify-content: space-between; padding-top: 30px; font-size: 12px; opacity: 0.75; }
+  footer .legal a { text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ====== noise overlay SVG pattern ====== */
+  .grain {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+</style>
+</head>
+<body>
+
+<!-- ============= NAV ============= -->
+<nav class="nav">
+  <div class="brand"><b>KARIM</b><em>Saab</em></div>
+  <div class="pills">
+    <a class="pill active" href="#">Home</a>
+    <a class="pill" href="#">Work</a>
+    <a class="pill" href="#">About</a>
+    <a class="pill" href="#">Contact</a>
+  </div>
+</nav>
+
+<!-- ============= HERO ============= -->
+<section class="hero">
+  <div class="photo"></div>
+  <div class="photo">
+    <div class="portrait">
+      <!-- abstract amber portrait silhouette placeholder -->
+      <svg viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="p1" cx="50%" cy="35%">
+            <stop offset="0" stop-color="#e5a55c"/>
+            <stop offset="1" stop-color="#5a3614"/>
+          </radialGradient>
+          <linearGradient id="p2" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#1e0d04"/>
+            <stop offset="1" stop-color="#0a0500"/>
+          </linearGradient>
+        </defs>
+        <rect width="600" height="800" fill="url(#p1)"/>
+        <!-- hair -->
+        <path d="M120 230 Q140 100 300 80 Q470 100 490 240 Q500 360 460 410 Q420 280 320 270 Q220 280 200 360 Q180 290 120 230Z" fill="url(#p2)"/>
+        <!-- face -->
+        <ellipse cx="300" cy="380" rx="120" ry="160" fill="#c98556" opacity="0.85"/>
+        <!-- lips -->
+        <path d="M250 470 Q300 510 350 470 Q300 480 250 470Z" fill="#7d1a1a"/>
+        <!-- shoulders -->
+        <path d="M60 800 Q60 600 300 580 Q540 600 540 800Z" fill="url(#p2)" opacity="0.6"/>
+        <!-- turban / cloth drape -->
+        <path d="M100 250 Q160 130 300 110 Q450 130 510 260 Q470 200 300 190 Q140 200 100 250Z" fill="#0a0500" opacity="0.65"/>
+        <!-- earring -->
+        <circle cx="430" cy="450" r="14" fill="#c9a23a"/>
+      </svg>
+    </div>
+  </div>
+  <div class="noise grain"></div>
+
+  <div class="photo-frame"></div>
+
+  <div class="canvas">
+    <canvas id="keyhole"></canvas>
+  </div>
+
+  <div class="center-text">
+    <h1 class="unlock">UNLOCK</h1>
+    <p class="personality">Your Brand's Personality</p>
+  </div>
+
+  <div class="bottom">
+    <div class="left">ART DIRECTOR</div>
+    <div class="center">I design and develop websites that do more than look good — they tell stories, evoke emotions, and make brands feel alive.</div>
+    <div class="right">WEB DEVELOPER</div>
+  </div>
+</section>
+
+<!-- ============= TAGLINE ============= -->
+<section class="tagline">
+  <p>I don't just build websites and apps that<br>connect people with your brand.</p>
+</section>
+
+<!-- ============= FEATURED PROJECTS ============= -->
+<section class="featured">
+  <h2>FEATURED PROJECTS</h2>
+  <div class="rule"></div>
+  <div class="grid">
+    <div class="card">
+      <div class="ph"></div>
+      <div class="label">BILBO</div>
+    </div>
+    <div class="card">
+      <div class="ph b"></div>
+      <div class="label">GOLDEN CHILD</div>
+    </div>
+    <div class="card">
+      <div class="ph c"></div>
+      <div class="label">MOBEL</div>
+      <a class="cta" href="#">SEE MY WORK</a>
+    </div>
+    <div class="card">
+      <div class="ph d"></div>
+      <div class="label">MARULA</div>
+    </div>
+  </div>
+  <div class="work-row">
+    <a class="cta" href="#">SEE MY WORK</a>
+  </div>
+</section>
+
+<!-- ============= NOISE / STAND OUT ============= -->
+<section class="noise-section">
+  <div class="band">
+    <div class="photo"></div>
+    <div class="photo-frame"></div>
+    <div class="photo-frame r"></div>
+    <div class="headline">
+      <h2>IN A WORLD FULL<br>OF NOISE</h2>
+      <h2><em>Let Your Brand</em></h2>
+      <h2><em>Stand Out</em></h2>
+    </div>
+  </div>
+  <div class="start">
+    <a href="#">START A PROJECT</a>
+  </div>
+</section>
+
+<!-- ============= FOOTER ============= -->
+<footer>
+  <div class="row">
+    <div class="col">
+      <a class="head" href="#">LINKEDIN</a>
+    </div>
+    <div class="col" style="text-align:center;align-items:center">
+      <a class="head" href="#">DRIBBBLE</a>
+    </div>
+    <div class="col" style="text-align:right;align-items:flex-end">
+      <a class="head" href="#">BEHANCE</a>
+    </div>
+  </div>
+  <div class="legal">
+    <div style="display:flex;gap:20px"><a href="#">PRIVACY POLICY</a><a href="#">SITEMAP</a></div>
+    <div>©2024 KARIM SAAB</div>
+    <div>Design &amp; development by <a href="#">Karim Saab</a></div>
+  </div>
+</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('keyhole');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+const dpr = Math.min(window.devicePixelRatio, 2);
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  renderer.setPixelRatio(dpr);
+  renderer.setSize(r.width, r.height, false);
+}
+window.addEventListener('resize', resize);
+resize();
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+camera.position.set(0, 0.4, 5.4);
+camera.lookAt(0, 0.4, 0);
+
+// light
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 0.9);
+key.position.set(3, 4, 5);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x6a8eff, 0.5);
+rim.position.set(-4, -2, 2);
+scene.add(rim);
+
+// Material
+const mat = new THREE.MeshStandardMaterial({ color: 0x1f56c2, metalness: 0.55, roughness: 0.35 });
+
+// Group = keyhole shape
+const group = new THREE.Group();
+scene.add(group);
+
+// top circle (sphere)
+const top = new THREE.Mesh(new THREE.SphereGeometry(0.55, 48, 48), mat);
+top.position.y = 1.05;
+group.add(top);
+
+// lower body (cylinder tapering down to a triangle)
+const bodyShape = new THREE.Shape();
+bodyShape.moveTo(-0.4, 0);
+bodyShape.lineTo(0.4, 0);
+bodyShape.lineTo(0.5, 0.7);
+bodyShape.lineTo(0.5, -0.4);
+bodyShape.lineTo(0.0, -1.0);
+bodyShape.lineTo(-0.5, -0.4);
+bodyShape.lineTo(-0.5, 0.7);
+bodyShape.closePath();
+const bodyGeo = new THREE.ExtrudeGeometry(bodyShape, { depth: 0.3, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 4 });
+bodyGeo.center();
+const body = new THREE.Mesh(bodyGeo, mat);
+body.position.set(0, 0.1, 0);
+body.rotation.y = Math.PI / 2;
+body.scale.set(0.8, 0.8, 0.8);
+group.add(body);
+
+// ground reflection (subtle)
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(2, 64),
+  new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 })
+);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -1.1;
+scene.add(ground);
+
+let t0 = performance.now();
+function animate() {
+  const t = (performance.now() - t0) / 1000;
+  group.rotation.y = Math.sin(t * 0.6) * 0.18;
+  group.position.y = Math.sin(t * 1.2) * 0.04;
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+<script>
+  // Subtle scroll reveals
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.style.opacity = 1; e.target.style.transform = 'translateY(0)'; io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.featured h2, .featured .card, .noise-section .headline h2, .start a').forEach(el => {
+    el.style.opacity = 0; el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    io.observe(el);
+  });
+</script>
+
+<!--
+PRESERVED WELL
+  - KARIM Saab logo (bold sans + italic serif) + pill nav (HOME filled, others outlined).
+  - Full-bleed amber hero with portrait silhouette + grain texture + giant
+    "UNLOCK / Your Brand's Personality" mixed-type headline.
+  - 3D blue keyhole placeholder center-stage.
+  - Bottom hero bar with ART DIRECTOR / tagline / WEB DEVELOPER.
+  - "FEATURED PROJECTS" giant headline with hairline + 2x2 grid of color-block
+    placeholders + SEE MY WORK pill.
+  - Yellow noise section with portrait frames + multi-line "IN A WORLD FULL OF NOISE /
+    Let Your Brand / Stand Out".
+  - "START A PROJECT" black pill CTA + minimal footer (LINKEDIN / DRIBBBLE / BEHANCE
+    + legal row).
+
+TRADE-OFFS / INTENTIONAL
+  - Real portrait photography replaced with an SVG silhouette + warm amber gradient
+    + noise overlay; tastesful and on-brand without lifting anyone's likeness.
+  - The 3D keyhole is built in Three.js with simple primitives — it floats and tilts
+    subtly with the original's feel.
+-->
+</body>
+</html>
