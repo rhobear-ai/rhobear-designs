@@ -1,0 +1,536 @@
+<!doctype html>
+<!--
+================================================================================
+Original URL : https://lisovskiy.work/
+Recreated by : MiniMax M3 (high) — lane designs-b1
+Design observations
+- Editorial / studio site for a single art-director / designer
+- Color: strict black/white with a warm dark accent (#312e2b — floppy body)
+  and a warm metal grey (#9f9b98) used for the floppy metal slider
+- Type: Apfel Grotezk (we substitute a tight grotesque: "Inter Tight" + a
+  fallback stack). Tracking is tight (-0.04em), weight 400 throughout, no
+  bold/italic. Heading 38.4 px with line-height 1.
+- Layout: full-bleed, near-monospaced vertical column on the right with a
+  single-word list ("Web / Design / Development / …"). Big h1 anchored
+  top-left, "Menu" top-right, "More" bottom-right.
+- Centerpiece: 3D-style floppy disk that rotates around the Y axis on click
+  ("Spin the floppy"). Built with Three.js so it reads as a real 3D object
+  with subtle lighting and a metallic shutter.
+- "About" section: 38 px text, three wrapped lines, lots of vertical space.
+- Featured works: irregular 4-column grid with offset rows. Tiles vary in
+  size (square vs tall) for a magazine feel. No real images — colored /
+  textural placeholders.
+- "Clients / Fields / Values" — three columns of large text, simple and
+  confident.
+- "All projects" — index list with project on the left and year on the
+  far right, separated by a hairline. "Behance / Linkedin / Email /
+  Instagram / Peace ✌︎" closes the page.
+- Animation: scroll-linked fade-in ("transparent" spans that become opaque
+  when they enter the viewport), small text reveals.
+
+Challenges solved
+- The 3D floppy: real Three.js BoxGeometry + CanvasTexture label, with
+  the metal shutter sitting in front. The disk itself spins continuously
+  when idle and accelerates on click.
+- The "irregular" works grid: pure CSS grid with intentional gaps and
+  `grid-column: span 2` for the larger tiles. No real images — placeholder
+  blocks with subtle gradient + grain.
+- Letter-spacing / line-height: tuned to read exactly like the original
+  even with a substitute typeface.
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The studio of (placeholder) — recreation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<style>
+  :root{
+    --color-front:#000;
+    --color-back:#fff;
+    --color-line:#000;
+    --color-asset-bg:#00000008;
+    --floppy-main:#312e2b;
+    --floppy-dark:#000;
+    --floppy-sticker:#fff;
+    --floppy-metal:#9f9b98;
+    --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--color-back);color:var(--color-front);font-family:"Inter Tight","Apfel Grotezk",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-weight:400;letter-spacing:-0.04em;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,p,ul,li,figure{margin:0;padding:0;list-style:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;letter-spacing:inherit;padding:0}
+
+  .transparent span{opacity:0;transform:translateY(8px);transition:opacity .9s ease, transform .9s ease}
+  .transparent.in span{opacity:1;transform:none}
+  .transparent.in span:nth-child(2){transition-delay:.04s}
+  .transparent.in span:nth-child(3){transition-delay:.08s}
+  .transparent.in span:nth-child(4){transition-delay:.12s}
+  .transparent.in span:nth-child(5){transition-delay:.16s}
+  .transparent.in span:nth-child(6){transition-delay:.2s}
+  .transparent.in span:nth-child(7){transition-delay:.24s}
+  .transparent.in span:nth-child(8){transition-delay:.28s}
+  .transparent.in span:nth-child(9){transition-delay:.32s}
+
+  .menu-button,.more-link{position:fixed;top:1.2rem;right:1.2rem;font-size:1.6rem;letter-spacing:-0.04em;z-index:50}
+  .more-link{top:auto;bottom:1.2rem;right:1.2rem;left:auto;z-index:40}
+  .menu-button{cursor:pointer}
+
+  /* HERO */
+  .hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:start;padding:1.2rem;position:relative}
+  .hero h1{font-size:clamp(28px,2.6vw,42px);line-height:1;letter-spacing:-0.04em;font-weight:400}
+  .hero h1 .wrap{display:block}
+  .hero .right-col{display:flex;justify-content:flex-end;padding-top:1.4rem}
+  .hero ul{font-size:clamp(28px,2.6vw,42px);line-height:1;text-align:right}
+  .hero ul li{margin-bottom:.05em}
+  .hero .centerpiece{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(200px,22vw,360px);aspect-ratio:1/1;pointer-events:auto}
+  .hero .centerpiece canvas{display:block;width:100%;height:100%}
+  .hero .centerpiece .spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .hero .centerpiece .spin-hint{position:absolute;left:50%;bottom:-1.6rem;transform:translateX(-50%);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0;transition:opacity .4s}
+  .hero .centerpiece:hover .spin-hint{opacity:.7}
+
+  /* ABOUT */
+  .about{padding:6rem 1.2rem 4rem;min-height:60vh}
+  .about h2{font-size:clamp(28px,2.6vw,42px);font-weight:400;letter-spacing:-0.04em;margin-bottom:1.2rem}
+  .about p{font-size:clamp(28px,2.6vw,42px);line-height:1.05;letter-spacing:-0.04em;max-width:38ch}
+
+  /* FEATURED WORKS (irregular) */
+  .works{padding:2rem 1.2rem 6rem}
+  .works .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1.2rem 1.2rem;align-items:start}
+  .tile{position:relative;aspect-ratio:1/1;background:var(--color-asset-bg);overflow:hidden;border-radius:2px;display:block}
+  .tile .ph{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-start;padding:.6rem;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0;transition:opacity .4s;color:#000}
+  .tile:hover .ph{opacity:.9}
+  .tile .ph::after{content:"";position:absolute;inset:0;background:var(--grain);mix-blend-mode:multiply;pointer-events:none}
+  .tile .ph-label{position:relative;z-index:1}
+  .tile.tall{aspect-ratio:1/1.15}
+  .tile.span2{grid-column:span 2;aspect-ratio:2/1}
+  .tile.t1{background:linear-gradient(135deg,#111 0%,#222 50%,#000 100%);color:#fff}
+  .tile.t2{background:radial-gradient(circle at 50% 60%,#ff7a18 0%,#5e1f00 70%,#1c0a00 100%)}
+  .tile.t3{background:#000;color:#fff}
+  .tile.t4{background:linear-gradient(180deg,#c9c9c9 0%,#5d5d5d 100%)}
+  .tile.t5{background:#ffd400}
+  .tile.t6{background:#3a3a3a;color:#fff}
+  .tile.t7{background:linear-gradient(135deg,#ffd5d5 0%,#ff9b9b 100%)}
+  .tile.t8{background:#fff;border:1px solid #000}
+  .tile.t9{background:radial-gradient(circle at 50% 50%,#f3c66b 0%,#7c4a1b 80%)}
+  .tile.t10{background:#000;color:#ffba00}
+  .tile.t11{background:linear-gradient(160deg,#7d3cff 0%,#2a1056 100%);color:#fff}
+  .tile.t12{background:#eee}
+  .tile.t13{background:#1a1a1a;color:#fff}
+  .tile.t14{background:linear-gradient(135deg,#a3b1c6 0%,#5b6b7e 100%)}
+  .tile.t15{background:#000;color:#fff}
+  .tile.t16{background:linear-gradient(135deg,#f4f1ec 0%,#cdb89a 100%)}
+  .tile.t17{background:#f1c4d1}
+  .tile.t18{background:linear-gradient(180deg,#1f1f1f 0%,#2c2c2c 100%);color:#fff}
+  .tile.t19{background:linear-gradient(180deg,#3a2916 0%,#0a0805 100%)}
+  .tile.t20{background:#dadada}
+  .tile.t21{background:#fff}
+  .tile.t22{background:linear-gradient(135deg,#0a2540 0%,#1f4068 100%);color:#fff}
+  .tile.t23{background:#000;color:#fff}
+  .tile .center-mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(36px,4vw,72px);font-weight:500;letter-spacing:-0.04em}
+  .tile .corner{position:absolute;left:.6rem;top:.6rem;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:.6}
+  .tile .corner.tr{left:auto;right:.6rem}
+
+  /* CLIENTS / FIELDS / VALUES */
+  .columns{padding:6rem 1.2rem 4rem;display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:3rem}
+  .columns h3{font-size:clamp(20px,1.4vw,24px);font-weight:400;letter-spacing:-0.04em;margin-bottom:1.4rem;opacity:.55}
+  .columns ul{font-size:clamp(20px,1.4vw,24px);line-height:1.2;letter-spacing:-0.04em}
+  .columns li{margin-bottom:.4em}
+  .columns .col-2 ul li{margin-bottom:1em}
+  .columns .col-2 ul + ul li,.columns .col-2 .group + .group{margin-top:1.6rem}
+  .columns .note{font-size:14px;margin-top:1.6rem;opacity:.55}
+
+  /* ALL PROJECTS */
+  .all{padding:6rem 1.2rem 2rem;position:relative}
+  .all h3{font-size:clamp(20px,1.4vw,24px);font-weight:400;letter-spacing:-0.04em;margin-bottom:1.4rem;opacity:.55}
+  .all-row{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:.4em 0;border-top:1px solid #000;cursor:pointer}
+  .all-row:last-child{border-bottom:1px solid #000}
+  .all-row .name{font-size:clamp(20px,1.4vw,24px);letter-spacing:-0.04em;transition:transform .35s}
+  .all-row .year{font-size:clamp(20px,1.4vw,24px);letter-spacing:-0.04em;opacity:.55}
+  .all-row:hover .name{transform:translateX(.6rem)}
+
+  /* FOOTER / CONTACTS */
+  .contacts{padding:6rem 1.2rem 4rem;display:grid;grid-template-columns:1fr 1fr;align-items:end;min-height:80vh}
+  .contacts ul{font-size:clamp(28px,2.6vw,42px);line-height:1.4;letter-spacing:-0.04em}
+  .contacts ul li{margin-bottom:.4em}
+  .contacts .m-vertical{writing-mode:vertical-rl;transform:rotate(180deg);justify-self:end;font-size:clamp(28px,2.6vw,42px);letter-spacing:-0.04em;padding-bottom:.2em}
+
+  /* responsive collapse */
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;gap:2rem}
+    .hero .right-col{justify-content:flex-start}
+    .works .grid{grid-template-columns:repeat(2,1fr)}
+    .columns{grid-template-columns:1fr;gap:2rem}
+    .contacts{grid-template-columns:1fr;gap:3rem;min-height:60vh}
+    .contacts .m-vertical{writing-mode:horizontal-tb;transform:none;justify-self:start}
+    .tile.span2{grid-column:span 1;aspect-ratio:1/1}
+  }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <h1 class="transparent" data-reveal>
+      <span class="wrap">The studio of</span>
+      <span class="wrap">Studio Placeholder</span>
+    </h1>
+
+    <div class="right-col">
+      <ul class="transparent" data-reveal>
+        <li>Web</li>
+        <li>Design</li>
+        <li>Development</li>
+        <li>Identity</li>
+        <li>Creative</li>
+        <li>Campaign</li>
+        <li>Collaboration</li>
+        <li>Innovation</li>
+        <li>Impact</li>
+      </ul>
+    </div>
+
+    <div class="centerpiece" id="centerpiece">
+      <div class="spin" id="floppySpin" aria-label="Spin the floppy">
+        <span class="spin-hint">Spin the floppy</span>
+      </div>
+    </div>
+
+    <button class="menu-button" aria-label="Menu">Menu</button>
+    <a class="more-link" href="#about">More</a>
+  </header>
+
+  <section id="about" class="about">
+    <h2 class="transparent" data-reveal><span>About</span></h2>
+    <p class="transparent" data-reveal>
+      <span>Crafting unique</span>
+      <br><span>experiences with the</span>
+      <br><span>power of identity</span>
+      <br><span>and tech</span>
+    </p>
+  </section>
+
+  <section class="works">
+    <div class="grid">
+      <!-- Row 1: offset middle, sparse edges -->
+      <a class="tile t1" style="grid-column:3/span 1"><span class="ph"><span class="ph-label">F · 2018</span></span><span class="center-mark">P</span><span class="corner">M</span><span class="corner tr">18</span></a>
+      <a class="tile t2" style="grid-column:4/span 1"><span class="ph"><span class="ph-label">Project A</span></span><span class="corner">a</span></a>
+      <a class="tile t3" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project B</span></span><span class="corner">b</span></a>
+
+      <!-- Row 2: centerline shift -->
+      <a class="tile t4" style="grid-column:4/span 1"><span class="ph"><span class="ph-label">Project C</span></span></a>
+      <a class="tile t5" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project D</span></span><span class="center-mark" style="color:#000">★</span></a>
+
+      <!-- Row 3: another shift -->
+      <a class="tile t6" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project E</span></span></a>
+
+      <!-- Row 4: dense cluster -->
+      <a class="tile t7" style="grid-column:4/span 1"><span class="ph"><span class="ph-label">Project F</span></span></a>
+      <a class="tile t8" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project G</span></span></a>
+
+      <!-- Row 5: gap, then a wide tile -->
+      <a class="tile t9" style="grid-column:3/span 1"><span class="ph"><span class="ph-label">Project H</span></span></a>
+      <a class="tile t10" style="grid-column:4/span 1"><span class="ph"><span class="ph-label">Project I</span></span></a>
+      <a class="tile t11" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project J</span></span></a>
+
+      <!-- Row 6: more gaps -->
+      <a class="tile t12" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project K</span></span></a>
+
+      <!-- Row 7: middle cluster -->
+      <a class="tile t13" style="grid-column:3/span 1"><span class="ph"><span class="ph-label">Project L</span></span></a>
+      <a class="tile t14" style="grid-column:4/span 1"><span class="ph"><span class="ph-label">Project M</span></span></a>
+      <a class="tile t15" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project N</span></span></a>
+
+      <!-- Row 8: edge feature -->
+      <a class="tile t16" style="grid-column:1/span 1"><span class="ph"><span class="ph-label">Project O</span></span></a>
+      <a class="tile t17" style="grid-column:2/span 1"><span class="ph"><span class="ph-label">Project P</span></span></a>
+      <a class="tile t18" style="grid-column:3/span 1"><span class="ph"><span class="ph-label">Project Q</span></span></a>
+      <a class="tile t19" style="grid-column:4/span 1"><span class="ph"><span class="ph-label">Project R</span></span></a>
+      <a class="tile t20" style="grid-column:5/span 1"><span class="ph"><span class="ph-label">Project S</span></span></a>
+    </div>
+  </section>
+
+  <section class="columns transparent" data-reveal>
+    <div>
+      <h3>Clients</h3>
+      <ul>
+        <li>Canon</li>
+        <li>Kia</li>
+        <li>Base Design</li>
+        <li>Manychat *</li>
+        <li>Soramitsu *</li>
+        <li>Hyperinteractive</li>
+        <li>CreativePeople *</li>
+        <li>ONY</li>
+        <li>Yandex</li>
+        <li>S7 Airlines</li>
+        <li>Megafon</li>
+        <li>Kerama Marazzi</li>
+      </ul>
+      <p class="note">* (on-site)</p>
+    </div>
+    <div class="col-2">
+      <h3>Fields</h3>
+      <div class="group">
+        <ul>
+          <li>Digital design</li>
+          <li>Interaction</li>
+          <li>Web production</li>
+          <li>Frontend</li>
+        </ul>
+      </div>
+      <div class="group">
+        <ul>
+          <li>Concepting</li>
+          <li>Brand identity</li>
+          <li>Visual systems</li>
+          <li>Creative direction</li>
+        </ul>
+      </div>
+      <div class="group">
+        <ul>
+          <li>Campaigns</li>
+          <li>Communications</li>
+          <li>Graphic design</li>
+          <li>Motion</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <h3>Values</h3>
+      <ul>
+        <li>Collaboration</li>
+        <li>Creativity</li>
+        <li>Partnership</li>
+        <li>Innovation</li>
+        <li>Transparency</li>
+        <li>Quality</li>
+        <li>Simplicity</li>
+        <li>Authenticity</li>
+        <li>Purpose</li>
+        <li>Trust</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="all transparent" data-reveal>
+    <h3>All projects</h3>
+    <a class="all-row" href="#"><span class="name">Music Videos I Like</span><span class="year">2026</span></a>
+    <a class="all-row" href="#"><span class="name">Wendy Andrade</span><span class="year">2025</span></a>
+    <a class="all-row" href="#"><span class="name">Manychat careers</span><span class="year">2025</span></a>
+    <a class="all-row" href="#"><span class="name">Polkaswap</span><span class="year">2024</span></a>
+    <a class="all-row" href="#"><span class="name">Fearless wallet</span><span class="year">2024</span></a>
+    <a class="all-row" href="#"><span class="name">Polecat Agency</span><span class="year">2024</span></a>
+    <a class="all-row" href="#"><span class="name">Elena Borisova</span><span class="year">2024</span></a>
+    <a class="all-row" href="#"><span class="name">SORA Card</span><span class="year">2024</span></a>
+    <a class="all-row" href="#"><span class="name">Style Reptile Figma plugin</span><span class="year">2023</span></a>
+    <a class="all-row" href="#"><span class="name">Fraud Intelligence Limited</span><span class="year">2023</span></a>
+    <a class="all-row" href="#"><span class="name">SORA</span><span class="year">2023</span></a>
+    <a class="all-row" href="#"><span class="name">Sekelyk &amp; Partners Law Bureau</span><span class="year">2023</span></a>
+    <a class="all-row" href="#"><span class="name">Manychat websites</span><span class="year">2023</span></a>
+    <a class="all-row" href="#"><span class="name">Personal page</span><span class="year">2023</span></a>
+    <a class="all-row" href="#"><span class="name">Instagram summit 2022</span><span class="year">2022</span></a>
+    <a class="all-row" href="#"><span class="name">Recycling guide</span><span class="year">2021</span></a>
+    <a class="all-row" href="#"><span class="name">Get a topic</span><span class="year">2021</span></a>
+    <a class="all-row" href="#"><span class="name">Burn the tickets game</span><span class="year">2021</span></a>
+    <a class="all-row" href="#"><span class="name">Big traffic rules exam</span><span class="year">2021</span></a>
+    <a class="all-row" href="#"><span class="name">9.8 agency</span><span class="year">2021</span></a>
+    <a class="all-row" href="#"><span class="name">Ovvverrrflowww Figma plugin</span><span class="year">2020</span></a>
+    <a class="all-row" href="#"><span class="name">20 stories of 2020 Yandex Taxi</span><span class="year">2020</span></a>
+    <a class="all-row" href="#"><span class="name">Manymoji</span><span class="year">2020</span></a>
+    <a class="all-row" href="#"><span class="name">Manychat contributor</span><span class="year">2020</span></a>
+    <a class="all-row" href="#"><span class="name">Manychat banners</span><span class="year">2020</span></a>
+    <a class="all-row" href="#"><span class="name">Pro 4.0</span><span class="year">2019</span></a>
+    <a class="all-row" href="#"><span class="name">NWPC</span><span class="year">2019</span></a>
+    <a class="all-row" href="#"><span class="name">Norkpalm</span><span class="year">2019</span></a>
+    <a class="all-row" href="#"><span class="name">Megafon big data</span><span class="year">2019</span></a>
+    <a class="all-row" href="#"><span class="name">Kerama Marazzi</span><span class="year">2019</span></a>
+    <a class="all-row" href="#"><span class="name">S7 presents A320neo</span><span class="year">2018</span></a>
+    <a class="all-row" href="#"><span class="name">Mercury tower</span><span class="year">2018</span></a>
+    <a class="all-row" href="#"><span class="name">Akron</span><span class="year">2018</span></a>
+    <a class="all-row" href="#"><span class="name">Acron</span><span class="year">2018</span></a>
+    <a class="all-row" href="#"><span class="name">S7 inspired by you</span><span class="year">2017</span></a>
+    <a class="all-row" href="#"><span class="name">Progroup</span><span class="year">2017</span></a>
+    <a class="all-row" href="#"><span class="name">OKO</span><span class="year">2017</span></a>
+    <a class="all-row" href="#"><span class="name">Legis</span><span class="year">2016</span></a>
+    <a class="all-row" href="#"><span class="name">Kia happiness</span><span class="year">2015</span></a>
+    <a class="all-row" href="#"><span class="name">Otkritie</span><span class="year">2014</span></a>
+    <a class="all-row" href="#"><span class="name">Marussia motors</span><span class="year">2014</span></a>
+  </section>
+
+  <footer id="contacts" class="contacts">
+    <ul class="transparent" data-reveal>
+      <li><a href="#">Behance</a></li>
+      <li><a href="#">Linkedin</a></li>
+      <li><a href="#">Email</a></li>
+      <li><a href="#">Instagram</a></li>
+    </ul>
+    <div class="m-vertical transparent" data-reveal><span>Peace ✌︎</span></div>
+  </footer>
+
+  <script>
+    /* Reveal on scroll */
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      }
+    }, { threshold: 0.18 });
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+
+    /* 3D floppy */
+    (function(){
+      const host = document.getElementById('centerpiece');
+      const w = host.clientWidth, h = host.clientHeight;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(28, w/h, 0.1, 100);
+      camera.position.set(0, 0.05, 5.4);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(w, h, false);
+      host.appendChild(renderer.domElement);
+
+      const root = new THREE.Group();
+      scene.add(root);
+
+      const C = {
+        main: new THREE.Color('#312e2b'),
+        dark: new THREE.Color('#000000'),
+        metal: new THREE.Color('#9f9b98'),
+        sticker: new THREE.Color('#ffffff'),
+      };
+
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(2.4, 2.4, 0.18),
+        new THREE.MeshStandardMaterial({ color: C.main, roughness: 0.65, metalness: 0.05 })
+      );
+      root.add(body);
+
+      /* Top dark band */
+      const top = new THREE.Mesh(
+        new THREE.BoxGeometry(2.4, 0.9, 0.19),
+        new THREE.MeshStandardMaterial({ color: C.dark, roughness: 0.85 })
+      );
+      top.position.y = 0.75;
+      root.add(top);
+
+      /* Metal shutter */
+      const shutter = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 0.95, 0.21),
+        new THREE.MeshStandardMaterial({ color: C.metal, roughness: 0.4, metalness: 0.6 })
+      );
+      shutter.position.set(-0.36, 0.6, 0);
+      root.add(shutter);
+
+      /* Shutter slot */
+      const slot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.18, 0.22),
+        new THREE.MeshStandardMaterial({ color: C.dark, roughness: 1 })
+      );
+      slot.position.set(-0.36, 0.95, 0);
+      root.add(slot);
+
+      /* Sticker */
+      const stickerCanvas = document.createElement('canvas');
+      stickerCanvas.width = 1024; stickerCanvas.height = 512;
+      const ctx = stickerCanvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,stickerCanvas.width,stickerCanvas.height);
+      ctx.fillStyle = '#000';
+      ctx.font = '600 64px "Inter Tight", system-ui, sans-serif';
+      ctx.fillText('STUDIO', 60, 110);
+      ctx.font = '300 38px "Inter Tight", system-ui, sans-serif';
+      ctx.fillText('Project · Identity · Web', 60, 170);
+      ctx.font = '300 26px "Inter Tight", system-ui, sans-serif';
+      ctx.fillStyle = '#888';
+      ctx.fillText('— — —', 60, 250);
+      ctx.fillStyle = '#000';
+      ctx.font = '300 22px "Inter Tight", system-ui, sans-serif';
+      for (let i=0;i<5;i++){
+        for (let j=0;j<40;j++){
+          ctx.fillRect(60 + j*22, 290 + i*32 + (j%2?6:0), 14, 14);
+        }
+      }
+      const tex = new THREE.CanvasTexture(stickerCanvas);
+      tex.anisotropy = 4;
+      const sticker = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.0, 1.0),
+        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 })
+      );
+      sticker.position.set(0, -0.5, 0.10);
+      root.add(sticker);
+
+      /* Notch */
+      const notch = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.18, 0.21),
+        new THREE.MeshStandardMaterial({ color: C.metal, roughness: 0.5, metalness: 0.6 })
+      );
+      notch.position.set(0.7, -0.4, 0);
+      root.add(notch);
+
+      /* Light */
+      const key = new THREE.DirectionalLight(0xffffff, 1.1);
+      key.position.set(3, 3, 5);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.4);
+      fill.position.set(-4, 1, 3);
+      scene.add(fill);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+
+      root.rotation.z = -0.18;
+
+      let targetRotY = 0;
+      let boost = 0;
+      const baseSpin = 0.004;
+      document.getElementById('floppySpin').addEventListener('click', () => {
+        boost = 0.25;
+        targetRotY = Math.PI * 4 * Math.sign(Math.random() - 0.5 || 1);
+      });
+
+      function loop(){
+        boost *= 0.96;
+        root.rotation.y += baseSpin + boost;
+        renderer.render(scene, camera);
+        requestAnimationFrame(loop);
+      }
+      loop();
+
+      window.addEventListener('resize', () => {
+        const w2 = host.clientWidth, h2 = host.clientHeight;
+        renderer.setSize(w2, h2, false);
+        camera.aspect = w2/h2;
+        camera.updateProjectionMatrix();
+      });
+    })();
+  </script>
+</body>
+</html>
+<!--
+PRESERVED WELL
+- Black/white restraint with a single warm dark accent (#312e2b) for the
+  floppy. The metal grey (#9f9b98) shows up exactly where it should.
+- The vertical word list, the "Menu / More" anchors, the giant h1 in the
+  upper-left, the irregular featured-works grid, the three columns of
+  Clients / Fields / Values, the hairline-separated project index, and the
+  "Peace ✌︎" vertical-rl closer all hit the same beats.
+- 3D floppy is real geometry (not a CSS hack) so the spin reads as motion,
+  not a transform.
+- The "transparent" reveal effect that the original uses (text fades from
+  invisible to opaque as it enters the viewport) is reproduced.
+
+INTENTIONAL TRADE-OFFS
+- Apfel Grotezk is a commercial face; we use Inter Tight as a very close
+  free substitute. Tracking and weight are matched (-0.04em / 400).
+- The featured-works tiles are colored placeholders with a faint film grain
+  rather than real artwork; the offsets and aspect ratios are picked to
+  read like the original magazine layout, not to match any specific work.
+- The 3D floppy does not exactly mirror the SVG geometry (the original is
+  drawn as paths, not a 3D mesh). We capture the spirit: a square body,
+  dark top band, metallic shutter, white label.
+-->

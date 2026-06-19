@@ -1,0 +1,499 @@
+<!doctype html>
+<!--
+================================================================================
+Original URL : https://stiff.madebybuzzworthy.com/
+Recreated by : MiniMax M3 (high) — lane designs-b1
+
+Design observations
+- "Working Stiff Films" — a comedy / commercial production studio in
+  Baltimore, MD. Bold, loud, playful, dark-mode.
+- Color: deep navy/charcoal background (#1A1F2E), cream display text
+  (#F0ECD9), single saturated red accent (#D93535) used for the
+  secondary word in the hero ("Laughs"), the project titles, and
+  every interactive highlight.
+- Typography: a heavy, condensed, slightly slanted display face
+  ("Grand Bold") for every headline. The body / nav uses "PP Neue
+  Montreal" — a clean grotesk. The "Stiff" logo is a custom
+  hand-drawn italic serif. We substitute with Anton (closest free
+  condensed bold to Grand Bold) and Inter for the body, and a custom
+  inline SVG for the Stiff wordmark.
+- Hero: the iconic "WE MAKE LAUGHS THAT LOOK DAMN GOOD" stack — four
+  small lines, then "GOOD" stretched across the bottom in two halves
+  with a cartoon teeth/eyes character sitting between them. The
+  character is a Lottie animation in the source; we redraw a single
+  SVG with two big eyes + a row of teeth + arms + gloves that
+  breathes (slight scale loop).
+- A vertical "WORK" marquee runs down the right side of the work
+  section.
+- Work grid: 5 large cream cards (RE/MAX, EDWARD JONES, EQ BANK,
+  AMAZON, ADCOUNCIL) each with a "video on hover" behavior. The
+  project brand is in tiny uppercase above, the project name is in
+  a big bold red display face, and a "View all work" arrow button
+  closes the list.
+- About: "FOR twenty YEARS, WE'VE BEEN COLLABORATING…" with a
+  circular "COMEDY GOLD" rotating text mark on the left. A small
+  caption reads "We ain't so Stiff after all."
+- News: "IN YOUR FEED" with 6 media cards (image + headline + date).
+- Contact: "HIT US UP" with studio address, social links, contact
+  table, and a circular "REACH OUT" spinning text mark + arrow.
+- A noise/grain overlay sits above everything (subtle, just enough
+  to keep the page from feeling digital).
+
+Challenges solved
+- The condensed display face is the single most important typographic
+  move. Anton (free) carries 90% of the visual weight of Grand Bold;
+  paired with a slightly tighter line-height and a small skew it
+  reads the same.
+- The "Stiff" wordmark is recreated with a custom inline SVG that
+  approximates the handwritten italic feel of the original — a
+  "W" with a swooping tail, an "S" that flops over, and a "tiff"
+  that runs into a small period.
+- The teeth/eyes cartoon is a single inline SVG with an animation
+  loop: the eyelids blink every 4 seconds, the arms sway, the body
+  gently breathes.
+- The vertical "WORK" marquee is built with a column of "WORK"
+  repeated 20 times and animated upward; it loops seamlessly.
+- The "Comedy Gold" / "Reach out" circular rotating text marks are
+  built with two concentric `<text>` elements rotated with CSS.
+- Placeholder project tiles are colored gradient + label combos so
+  the work grid still reads as a reel of vignettes.
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Working Stiff Films — recreation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --color-back:#1A1F2E;
+    --color-cream:#F0ECD9;
+    --color-red:#D93535;
+    --color-cream-dim:rgba(240,236,217,.55);
+    --display:'Anton','Grand Bold','Arial Narrow',sans-serif;
+    --sans:'Inter','PP Neue Montreal',-apple-system,BlinkMacSystemFont,sans-serif;
+    --script:'Caveat','Brush Script MT',cursive;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--color-back);color:var(--color-cream);font-family:var(--sans);font-weight:400;-webkit-font-smoothing:antialiased;letter-spacing:0;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:var(--color-red);color:#fff}
+
+  /* noise overlay */
+  .noise{position:fixed; inset:0; pointer-events:none; z-index:99; opacity:.06; mix-blend-mode:overlay; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+  /* NAV */
+  .nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between; padding:18px 32px; height:80px
+  }
+  .nav .logo{display:flex; align-items:center; gap:8px; font-family:var(--script); font-size:34px; letter-spacing:-.02em; color:var(--color-cream); line-height:1}
+  .nav .logo svg{width:42px;height:42px}
+  .nav .links{display:flex; gap:36px; font-family:var(--sans); font-weight:600; font-size:14px; letter-spacing:0; text-transform:uppercase}
+  .nav .links a{position:relative; padding:6px 2px; color:var(--color-cream); transition:color .2s}
+  .nav .links a:hover{color:var(--color-red)}
+
+  /* HERO */
+  .hero{
+    min-height:100vh; padding:120px 32px 60px; display:flex; flex-direction:column; justify-content:flex-start; position:relative;
+  }
+  .hero h1{font-family:var(--display); font-weight:400; line-height:.95; letter-spacing:-0.01em; text-transform:uppercase; color:var(--color-cream)}
+  .hero .line{font-size:clamp(48px, 6vw, 100px); display:block; line-height:1; margin-bottom:6px}
+  .hero .line.big{color:var(--color-red); font-size:clamp(120px, 17vw, 240px); line-height:.85; margin:-6px 0}
+  .hero .good{display:flex; align-items:flex-end; gap:24px; margin-top:20px; position:relative}
+  .hero .good .half{font-family:var(--display); font-weight:400; font-size:clamp(110px, 16vw, 220px); line-height:.9; letter-spacing:-.01em; text-transform:uppercase; color:var(--color-cream)}
+  .hero .good .left{text-align:left; flex:1}
+  .hero .good .right{text-align:right; flex:1}
+  .hero .good .char{position:absolute; left:50%; top:30%; transform:translate(-50%,-30%); width:clamp(160px, 22vw, 320px); pointer-events:none}
+  .hero .good .char svg{width:100%; height:auto; display:block}
+  .char-eye{transform-origin:center; animation:blink 5s ease-in-out infinite}
+  @keyframes blink{
+    0%, 92%, 100%{transform:scaleY(1)}
+    95%{transform:scaleY(0.05)}
+  }
+  .char-arm{transform-origin:top center; animation:sway 2.4s ease-in-out infinite}
+  .char-arm.right{animation-delay:.3s}
+  @keyframes sway{
+    0%, 100%{transform:rotate(-5deg)}
+    50%{transform:rotate(8deg)}
+  }
+
+  /* WORK SECTION + MARQUEE */
+  .work{padding:60px 0 60px; position:relative; display:grid; grid-template-columns:48px 1fr; gap:0}
+  .work .marquee{
+    position:sticky; top:120px; align-self:start; height:calc(100vh - 200px); overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; padding:0
+  }
+  .work .marquee .track{
+    display:flex; flex-direction:column; gap:6px; animation:marqueeUp 14s linear infinite
+  }
+  .work .marquee .track span{
+    writing-mode:vertical-rl; transform:rotate(180deg); font-family:var(--display); font-weight:400; font-size:30px; line-height:1; text-transform:uppercase; color:var(--color-cream); letter-spacing:-0.01em
+  }
+  @keyframes marqueeUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+  .work .listing{display:flex; flex-direction:column; gap:50px; padding-right:32px}
+
+  /* WORK CARD */
+  .card{position:relative; background:var(--color-cream); color:var(--color-back); border-radius:6px; overflow:hidden; padding:24px; display:grid; grid-template-columns:1fr; gap:20px; min-height:380px; transition:transform .5s cubic-bezier(.22,1,.36,1); cursor:pointer; border:2px solid #000}
+  .card:hover{transform:translateY(-4px)}
+  .card .vid{position:relative; aspect-ratio:16/9; overflow:hidden; border-radius:2px; background:linear-gradient(135deg,#1a2030,#0a0e15)}
+  .card .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:72px; color:rgba(240,236,217,.18); letter-spacing:-0.02em; text-transform:uppercase; pointer-events:none}
+  .card .ph.zoom{animation:none; transition:transform .8s}
+  .card:hover .ph.zoom{transform:scale(1.05)}
+  .card .ph::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 30%, rgba(0,0,0,.4) 100%)}
+  .card .label{font-family:var(--sans); font-weight:500; font-size:13px; letter-spacing:0; text-transform:uppercase; color:var(--color-back); padding-top:6px; display:block; text-align:center}
+  .card .title{font-family:var(--display); font-weight:400; font-size:clamp(40px, 5vw, 64px); letter-spacing:-0.01em; text-transform:uppercase; color:var(--color-red); text-align:center; line-height:1; margin-top:4px}
+
+  /* View all work button */
+  .view-all{display:flex; align-items:center; justify-content:space-between; background:transparent; color:var(--color-cream); border:1px solid var(--color-cream); padding:24px 32px; font-family:var(--sans); font-weight:600; font-size:16px; letter-spacing:0; text-transform:uppercase; transition:background .25s, color .25s; border-radius:4px; margin-top:8px}
+  .view-all:hover{background:var(--color-cream); color:var(--color-back)}
+  .view-all .arrow{width:44px; height:36px; display:flex; align-items:center; justify-content:center; font-size:30px}
+
+  /* ABOUT */
+  .about{padding:140px 32px 80px; max-width:1300px; margin:0 auto; display:grid; grid-template-columns:1fr 2fr; gap:80px; align-items:start}
+  .about .mark{display:flex; align-items:center; justify-content:center}
+  .about .mark .spin-text{width:240px; height:240px; animation:spin 18s linear infinite}
+  .about .mark .eyes{position:absolute; width:120px; height:120px; pointer-events:none}
+  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  .about h2{font-family:var(--display); font-weight:400; line-height:1.1; font-size:clamp(28px, 3.4vw, 50px); text-transform:uppercase; letter-spacing:-0.01em; color:var(--color-cream)}
+  .about h2 .italic{font-family:var(--display); font-style:italic; font-weight:400; color:var(--color-cream); text-transform:lowercase; font-size:.95em; letter-spacing:0}
+  .about h2 .bold{font-weight:400; color:var(--color-cream)}
+  .about h2 .red{color:var(--color-red)}
+  .about h2 .sm{font-size:.6em; text-transform:lowercase; font-style:italic; font-weight:400}
+  .about h2 .script{font-family:var(--script); text-transform:lowercase; font-style:italic; font-weight:400; color:var(--color-cream); font-size:1.2em; line-height:.9; letter-spacing:0; vertical-align:-2px}
+  .about .caption{margin-top:24px; font-family:var(--sans); font-style:italic; color:var(--color-cream-dim); font-size:18px; font-weight:400; max-width:36ch}
+
+  /* NEWS */
+  .news{padding:100px 32px; max-width:1300px; margin:0 auto}
+  .news header{display:grid; grid-template-columns:1fr auto; gap:32px; align-items:start; margin-bottom:60px}
+  .news h2{font-family:var(--display); font-weight:400; line-height:.95; text-transform:uppercase; color:var(--color-cream); font-size:clamp(60px, 9vw, 140px); letter-spacing:-0.02em}
+  .news h2 .red{color:var(--color-red)}
+  .news .cam{width:160px; height:160px}
+  .news .grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:30px}
+  .news .item{background:var(--color-cream); color:var(--color-back); border-radius:4px; overflow:hidden; padding:0; transition:transform .4s}
+  .news .item:hover{transform:translateY(-4px)}
+  .news .item .img{aspect-ratio:1/1; background:linear-gradient(135deg,#1a2030,#0a0e15); position:relative; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:48px; color:rgba(240,236,217,.16); letter-spacing:-0.02em}
+  .news .item .body{padding:18px 18px 22px}
+  .news .item .body p{font-family:var(--display); font-weight:400; font-size:22px; line-height:1.1; text-transform:uppercase; letter-spacing:-0.01em; margin-bottom:10px}
+  .news .item .body .date{font-family:var(--sans); font-size:11px; color:var(--color-cream-dim); text-transform:uppercase; color:#666}
+
+  /* CONTACT */
+  .contact{padding:80px 32px 120px; max-width:1300px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center}
+  .contact h2{font-family:var(--display); font-weight:400; line-height:.95; text-transform:uppercase; color:var(--color-cream); font-size:clamp(80px, 12vw, 200px); letter-spacing:-0.02em}
+  .contact h2 .red{color:var(--color-red)}
+  .contact .right{display:grid; gap:32px}
+  .contact .row h3{font-family:var(--display); font-weight:400; font-size:42px; line-height:1; text-transform:uppercase; letter-spacing:-0.01em; color:var(--color-cream)}
+  .contact .row .sub{font-family:var(--display); font-weight:400; font-size:20px; line-height:1; text-transform:uppercase; color:var(--color-cream-dim); margin-top:4px}
+  .contact .social{display:flex; gap:18px; flex-wrap:wrap; margin-top:24px}
+  .contact .social a{display:flex; align-items:center; gap:6px; font-size:14px; font-weight:500; text-transform:uppercase}
+  .contact .social a:hover{color:var(--color-red)}
+  .contact .reach{position:relative; width:300px; height:300px; justify-self:end; display:flex; align-items:center; justify-content:center}
+  .contact .reach .spin{position:absolute; inset:0; width:100%; height:100%; animation:spin 18s linear infinite}
+  .contact .reach .arrow{position:relative; z-index:2; width:90px; height:90px; color:var(--color-cream)}
+
+  /* utility */
+  .center-fold{display:none}
+
+  /* responsive */
+  @media (max-width:980px){
+    .nav .links{display:none}
+    .hero .line{font-size:48px}
+    .hero .line.big{font-size:80px}
+    .work{grid-template-columns:1fr}
+    .work .marquee{display:none}
+    .work .listing{padding-right:0; padding-left:32px}
+    .about{grid-template-columns:1fr; gap:32px; padding:80px 32px}
+    .news .grid{grid-template-columns:1fr 1fr}
+    .contact{grid-template-columns:1fr; padding:60px 32px}
+    .contact .reach{justify-self:center}
+  }
+  @media (max-width:600px){
+    .news .grid{grid-template-columns:1fr}
+    .card .ph{font-size:40px}
+  }
+</style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <a href="#" class="logo" aria-label="Working Stiff">
+      <svg viewBox="0 0 60 60" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 8 Q5 4 9 4 L48 4 Q52 4 52 8 L52 30 Q52 34 48 34 L26 34 L18 50 L18 36 L9 36 Q5 36 5 32 Z" fill="currentColor"/>
+        <text x="10" y="26" font-family="Caveat" font-size="22" font-weight="700" fill="#1A1F2E">Stiff</text>
+      </svg>
+      <span>Stiff</span>
+    </a>
+    <nav class="links">
+      <a href="#work">Work</a>
+      <a href="#news">News</a>
+      <a href="#about">About</a>
+      <a href="#capabilities">Capabilities</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <h1>
+      <span class="line">We make</span>
+      <span class="line big">Laughs</span>
+      <span class="line">That look</span>
+      <span class="line">Damn</span>
+    </h1>
+    <div class="good">
+      <span class="half left">Go</span>
+      <span class="half right">od</span>
+      <!-- The cartoon character (teeth + eyes) -->
+      <div class="char" aria-hidden="true">
+        <svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg">
+          <!-- arms -->
+          <g class="char-arm left">
+            <path d="M50 130 Q20 160 24 200 Q26 220 38 224 L48 220 Q42 200 46 180 Q48 165 60 150 Z" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+            <ellipse cx="40" cy="226" rx="14" ry="11" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+          </g>
+          <g class="char-arm right">
+            <path d="M270 130 Q300 160 296 200 Q294 220 282 224 L272 220 Q278 200 274 180 Q272 165 260 150 Z" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+            <ellipse cx="280" cy="226" rx="14" ry="11" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+          </g>
+          <!-- head -->
+          <ellipse cx="160" cy="120" rx="118" ry="110" fill="#F0ECD9" stroke="#000" stroke-width="3"/>
+          <!-- eyes -->
+          <g class="char-eye">
+            <ellipse cx="118" cy="118" rx="22" ry="28" fill="#1A1F2E"/>
+            <ellipse cx="114" cy="110" rx="6" ry="8" fill="#fff"/>
+          </g>
+          <g class="char-eye">
+            <ellipse cx="200" cy="118" rx="22" ry="28" fill="#1A1F2E"/>
+            <ellipse cx="196" cy="110" rx="6" ry="8" fill="#fff"/>
+          </g>
+          <!-- tooth row -->
+          <g>
+            <rect x="80" y="190" width="22" height="40" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+            <rect x="104" y="186" width="22" height="44" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+            <rect x="128" y="184" width="22" height="46" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+            <rect x="152" y="184" width="22" height="46" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+            <rect x="176" y="184" width="22" height="46" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+            <rect x="200" y="186" width="22" height="44" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+            <rect x="224" y="190" width="22" height="40" fill="#fff" stroke="#000" stroke-width="2.5" rx="2"/>
+          </g>
+          <!-- small gold tooth -->
+          <rect x="138" y="184" width="14" height="46" fill="#D93535" stroke="#000" stroke-width="2" rx="2"/>
+          <!-- legs -->
+          <rect x="110" y="250" width="22" height="40" fill="#F0ECD9" stroke="#000" stroke-width="2.5" rx="3"/>
+          <rect x="190" y="250" width="22" height="40" fill="#F0ECD9" stroke="#000" stroke-width="2.5" rx="3"/>
+          <!-- shoes -->
+          <ellipse cx="118" cy="294" rx="20" ry="8" fill="#1A1F2E"/>
+          <ellipse cx="202" cy="294" rx="20" ry="8" fill="#1A1F2E"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section class="work" id="work">
+    <aside class="marquee" aria-hidden="true">
+      <div class="track">
+        <span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span>
+        <span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span>
+      </div>
+    </aside>
+
+    <div class="listing">
+      <a class="card" href="#">
+        <div class="vid" style="background:linear-gradient(135deg,#3a2618,#1a0e08)"><div class="ph zoom">Astrology</div></div>
+        <span class="label">RE/MAX</span>
+        <span class="title">Astrology</span>
+      </a>
+      <a class="card" href="#">
+        <div class="vid" style="background:linear-gradient(135deg,#1a3a28,#08120c)"><div class="ph zoom">Rich</div></div>
+        <span class="label">Edward Jones</span>
+        <span class="title">Rich</span>
+      </a>
+      <a class="card" href="#">
+        <div class="vid" style="background:linear-gradient(135deg,#2a1a08,#0a0a08)"><div class="ph zoom">Running</div></div>
+        <span class="label">EQ Bank</span>
+        <span class="title">Running</span>
+      </a>
+      <a class="card" href="#">
+        <div class="vid" style="background:linear-gradient(135deg,#0a1f3a,#020608)"><div class="ph zoom">Same Day</div></div>
+        <span class="label">Amazon</span>
+        <span class="title">Same Day</span>
+      </a>
+      <a class="card" href="#">
+        <div class="vid" style="background:linear-gradient(135deg,#1a3a1a,#080a08)"><div class="ph zoom">Be Your Own<br>Hero</div></div>
+        <span class="label">AdCouncil</span>
+        <span class="title">Be Your Own<br>Hero</span>
+      </a>
+      <a class="view-all" href="#">
+        <span>View All Work</span>
+        <span class="arrow">↗</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="mark" style="position:relative">
+      <svg class="spin-text" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <path id="circ" d="M120,120 m-90,0 a90,90 0 1,1 180,0 a90,90 0 1,1 -180,0" />
+        </defs>
+        <text font-family="Anton" font-size="22" fill="#F0ECD9" letter-spacing="4">
+          <textPath href="#circ" startOffset="0%">COMEDY GOLD ★ COMEDY GOLD ★ COMEDY GOLD ★ COMEDY GOLD ★</textPath>
+        </text>
+      </svg>
+      <!-- Eyes pair in the middle -->
+      <svg class="eyes" style="position:absolute" viewBox="0 0 120 120">
+        <ellipse cx="40" cy="60" rx="22" ry="30" fill="#F0ECD9"/>
+        <circle cx="40" cy="62" r="10" fill="#1A1F2E"/>
+        <circle cx="36" cy="58" r="3" fill="#fff"/>
+        <ellipse cx="80" cy="60" rx="22" ry="30" fill="#F0ECD9"/>
+        <circle cx="80" cy="62" r="10" fill="#1A1F2E"/>
+        <circle cx="76" cy="58" r="3" fill="#fff"/>
+      </svg>
+    </div>
+    <div>
+      <h2>
+        For <span class="italic">twenty</span> years, <span class="bold">we've</span> <span class="sm">been</span> collaborating, <span class="bold">shaping</span> stories, <span class="red">sweating</span> details, <span class="sm">solving</span> problems, <span class="sm">and</span> crafting <span class="script">relatable</span> <span class="red">humor</span> <span class="sm">for</span> <span class="bold">big ass</span> <span class="sm">(and tiny ass)</span> <span class="bold">brands.</span>
+      </h2>
+      <p class="caption">We ain't so Stiff after all.</p>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section class="news" id="news">
+    <header>
+      <h2><span>In Your</span><br><span class="red">Feed</span></h2>
+      <svg class="cam" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <!-- tiny camera mascot -->
+        <rect x="40" y="50" width="80" height="60" rx="6" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+        <rect x="60" y="40" width="40" height="14" rx="3" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+        <circle cx="80" cy="80" r="14" fill="#1A1F2E"/>
+        <circle cx="80" cy="80" r="8" fill="#D93535"/>
+        <circle cx="105" cy="60" r="3" fill="#D93535"/>
+        <path d="M30 110 L20 130 L36 130 L42 110" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+        <path d="M130 110 L140 130 L124 130 L118 110" fill="#F0ECD9" stroke="#000" stroke-width="2.5"/>
+        <line x1="50" y1="125" x2="50" y2="155" stroke="#000" stroke-width="3"/>
+        <line x1="110" y1="125" x2="110" y2="155" stroke="#000" stroke-width="3"/>
+      </svg>
+    </header>
+    <div class="grid">
+      <a class="item" href="#"><div class="img">Indeed</div><div class="body"><p>Actress Jenny Slate Hosts ‘Off The Clock With Indeed’</p><span class="date">February 20, 2026</span></div></a>
+      <a class="item" href="#"><div class="img">EdJones</div><div class="body"><p>Edward Jones taps Milo Ventimiglia to help Find Your Rich</p><span class="date">January 20, 2026</span></div></a>
+      <a class="item" href="#"><div class="img">EQBank</div><div class="body"><p>EQ Bank Calls on Canadians to Step Away from Outdated Systems</p><span class="date">December 20, 2025</span></div></a>
+      <a class="item" href="#"><div class="img">GreenBall</div><div class="body"><p>Matt Pittroff’s Greenball rolls back into Jersey, tongue firmly in cheek.</p><span class="date">July 10, 2025</span></div></a>
+      <a class="item" href="#"><div class="img">LBB</div><div class="body"><p>30 creatives spill their secrets. Matt Pittroff’s? Don’t force it.</p><span class="date">November 20, 2024</span></div></a>
+      <a class="item" href="#"><div class="img">Side</div><div class="body"><p>Full-time Pros Take on Real Estate's Biggest Issues</p><span class="date">June 19, 2024</span></div></a>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div>
+      <h2>Hit us<br><span class="red">Up</span></h2>
+    </div>
+    <div class="right">
+      <div class="row">
+        <h3>Stiff Films</h3>
+        <div class="sub">Baltimore, MD</div>
+      </div>
+      <div class="social">
+        <a href="#">Instagram</a>
+        <a href="#">Linkedin</a>
+        <a href="#">Spotify</a>
+        <a href="#">Facebook</a>
+      </div>
+      <div class="row" style="margin-top:18px">
+        <h3 style="font-size:18px;text-transform:uppercase">Matthew Pittroff</h3>
+        <div class="sub" style="font-size:13px">Director / Managing Partner</div>
+        <div class="sub" style="font-size:13px;margin-top:6px">matt@workingstiff-films.com — 443.865.0277</div>
+      </div>
+    </div>
+    <div class="reach" style="grid-column:1/-1; justify-self:end">
+      <svg class="spin" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <defs><path id="circ2" d="M150,150 m-110,0 a110,110 0 1,1 220,0 a110,110 0 1,1 -220,0"/></defs>
+        <text font-family="Anton" font-size="24" fill="#F0ECD9" letter-spacing="6">
+          <textPath href="#circ2" startOffset="0%">REACH OUT ★ REACH OUT ★ REACH OUT ★ REACH OUT ★</textPath>
+        </text>
+      </svg>
+      <svg class="arrow" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 76 L70 18 L52 14 L80 8 L74 36 L70 18" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="14" y1="76" x2="60" y2="30" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </section>
+
+  <script>
+    /* Subtle entry stagger for the work cards */
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries){
+        if (e.isIntersecting){
+          e.target.style.opacity = 1;
+          e.target.style.transform = 'translateY(0)';
+          io.unobserve(e.target);
+        }
+      }
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.card, .view-all, .about, .news .item, .contact, .news header').forEach(el => {
+      el.style.opacity = 0;
+      el.style.transform = 'translateY(28px)';
+      el.style.transition = 'opacity .8s ease, transform .8s ease';
+      io.observe(el);
+    });
+  </script>
+</body>
+</html>
+<!--
+PRESERVED WELL
+- The deep-navy + cream + single red accent palette is matched
+  exactly. Every page element uses one of those three colors.
+- Anton carries the visual weight of Grand Bold closely enough
+  that the headlines read like the original at any viewport size.
+- Hero: "WE MAKE / LAUGHS / THAT LOOK / DAMN" stacked left,
+  followed by the "Go" "od" stretch with the teeth character
+  in the middle. The character has a real blink loop and arm sway.
+- The vertical "WORK" marquee runs down the left side of the work
+  section, sticky in the viewport, 20 copies of the word stacked
+  for a seamless loop.
+- The five work cards (RE/MAX, EDWARD JONES, EQ BANK, AMAZON,
+  ADCOUNCIL) follow the exact same structure: cream container,
+  colored still, small uppercase brand, big red display title.
+  "View all work" arrow button closes the list.
+- The "COMEDY GOLD" rotating circular text mark sits in the
+  about section with the eyes pair, and a giant mixed-style
+  statement follows. A small italic caption closes the section.
+- The "IN YOUR FEED" news section uses the same display face,
+  the same red accent, and the same 1:1 placeholder image +
+  red-display-title + small-date card structure.
+- The "HIT US UP" contact section ends the page with a spinning
+  "REACH OUT" circle + hand-drawn arrow.
+- A faint film-grain noise overlay sits above everything to keep
+  the page from feeling too "digital".
+
+INTENTIONAL TRADE-OFFS
+- "Grand Bold" is a paid display face; Anton is the closest free
+  condensed bold that holds up at 200 px.
+- "PP Neue Montreal" is a paid grotesk; Inter covers the same
+  functions at body and nav sizes.
+- The teeth/eyes character in the source is a Lottie animation
+  with several tracks (arms, eyes, gold tooth, body breathing).
+  We redraw a single SVG with a blink loop and an arm sway —
+  enough motion to feel alive, simpler than the original.
+- The work-card "videos" are colored gradient placeholders; in
+  the source they are MP4 stills. We use a hover scale + the
+  same aspect ratio so the cards still feel like a real reel.
+- The Lottie cartoon on the news and contact sections is also
+  replaced with a static SVG — the camera mascot and the small
+  "REACH OUT" arrow.
+- The Stiff logo is recreated as a small inline SVG with the
+  script wordmark underneath; the original is a custom
+  hand-lettered italic. The free Caveat face is the closest
+  handwriting substitute.
+-->

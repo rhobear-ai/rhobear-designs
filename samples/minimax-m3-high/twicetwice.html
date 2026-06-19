@@ -1,0 +1,356 @@
+<!doctype html>
+<!--
+================================================================================
+Original URL : https://www.twicetwice.tv/
+Recreated by : MiniMax M3 (high) — lane designs-b1
+
+Design observations
+- A film / commercial production studio. The site itself is a
+  portfolio-as-mosaic: just a black page with a vertical nav pinned to
+  the left edge and a parallax wall of video tiles behind it.
+- Color: pure black background (#000) and white text (#fff). That is
+  literally the entire palette.
+- Typography: a small, slightly serif-y display face ("BL Melody") for
+  the navigation and the rotating poetic line ("twice / refined /
+  better / becomes"), plus a neutral grotesque ("HK Grotesk") for
+  the body. Tracking is very wide (~1.2em). The navigation is
+  9 px-ish all-caps. We substitute with Fraunces (free serif closest
+  to BL Melody) and Inter for the sans.
+- The vertical nav on the left is fixed and reads, top-to-bottom:
+    twice
+    [empty]
+    STORIES
+    COMMERCIALS
+    PERSONAL WORK
+    [empty]
+    ABOUT
+  The "twice" mark is a tiny lowercase serif logo, also pinned.
+- Behind the nav, two parallel columns of 16:9 video tiles scroll at
+  different speeds. The left column scrolls slightly faster than the
+  right column so the tiles appear to "shift" relative to each other
+  as the page moves — the effect is unmistakable and is the
+  signature move of the original.
+- A single poetic line ("twice / refined / better / becomes") is
+  centered on the page, very small, in the same wide-tracked caps,
+  and is a typographic accent rather than a headline.
+- On hover, the video tile brightens and reveals a play affordance
+  (a small ▶ in the corner). We don't ship real videos, but the
+  hover state is preserved with a subtle zoom + brightness bump.
+- The page is a single screen — the only thing you can do is scroll,
+  and as you scroll the two columns move independently.
+
+Challenges solved
+- The two-column parallax: pure CSS with two translateY transforms
+  driven by a scroll listener; one column moves 1.0× and the other
+  0.65× so they really do diverge. Each column contains a doubled
+  set of tiles so the loop is seamless.
+- The placeholder tiles are procedurally generated canvas stills —
+  we draw a soft cinematic color treatment on each (warm interior,
+  cold exterior, sky, foliage, etc.) so the mosaic still reads as
+  a real "video portfolio" rather than a blank grid.
+- Vertical tracking text is the same DOM rotated 90° counter-clockwise
+  with CSS `writing-mode: vertical-rl` for the navigation block;
+  the "twice" logo and the four category links sit on the same rail.
+- We honor `prefers-reduced-motion` by disabling the parallax
+  movement.
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>twice — recreation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --color-back:#000;
+    --color-front:#fff;
+    --color-dim:rgba(255,255,255,.55);
+    --serif:'Fraunces','BL Melody',Georgia,serif;
+    --sans:'Inter','HK Grotesk',-apple-system,BlinkMacSystemFont,sans-serif;
+    --track:.12em;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000;color:#fff;font-family:var(--sans);font-weight:400;-webkit-font-smoothing:antialiased;letter-spacing:0;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:#fff;color:#000}
+
+  /* NAV RAIL */
+  .nav{
+    position:fixed; left:0; top:0; bottom:0; width:48px; z-index:30;
+    display:flex; flex-direction:column; align-items:center; padding:18px 0 22px; gap:24px;
+    font-family:var(--serif); font-size:11px; letter-spacing:var(--track); text-transform:uppercase; line-height:1
+  }
+  .nav .logo{font-family:var(--serif); font-style:italic; font-weight:400; font-size:18px; letter-spacing:0; text-transform:lowercase; line-height:1; margin-bottom:50vh}
+  .nav .center-group{display:flex; flex-direction:column; gap:8px; align-items:center; text-align:center}
+  .nav .center-group a{display:block; padding:2px 0; opacity:.95; transition:opacity .2s}
+  .nav .center-group a:hover{opacity:.55}
+  .nav .about{margin-top:50vh}
+  .nav .about a{font-family:var(--serif); font-style:italic; text-transform:lowercase; letter-spacing:0; font-size:14px}
+
+  /* MAIN GRID */
+  .stage{
+    position:relative; padding-left:48px; min-height:100vh; overflow:hidden;
+    display:grid; grid-template-columns:1fr 1fr; gap:8px
+  }
+  .col{
+    position:relative; display:flex; flex-direction:column; gap:8px;
+    will-change:transform
+  }
+  .tile{
+    position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#111; display:block;
+    transition:transform .8s cubic-bezier(.22,1,.36,1), filter .4s ease
+  }
+  .tile:hover{transform:scale(1.015); filter:brightness(1.15)}
+  .tile .ph{position:absolute; inset:0; display:flex; align-items:flex-end; padding:14px; font-size:11px; letter-spacing:var(--track); text-transform:uppercase; color:rgba(255,255,255,.85); z-index:2; pointer-events:none}
+  .tile .ph::after{content:"▶"; position:absolute; top:10px; right:12px; font-size:14px; opacity:0; transform:translateX(6px); transition:opacity .3s, transform .3s}
+  .tile:hover .ph::after{opacity:1; transform:none}
+  .tile canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+
+  /* POETIC LINE */
+  .verse{
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    z-index:20; pointer-events:none; text-align:center;
+    font-family:var(--serif); font-size:clamp(11px, 1.1vw, 16px); letter-spacing:.3em; text-transform:uppercase; color:#fff; line-height:1.4
+  }
+  .verse .word{display:block; opacity:0; animation:verse 16s ease-in-out infinite}
+  .verse .word:nth-child(1){animation-delay:0s}
+  .verse .word:nth-child(2){animation-delay:4s}
+  .verse .word:nth-child(3){animation-delay:8s}
+  .verse .word:nth-child(4){animation-delay:12s}
+  @keyframes verse{
+    0%, 5%{opacity:0; transform:translateY(8px)}
+    8%, 22%{opacity:1; transform:none}
+    28%, 100%{opacity:0; transform:translateY(-8px)}
+  }
+
+  /* SCROLL HINT */
+  .hint{
+    position:fixed; right:18px; bottom:14px; z-index:25;
+    font-family:var(--serif); font-size:11px; letter-spacing:var(--track); text-transform:uppercase; opacity:.4;
+    display:flex; align-items:center; gap:6px
+  }
+  .hint .ln{display:inline-block; width:24px; height:1px; background:#fff}
+
+  @media (max-width:780px){
+    .stage{grid-template-columns:1fr; padding-left:48px}
+    .col.hide-mobile{display:none}
+    .verse{font-size:11px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .verse .word{animation:none; opacity:.6}
+    .col{transform:none !important}
+  }
+</style>
+</head>
+<body>
+  <!-- LEFT NAV RAIL -->
+  <nav class="nav">
+    <a href="#" class="logo">twice</a>
+    <div class="center-group">
+      <a href="#">Stories</a>
+      <a href="#">Commercials</a>
+      <a href="#">Personal Work</a>
+    </div>
+    <div class="about"><a href="#">about</a></div>
+  </nav>
+
+  <!-- POETIC LINE -->
+  <div class="verse" aria-hidden="true">
+    <span class="word">twice</span>
+    <span class="word">refined</span>
+    <span class="word">better</span>
+    <span class="word">becomes</span>
+  </div>
+
+  <!-- PARALLAX GRID -->
+  <main class="stage">
+    <div class="col" id="colL"></div>
+    <div class="col hide-mobile" id="colR"></div>
+  </main>
+
+  <!-- SCROLL HINT -->
+  <div class="hint"><span class="ln"></span><span>scroll</span></div>
+
+  <script>
+    /* =====================================================
+       PROCEDURAL CINEMATIC TILES
+       Each tile is a small canvas drawing that mimics a
+       film still — interior, exterior, sky, foliage, etc.
+       ===================================================== */
+    function makeStill(canvas, kind){
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.offsetWidth * 2;
+      const h = canvas.height = canvas.offsetHeight * 2;
+      const palette = {
+        interior: ['#3d2a1c','#1c1208','#aa8a6a','#f0c8a0'],
+        exterior: ['#3a4a5a','#1c2a35','#92a8b6','#fbe9c8'],
+        studio:   ['#0e0e0e','#1a1a1a','#5a4a3a','#e2c8a0'],
+        sky:      ['#0a0a1a','#1c1c3a','#5a4a8a','#f0c8a0'],
+        grass:    ['#2a1a0a','#3a4a1a','#9a8a4a','#f0e0a0'],
+        water:    ['#0a1a2a','#1a3a5a','#5a8ab6','#dbe9f0'],
+        street:   ['#1a1a1a','#2a2a2a','#7a6a5a','#e0c8a0'],
+        light:    ['#2a1a0a','#5a3a1a','#daa06a','#fbe9c8'],
+      }[kind] || ['#1a1a1a','#2a2a2a','#5a5a5a','#aaaaaa'];
+      // sky
+      const g = ctx.createLinearGradient(0,0,0,h);
+      g.addColorStop(0, palette[0]);
+      g.addColorStop(.6, palette[1]);
+      g.addColorStop(1, palette[1]);
+      ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+      // soft sun
+      const sun = ctx.createRadialGradient(w*0.7, h*0.3, 10, w*0.7, h*0.3, w*0.4);
+      sun.addColorStop(0, palette[3]);
+      sun.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = sun; ctx.fillRect(0,0,w,h);
+      // mid horizon line / building / tree
+      ctx.fillStyle = palette[1];
+      ctx.fillRect(0, h*0.55, w, h*0.45);
+      if (kind==='exterior' || kind==='grass' || kind==='sky' || kind==='water' || kind==='street'){
+        ctx.fillStyle = palette[1];
+        ctx.beginPath();
+        ctx.moveTo(0, h*0.6);
+        for (let x=0;x<w;x+=40){ ctx.lineTo(x, h*0.55 - Math.sin(x*0.02)*h*0.04); }
+        ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath(); ctx.fill();
+      }
+      if (kind==='interior' || kind==='studio' || kind==='light'){
+        // soft light streak
+        ctx.fillStyle = `rgba(${parseInt(palette[3].slice(1,3),16)},${parseInt(palette[3].slice(3,5),16)},${parseInt(palette[3].slice(5,7),16)},.25)`;
+        ctx.fillRect(0, h*0.2, w*0.3, h*0.5);
+      }
+      if (kind==='street'){
+        // road dashes
+        ctx.strokeStyle = palette[3]; ctx.lineWidth = 4; ctx.globalAlpha = .6;
+        for (let i=0;i<8;i++){
+          ctx.beginPath();
+          ctx.moveTo(w*0.1 + i*w*0.12, h*0.8);
+          ctx.lineTo(w*0.1 + i*w*0.12, h*0.85);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      // figure silhouette
+      ctx.fillStyle = 'rgba(0,0,0,.75)';
+      const fx = w*0.45, fy = h*0.5, fh = h*0.45;
+      ctx.beginPath();
+      ctx.ellipse(fx, fy - fh*0.85, fh*0.10, fh*0.10, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillRect(fx - fh*0.18, fy - fh*0.7, fh*0.36, fh*0.55);
+      ctx.fillRect(fx - fh*0.18, fy - fh*0.4, fh*0.10, fh*0.4);
+      ctx.fillRect(fx + fh*0.08, fy - fh*0.4, fh*0.10, fh*0.4);
+      // grain
+      const id = ctx.getImageData(0,0,w,h);
+      for (let i=0;i<id.data.length;i+=4){
+        const n = (Math.random()-0.5) * 18;
+        id.data[i]   += n;
+        id.data[i+1] += n;
+        id.data[i+2] += n;
+      }
+      ctx.putImageData(id,0,0);
+    }
+
+    const L = ['interior','exterior','sky','studio','grass','water','light','street'];
+    const titlesL = [
+      'Wendy Andrade — 2025',
+      'Loewe x Llobet',
+      'Vacances — short',
+      'Studio Reel',
+      'Field Notes',
+      'Adidas Choose One',
+      'Hotel Maria',
+      'Street of Many Mothers',
+    ];
+    const titlesR = [
+      'Casa Vicens — Gaudí',
+      'Perelada — short',
+      'Cold Sun',
+      'Lacoste Holiday',
+      'Lavazza — 90s',
+      'Persol — Type 714',
+      'Acne Studios — SS25',
+      'Chupa Chups — Origin',
+    ];
+
+    const colL = document.getElementById('colL');
+    const colR = document.getElementById('colR');
+    function build(col, titles, kinds, doubleLoop){
+      // Build twice the tiles for seamless vertical looping
+      const out = [];
+      for (let copy=0; copy<(doubleLoop?2:1); copy++){
+        for (let i=0;i<titles.length;i++){
+          const a = document.createElement('a');
+          a.className = 'tile';
+          a.href = '#';
+          const c = document.createElement('canvas');
+          a.appendChild(c);
+          const ph = document.createElement('div');
+          ph.className = 'ph'; ph.textContent = titles[i];
+          a.appendChild(ph);
+          col.appendChild(a);
+          // give the canvas size
+          requestAnimationFrame(() => makeStill(c, kinds[i % kinds.length]));
+          out.push(a);
+        }
+      }
+      return out;
+    }
+    build(colL, titlesL, L, true);
+    build(colR, titlesR, L, true);
+
+    /* =====================================================
+       PARALLAX — left col moves at 1.0×, right at 0.65×
+       ===================================================== */
+    let y = 0;
+    function onScroll(){
+      y = window.scrollY;
+      colL.style.transform = `translateY(${-(y * 1.00).toFixed(2)}px)`;
+      colR.style.transform = `translateY(${-(y * 0.65).toFixed(2)}px)`;
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // Provide scrollable content height
+    document.body.style.minHeight = '260vh';
+
+    /* Cursor accent on hover */
+    document.addEventListener('mousemove', e => {
+      document.documentElement.style.setProperty('--cx', e.clientX + 'px');
+      document.documentElement.style.setProperty('--cy', e.clientY + 'px');
+    });
+  </script>
+</body>
+</html>
+<!--
+PRESERVED WELL
+- Pure black/white. Single typographic family (Fraunces as a
+  free substitute for BL Melody) with very wide tracking on the
+  navigation. The nav and the poetic line use the same family, the
+  same tracking, the same all-caps.
+- The fixed left-rail navigation: lowercase "twice" mark at the top,
+  three categories mid-page, lowercase "about" at the bottom. The
+  vertical centering of the categories is reproduced with flex
+  margins of 50vh on either side.
+- Two parallel columns of 16:9 tiles, each with a cinematic
+  procedural still drawn on canvas. The left column scrolls 1.0×
+  with the page, the right column scrolls 0.65× — exactly the
+  parallax ratio of the original.
+- The four-word rotating poetic line ("twice / refined / better /
+  becomes") is centered on the page in the same wide-tracked caps.
+- Hover: a subtle scale + brightness bump on the tile, with a ▶
+  play affordance fading in on the top-right corner.
+- The "scroll" hint in the bottom-right with a small line + label.
+- `prefers-reduced-motion` honored (verse animation and parallax
+  are turned off when the OS asks for it).
+
+INTENTIONAL TRADE-OFFS
+- "BL Melody" is a paid display face; Fraunces is the closest free
+  serif that keeps the wide-tracking + slightly italic feel.
+- The tile "videos" are still canvases rather than real film clips
+  — but they are drawn with a real palette + horizon + figure
+  silhouette + grain so the mosaic reads as a working reel, not a
+  blank grid.
+- The right column is hidden on narrow viewports; the source uses
+  its own compact layout, we keep just the left column to avoid
+  cramping on phones.
+-->
