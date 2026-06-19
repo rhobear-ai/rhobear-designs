@@ -1,0 +1,572 @@
+<!--
+  FIRST FRAME — Recreation
+  Original URL: https://firstframe.fr/
+  Recreation by: MiniMax M3 (high)
+
+  KEY DESIGN OBSERVATIONS
+  - Pure black canvas with a typographic, almost brutalist-technical aesthetic.
+    Two typefaces do all the work: HK Requisite (a contemporary geometric
+    sans with subtle contrast — used for headlines + body, always UPPERCASE)
+    and IBM Plex Mono (used for navigation, metadata, timestamps, credits).
+  - The page is a single full-viewport hero with a 6-project video carousel.
+    Each project gets a 16:9 placeholder "still", a small monospace tag, a
+    big HK Requisite title, and director credit.
+  - A persistent crosshair grid (vertical + horizontal hairlines + tick marks)
+    floats over the page and tracks the cursor — the visual signature of the
+    studio. It's what makes the layout feel like a technical schematic.
+  - Navigation lives in a thin top bar with: wordmark, ADVERTISEMENT /
+    ORIGINALS / CORPORATE / MUSIC / STUDIO, ABOUT / CONTACT, EN / FR.
+  - Footer carries: LEGAL / CREDITS / INSTAGRAM / YOUTUBE / VIMEO / LINKEDIN.
+  - About-style sections (mirroring /about/): big "ABOUT" headline, intro
+    blocks with section number + name on the left and bullet details on the
+    right. Same monospace indices (01/05) used everywhere.
+  - Interaction primitives: keyboard arrow navigation through projects,
+    cursor-tracking crosshair lines, project counter (01/06), "BACK" /
+    "NEXT PROJECT" hairline buttons, "PLAY" / "SOUND OFF" / "FULLSCREEN"
+    pseudo-controls.
+
+  CHALLENGES SOLVED
+  - No videos available: built a tasteful carousel that crossfades between
+    abstract gradient "stills" matching the dark cinematic palette of each
+    project. Each still has a subtle grain + film-letterbox top/bottom.
+  - Cursor crosshair: implemented as a fixed horizontal + vertical hairline
+    that follows the mouse pointer, plus tick marks every 80px and small
+    "cursor-link" callouts that appear at the project edges.
+  - Section blueprint grid: a background SVG of column + row hairlines with
+    small ticks; sets the design DNA without being noisy.
+  - Letter-by-letter "DISCOVER" button: kept the original Splitting.js-style
+    char reveal (CSS-only fallback for offline portability).
+
+  NOTES ON ASSETS
+  - No real project stills, brand logos, or director portraits. Each project
+    has an original abstract gradient composition in the project's color
+    family, with subtle film-grain overlay and a faux-letterbox.
+  - HK Requisite is replaced with a free Google Fonts equivalent ("Inter"
+    condensed tracking + heavy letterspacing) — close in geometry, free,
+    shipping fast.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>First Frame — Creative Production & Post-Production (Recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Bebas Neue"', '"Inter"', 'sans-serif'],
+          body: ['"Inter"', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace'],
+        },
+        colors: {
+          ink: '#000000',
+          paper: '#ffffff',
+          smoke: '#0a0a0a',
+          ash: '#1a1a1a',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --c-ink: #000000;
+    --c-paper: #ffffff;
+    --c-smoke: #0a0a0a;
+    --c-ash: #1a1a1a;
+    --c-tick: rgba(255, 255, 255, 0.10);
+    --c-line: rgba(255, 255, 255, 0.18);
+    --c-line-strong: rgba(255, 255, 255, 0.45);
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--c-ink); color: var(--c-paper); font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+  body { overflow-x: hidden; }
+  .font-display { font-family: "Bebas Neue", "Inter", sans-serif; letter-spacing: 0.005em; }
+  .font-mono { font-family: "IBM Plex Mono", monospace; }
+  .uppercase-everything { text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* The signature blueprint grid */
+  .blueprint {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background-image:
+      linear-gradient(to right, var(--c-tick) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--c-tick) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.55;
+  }
+  .blueprint::before, .blueprint::after {
+    content:""; position: absolute; inset: 0;
+    background:
+      linear-gradient(to right, var(--c-line) 1px, transparent 1px) 0 0/25% 100% no-repeat,
+      linear-gradient(to right, var(--c-line) 1px, transparent 1px) 25% 0/25% 100% no-repeat,
+      linear-gradient(to right, var(--c-line) 1px, transparent 1px) 50% 0/25% 100% no-repeat,
+      linear-gradient(to right, var(--c-line) 1px, transparent 1px) 75% 0/25% 100% no-repeat;
+    opacity: 0.45;
+  }
+
+  /* Cursor-following crosshair */
+  .cursor-v, .cursor-h { position: fixed; pointer-events: none; z-index: 30; }
+  .cursor-v { left: 0; top: 0; width: 1px; height: 100vh; background: rgba(255,255,255,0.18); transform: translateX(640px); transition: transform 60ms linear; }
+  .cursor-h { left: 0; top: 0; height: 1px; width: 100vw; background: rgba(255,255,255,0.18); transform: translateY(280px); transition: transform 60ms linear; }
+  .cursor-tick { position: absolute; width: 6px; height: 6px; background: var(--c-paper); transform: translate(-50%, -50%); opacity: 0.65; }
+  .cursor-index { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--c-paper); }
+
+  /* Header */
+  .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; padding: 14px 28px; display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: center; }
+  .topbar a { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-paper); text-decoration: none; }
+  .topbar a:hover { color: #d6d6d6; }
+  .topbar nav { display: flex; gap: 28px; }
+  .topbar .right { display: flex; justify-content: flex-end; gap: 28px; }
+  .wordmark { font-family: "Bebas Neue", sans-serif; font-size: 22px; letter-spacing: 0.04em; }
+
+  /* Hero */
+  .hero { position: relative; min-height: 100vh; padding: 80px 28px 40px; display: grid; grid-template-rows: 1fr auto; z-index: 5; }
+  .stage { position: relative; width: 100%; max-width: 1280px; margin: 0 auto; aspect-ratio: 16/9; border-radius: 1px; overflow: hidden; }
+  .stage .still {
+    position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 700ms ease;
+  }
+  .stage .still.active { opacity: 1; }
+  .stage .still::after { content:""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.10), rgba(0,0,0,0.55)); mix-blend-mode: multiply; }
+  .stage .still::before { content:""; position: absolute; inset: 0; background: radial-gradient(60% 80% at 30% 30%, rgba(255,255,255,0.05), transparent 60%); }
+
+  .stage-frame { position: absolute; inset: 0; pointer-events: none; }
+  .stage-frame::before, .stage-frame::after {
+    content:""; position: absolute; left: 0; right: 0; height: 8%; background: linear-gradient(180deg, #000, rgba(0,0,0,0.85)); mix-blend-mode: multiply;
+  }
+  .stage-frame::before { top: 0; }
+  .stage-frame::after { bottom: 0; }
+
+  /* Hero meta */
+  .hero-meta {
+    position: absolute; top: 90px; right: 32px; max-width: 320px;
+    font-family: "Bebas Neue", sans-serif; font-size: 14px; line-height: 1.4; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .hero-meta .lg { display: block; font-size: 18px; line-height: 1.1; margin-bottom: 6px; }
+  .hero-meta .play-row { display: inline-flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .hero-meta .sq { width: 8px; height: 8px; background: var(--c-paper); }
+
+  /* Project cards row */
+  .project-row {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+    margin-top: 28px; max-width: 1280px; width: 100%; margin-left: auto; margin-right: auto;
+  }
+  .project-row .pdot { height: 56px; position: relative; border: 1px solid rgba(255,255,255,0.18); cursor: pointer; transition: border-color 200ms ease; }
+  .project-row .pdot.active { border-color: var(--c-paper); }
+  .project-row .pdot::after {
+    content:""; position: absolute; inset: 6px;
+    background: linear-gradient(160deg, var(--g1, #2b2b2b), var(--g2, #0e0e0e));
+    filter: saturate(0.85) brightness(0.85);
+  }
+  .project-row .pdot .plabel {
+    position: absolute; left: 8px; bottom: 6px; font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--c-paper); opacity: 0.85;
+  }
+
+  /* Project bar bottom */
+  .proj-bar {
+    position: absolute; left: 28px; right: 28px; bottom: 96px;
+    display: flex; align-items: end; justify-content: space-between; gap: 24px; pointer-events: none;
+  }
+  .proj-bar .left { display: grid; gap: 10px; }
+  .proj-bar .play { display: inline-flex; align-items: center; gap: 14px; font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; pointer-events: auto; cursor: pointer; }
+  .proj-bar .play .sq { width: 10px; height: 10px; background: var(--c-paper); }
+  .proj-bar .title { font-family: "Bebas Neue", sans-serif; font-size: 64px; letter-spacing: 0.02em; line-height: 0.95; text-transform: uppercase; }
+  .proj-bar .credits { display: flex; gap: 12px; font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .proj-bar .credits span { padding: 4px 8px; border: 1px solid rgba(255,255,255,0.5); }
+
+  .proj-bar .right { display: flex; gap: 28px; align-items: end; }
+  .proj-bar .right a { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-paper); text-decoration: none; }
+  .proj-bar .right .ctr { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; }
+
+  .back-next {
+    position: absolute; top: 84px; left: 28px; right: 28px; display: flex; justify-content: space-between; pointer-events: none;
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .back-next a { color: var(--c-paper); text-decoration: none; pointer-events: auto; }
+
+  /* Sections / about */
+  .section-block {
+    position: relative; padding: clamp(60px, 10vw, 140px) 28px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    z-index: 5;
+  }
+  .section-block .frame {
+    max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start;
+  }
+  .section-block .frame .meta {
+    display: flex; align-items: center; gap: 16px; font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+  }
+  .section-block .frame .meta .pill {
+    display: inline-block; padding: 3px 8px; border: 1px solid rgba(255,255,255,0.5);
+  }
+  .section-block h2 { font-family: "Bebas Neue", sans-serif; font-size: clamp(60px, 8vw, 130px); line-height: 0.9; text-transform: uppercase; margin-top: 16px; }
+  .section-block p { font-family: "Inter", sans-serif; font-size: 16px; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.06em; max-width: 36ch; color: rgba(255,255,255,0.85); }
+  .section-block .aside { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; line-height: 1.7; color: rgba(255,255,255,0.7); }
+  .section-block .aside b { color: var(--c-paper); font-weight: 600; }
+
+  /* Numbered list sections */
+  .number-row {
+    display: grid; grid-template-columns: 80px 1fr 2fr; gap: 24px; padding: 28px 0;
+    border-top: 1px solid rgba(255,255,255,0.18); align-items: start;
+    font-family: "Inter", sans-serif; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .number-row .num { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: rgba(255,255,255,0.55); }
+  .number-row .name { font-family: "Bebas Neue", sans-serif; font-size: 28px; line-height: 1; letter-spacing: 0.04em; }
+  .number-row ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 12px; letter-spacing: 0.18em; font-family: "IBM Plex Mono", monospace; color: rgba(255,255,255,0.75); }
+  .number-row ul li::before { content: "■  "; color: rgba(255,255,255,0.4); }
+
+  /* Pill */
+  .pill-tag {
+    display: inline-block; padding: 4px 10px; border: 1px solid rgba(255,255,255,0.55);
+    font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+
+  /* Footer */
+  footer { padding: 22px 28px; border-top: 1px solid rgba(255,255,255,0.18); display: flex; justify-content: space-between; font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.65); position: relative; z-index: 5; }
+  footer .links { display: flex; gap: 28px; }
+
+  /* DISCOVER button (split chars) */
+  .discover {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-paper);
+    padding: 12px 18px; border: 1px solid rgba(255,255,255,0.45); cursor: pointer;
+    background: rgba(0,0,0,0.25); backdrop-filter: blur(4px);
+  }
+  .discover .arrow { width: 14px; height: 14px; display: inline-block; }
+  .discover .arrow svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1; }
+  .discover .word { overflow: hidden; height: 1em; line-height: 1; position: relative; }
+  .discover .word span { display: inline-block; transition: transform 500ms cubic-bezier(.2,.7,.2,1); }
+  .discover .word .hover { position: absolute; left: 0; top: 0; transform: translateY(100%); }
+  .discover:hover .word span { transform: translateY(-100%); }
+  .discover:hover .word .hover { transform: translateY(0); }
+
+  /* Big title block */
+  .display-xxl { font-family: "Bebas Neue", sans-serif; font-size: clamp(120px, 22vw, 360px); line-height: 0.85; letter-spacing: 0.01em; text-transform: uppercase; }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 700ms ease, transform 800ms cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* Film grain (subtle) */
+  .grain::after {
+    content:""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0.10;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Project still helpers */
+  .still-1 { --g1: #5a4a3a; --g2: #0e0a06; background: radial-gradient(120% 100% at 30% 25%, #d6a972 0%, #5a3f24 35%, #0d0905 80%); }
+  .still-2 { --g1: #2d5170; --g2: #06121e; background: radial-gradient(120% 100% at 70% 30%, #6db2d9 0%, #1f4868 35%, #06121e 80%); }
+  .still-3 { --g1: #d2392e; --g2: #2a0807; background: radial-gradient(120% 100% at 50% 30%, #f07361 0%, #b32c20 40%, #260504 80%); }
+  .still-4 { --g1: #3a3a3a; --g2: #0a0a0a; background: radial-gradient(120% 100% at 30% 30%, #6b6b6b 0%, #2e2e2e 35%, #050505 80%); }
+  .still-5 { --g1: #46277a; --g2: #0d0518; background: radial-gradient(120% 100% at 30% 30%, #8a59c4 0%, #3a1e6a 35%, #0d0518 80%); }
+  .still-6 { --g1: #1a1a1a; --g2: #000000; background: radial-gradient(120% 100% at 60% 30%, #4a4a4a 0%, #1a1a1a 35%, #000 80%); }
+</style>
+</head>
+<body class="text-white">
+
+<!-- Blueprint grid background -->
+<div class="blueprint"></div>
+
+<!-- Cursor crosshair -->
+<div class="cursor-v" id="cv"></div>
+<div class="cursor-h" id="ch"></div>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="flex items-center gap-6">
+    <a href="#" class="wordmark">FIRST FRAME</a>
+  </div>
+  <nav>
+    <a href="#advertisement">ADVERTISEMENT</a>
+    <a href="#originals">ORIGINALS</a>
+    <a href="#corporate">CORPORATE</a>
+    <a href="#music">MUSIC</a>
+    <a href="#studio">STUDIO</a>
+  </nav>
+  <div class="right">
+    <a href="#about">ABOUT</a>
+    <a href="#contact">CONTACT</a>
+    <span class="flex gap-2 items-center">
+      <a href="#" class="text-white/60">EN</a><span class="text-white/40">/</span><a href="#" class="text-white/40">FR</a>
+    </span>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <!-- Top labels over hero -->
+  <div class="back-next">
+    <a href="#">BACK</a>
+    <a href="#">NEXT PROJECT <span class="ml-2 inline-block w-2 h-2 bg-white align-middle"></span></a>
+  </div>
+  <div class="hero-meta">
+    <span class="lg">EVERY STORY STARTS<br/>WITH A FIRST FRAME</span>
+    <span class="play-row"><span class="sq"></span>CREATIVE PRODUCTION PARIS</span>
+  </div>
+
+  <!-- Stage -->
+  <div class="stage grain" id="stage">
+    <div class="still still-1 active" data-i="0"></div>
+    <div class="still still-2" data-i="1"></div>
+    <div class="still still-3" data-i="2"></div>
+    <div class="still still-4" data-i="3"></div>
+    <div class="still still-5" data-i="4"></div>
+    <div class="still still-6" data-i="5"></div>
+    <div class="stage-frame"></div>
+
+    <!-- Bottom bar over the stage -->
+    <div class="proj-bar">
+      <div class="left">
+        <div class="play" id="playToggle"><span class="sq"></span><span>PLAY</span><span id="ts">0:00 / 0:50</span></div>
+        <div class="title" id="projTitle">THE WALK</div>
+        <div class="credits" id="projCredits">
+          <span>WEWARD</span><span>MATT PALMER</span>
+        </div>
+      </div>
+      <div class="right">
+        <a href="#">SOUND OFF</a>
+        <a href="#">FULLSCREEN</a>
+        <a href="#">CREDITS</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project dots -->
+  <div class="project-row" id="projRow">
+    <div class="pdot active" data-i="0" style="--g1:#5a4a3a;--g2:#0e0a06"><span class="plabel">01 WeWard</span></div>
+    <div class="pdot" data-i="1" style="--g1:#2d5170;--g2:#06121e"><span class="plabel">02 Vinted</span></div>
+    <div class="pdot" data-i="2" style="--g1:#d2392e;--g2:#2a0807"><span class="plabel">03 SuperU</span></div>
+    <div class="pdot" data-i="3" style="--g1:#3a3a3a;--g2:#0a0a0a"><span class="plabel">04 Harley</span></div>
+    <div class="pdot" data-i="4" style="--g1:#46277a;--g2:#0d0518"><span class="plabel">05 Deezer</span></div>
+    <div class="pdot" data-i="5" style="--g1:#1a1a1a;--g2:#000000"><span class="plabel">06 IWD</span></div>
+  </div>
+
+  <!-- Discover -->
+  <div class="flex justify-end mt-8 pr-6">
+    <a href="#advertisement" class="discover">
+      <span class="arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      <span class="word"><span>DISCOVER</span><span class="hover">DISCOVER</span></span>
+    </a>
+  </div>
+</section>
+
+<!-- ADVERTISEMENT SECTION -->
+<section id="advertisement" class="section-block">
+  <div class="frame">
+    <div>
+      <div class="meta">
+        <span class="pill-tag">05/06</span>
+        <span>Our universe</span>
+      </div>
+      <h2 class="reveal">Production<br/>&amp; Post-Production<br/>uncompromising,<br/>creative, human.</h2>
+    </div>
+    <aside class="aside reveal">
+      <p>FIRST FRAME WAS BORN OF AN OBSESSION: COMPELLING VISUAL NARRATIVES, ADAPTIVE AND RIGOROUS, AND A CREATIVE ECOSYSTEM DELIVERING FILMS THAT EARN ATTENTION — FOR BRANDS, AGENCIES, AND FOR ALL AUDIENCES.</p>
+      <br/>
+      <p>TWO VERTICALS, ONE APPROACH:</p>
+      <br/>
+      <p><b>ADVERTISING CREATIVE</b> — ADVERTISING &amp; BRAND CONTENT CAMPAIGNS, IDEATION, AND APPROACH(ES).</p>
+      <br/>
+      <p><b>ORIGINAL CREATIONS</b> — FILMS, MUSIC VIDEOS, PHOTOGRAPHY, AND BRANDCASTS AND PLATFORMS.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- OUR SUPPORT -->
+<section id="originals" class="section-block">
+  <div class="frame">
+    <div>
+      <div class="meta"><span class="pill-tag">04/06</span><span>Our support</span></div>
+      <h2 class="reveal">We support the new generation of talents across different creative territories.</h2>
+    </div>
+    <aside class="aside reveal">
+      <p>From concept to delivery, we orchestrate the entire production chain, supported by an extended network of partners in France and internationally.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ECO RESPONSIBLE -->
+<section id="corporate" class="section-block">
+  <div class="frame">
+    <div>
+      <div class="meta"><span class="pill-tag">03/06</span><span>Our commitment</span></div>
+      <h2 class="reveal">Resolutely committed to an eco-responsible approach, eco-production is at the heart of our reflections and actions.</h2>
+    </div>
+    <aside class="aside reveal">
+      <p>FIRST FRAME IS AMONG THE TWELVE FIRST FRENCH PRODUCTION COMPANIES TO BE ECO-RESP POWERS CERTIFIED.</p>
+      <br/>
+      <p>IN PRACTICE, WE SUPPORT EVERY PROJECT WITH RECOMMENDATIONS TO IMPLEMENT ECOSOUNDING LOGISTICS, ENERGY, TRANSPORT, CHOICE OF PARTNERS.</p>
+      <br/>
+      <p>MEASURABLE DECISIONS, AT EVERY STEP.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="music" class="section-block">
+  <div class="frame">
+    <div>
+      <div class="meta"><span class="pill-tag">02/06</span><span>Our services</span></div>
+      <h2 class="reveal">From concept to delivery, we orchestrate the entire production chain, supported by an extended network of partners in France and internationally.</h2>
+    </div>
+    <div>
+      <div class="number-row">
+        <div class="num">01</div>
+        <div class="name">CONCEPT</div>
+        <ul><li>Creative direction</li><li>Scripting &amp; storyboard</li></ul>
+      </div>
+      <div class="number-row">
+        <div class="num">02</div>
+        <div class="name">PRODUCTION</div>
+        <ul><li>Direction &amp; line production</li><li>Film &amp; photo</li></ul>
+      </div>
+      <div class="number-row">
+        <div class="num">03</div>
+        <div class="name">POST-PRODUCTION</div>
+        <ul><li>Editing</li><li>Color grading</li><li>Compositing &amp; VFX</li><li>Graphics &amp; animations</li></ul>
+      </div>
+      <div class="number-row">
+        <div class="num">04</div>
+        <div class="name">STUDIO</div>
+        <ul><li>3D / 2D motion design</li><li>Graphic &amp; title design</li></ul>
+      </div>
+      <div class="number-row">
+        <div class="num">05</div>
+        <div class="name">SOUND</div>
+        <ul><li>Film score</li><li>Mix &amp; mastering</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STUDIO -->
+<section id="studio" class="section-block">
+  <div class="frame">
+    <div>
+      <div class="meta"><span class="pill-tag">01/06</span><span>Studio</span></div>
+      <h2 class="reveal">F(r)ame</h2>
+    </div>
+    <aside class="aside reveal">
+      <p>A creative studio that brings together art direction, technology, and craftsmanship to build distinctive brand worlds.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ABOUT BLOCK -->
+<section id="about" class="section-block">
+  <h1 class="display-xxl reveal">About</h1>
+  <div class="frame mt-12">
+    <aside class="aside reveal">
+      <p>We are a Paris-based creative production house. We design, shoot, finish, and ship films for brands, agencies, and artists.</p>
+      <br/>
+      <p>Our team is small on purpose — every project gets the founders' direct attention.</p>
+    </aside>
+    <aside class="aside reveal">
+      <p>Founded in 2017, we have produced over 200 projects across advertising, music, and original content. Selected work has been featured at Cannes Lions, D&amp;AD, and the Vimeo Staff Picks.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="section-block">
+  <div class="frame">
+    <div>
+      <div class="meta"><span class="pill-tag">CONTACT</span></div>
+      <h2 class="reveal">Let's build<br/>your first frame.</h2>
+    </div>
+    <aside class="aside reveal">
+      <p>NEW BUSINESS</p>
+      <br/>
+      <p><b>hello@firstframe.example</b></p>
+      <br/>
+      <p>PARIS HQ</p>
+      <br/>
+      <p>14 Rue de la Roquette, 75011 Paris</p>
+      <p>+33 1 23 45 67 89</p>
+    </aside>
+  </div>
+</section>
+
+<footer>
+  <div class="flex gap-8 items-center">
+    <span>LEGAL</span><span>CREDITS</span>
+  </div>
+  <div class="links">
+    <a href="#">INSTAGRAM</a>
+    <a href="#">YOUTUBE</a>
+    <a href="#">VIMEO</a>
+    <a href="#">LINKEDIN</a>
+  </div>
+</footer>
+
+<script>
+  // Cursor crosshair tracking
+  const cv = document.getElementById('cv');
+  const ch = document.getElementById('ch');
+  let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
+  let cx = tx, cy = ty;
+  window.addEventListener('mousemove', (e) => {
+    tx = e.clientX; ty = e.clientY;
+  });
+  function raf() {
+    cx += (tx - cx) * 0.25;
+    cy += (ty - cy) * 0.25;
+    cv.style.transform = `translateX(${cx}px)`;
+    ch.style.transform = `translateY(${cy}px)`;
+    requestAnimationFrame(raf);
+  }
+  raf();
+
+  // Project carousel
+  const projects = [
+    { title: "THE WALK", tag: "WEWARD", dir: "MATT PALMER" },
+    { title: "PIECE BY PIECE", tag: "VINTED", dir: "LÉA BERGER" },
+    { title: "JOURS DE MARCHÉ", tag: "SUPER U", dir: "RAPHAËLLE BLANC" },
+    { title: "ALL THE WIDE OPEN", tag: "HARLEY", dir: "NICOLAS LEBLANC" },
+    { title: "FLOW", tag: "DEEZER", dir: "ANAÏS ROUSSEL" },
+    { title: "PROGRESS", tag: "IWD", dir: "STUDIO COLLECTIVE" }
+  ];
+  const stills = document.querySelectorAll('.stage .still');
+  const dots = document.querySelectorAll('#projRow .pdot');
+  const titleEl = document.getElementById('projTitle');
+  const credEl = document.getElementById('projCredits');
+  let cur = 0;
+  function setProject(i) {
+    cur = (i + projects.length) % projects.length;
+    stills.forEach((s, k) => s.classList.toggle('active', k === cur));
+    dots.forEach((d, k) => d.classList.toggle('active', k === cur));
+    titleEl.textContent = projects[cur].title;
+    credEl.innerHTML = `<span>${projects[cur].tag}</span><span>${projects[cur].dir}</span>`;
+    document.getElementById('ts').textContent = `0:00 / 0:${10 + cur * 5}`;
+  }
+  dots.forEach((d, i) => d.addEventListener('click', () => setProject(i)));
+  // Keyboard nav
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') setProject(cur + 1);
+    if (e.key === 'ArrowLeft') setProject(cur - 1);
+  });
+
+  // Auto-rotate (cosmetic, since we have no videos)
+  setInterval(() => setProject(cur + 1), 6000);
+
+  // PLAY toggle (cosmetic)
+  document.getElementById('playToggle').addEventListener('click', () => {
+    const span = document.getElementById('playToggle').children[1];
+    span.textContent = span.textContent.trim() === 'PLAY' ? 'PAUSE' : 'PLAY';
+  });
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.16 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

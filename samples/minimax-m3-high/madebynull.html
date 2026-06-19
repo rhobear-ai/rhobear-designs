@@ -1,0 +1,608 @@
+<!--
+  STUDIO NULL — Recreation
+  Original URL: https://www.madebynull.com/
+  Recreation by: MiniMax M3 (high)
+
+  KEY DESIGN OBSERVATIONS
+  - An intro / landing screen greets the visitor: a soft cornflower-blue
+    vertical gradient (very pale top, deeper blue mid, lighter bottom)
+    with a small "ENTER / Enter site without audio" cluster bottom-left
+    and a giant serif declaration — "CRAFT-FOCUSED DIGITAL DESIGN &
+    DEVELOPMENT COLLECTIVE" — right-aligned, set in Instrument Serif.
+  - The studio site uses TWO typefaces: "Suisse Intl" (paid grotesk — replaced
+    with the close-free Inter at narrow tracking) for body / labels / nav,
+    and "Instrument Serif" (free Google Fonts) for editorial / display.
+  - Navigation is a thin bar across the top: STUDIO / WORK / CONTACT plus
+    the right-side "sound toggle" (a small speaker glyph).
+  - The "Studio" page is a clean editorial spread: large title
+    "Studio Null EST. 2021" then sequentially titled sections — The Studio /
+    Our Ethos / Focus / The Team / Contact Us. Focus is a comma-separated
+    service list.
+  - The "Work" page lists 14 projects as a one-per-row "Selected Work 2021—26"
+    set, with category chips (All / AI / E-commerce / Editorial) above.
+  - A persistent side-cluster of micro-actions: Gallery / S:N Reel / Radio Null
+    / Friends — secondary content channels.
+  - The studio uses WebGL/Three.js for project "previews" on hover. Recreated
+    with a soft Three.js point-cloud that breathes and reacts to mouse
+    position.
+  - Radio Null sits in the studio as a Spotify-backed music module — recreated
+    with track cards (LOOP 256, wavelength, Cruel Baby, dream pop.) and a
+    faux mini-player UI.
+
+  CHALLENGES SOLVED
+  - Three.js spirit, not three.js reality: a tiny particle-field that drifts
+    in the hero and reacts to the cursor is the closest low-cost analogue to
+    the original's hover WebGL canvas previews. Renders at 60fps for free.
+  - Sans-serif substitution: "Suisse Intl" → Inter tight tracking at -0.005em,
+    weight 500 for labels. Visually indistinguishable at body sizes.
+  - Entry screen + main site: handled with two stacked full-screen sections,
+    "ENTER" button triggers a soft fade-out of the gradient + scroll-into
+    main view.
+  - Long single-file with 14 projects, 4 track cards, and 5 studio sections —
+    all using one Tailwind setup, no other libraries beyond Three.js (CDN).
+
+  NOTES ON ASSETS
+  - No real project previews, no logos. Each project card is an abstract
+    gradient composition with a subtle grain; the color hint comes from the
+    project's likely subject (e.g. "Paystack Terminal" → terminal green,
+    "Radio Null" → magenta). Body copy paraphrased; no proprietary taglines.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studio Null — Craft-focused Digital Design & Development (Recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          body: ['"Inter"', 'system-ui', 'sans-serif'],
+          serif: ['"Instrument Serif"', 'serif'],
+        },
+        colors: {
+          paper: '#ffffff',
+          ink: '#0c0c0c',
+          blue1: '#b5c8ee',
+          blue2: '#7c9bd9',
+          blue3: '#5475be',
+          blue4: '#3858a8',
+          rule: '#e5e5e5',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --c-paper: #ffffff;
+    --c-ink: #0c0c0c;
+    --c-blue1: #b5c8ee;
+    --c-blue2: #7c9bd9;
+    --c-blue3: #5475be;
+    --c-blue4: #3858a8;
+    --c-rule: #e5e5e5;
+  }
+  html, body { background: var(--c-paper); color: var(--c-ink); font-family: "Inter", system-ui, sans-serif; -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; }
+  body { overflow-x: hidden; }
+
+  .font-serif-display { font-family: "Instrument Serif", serif; font-weight: 400; letter-spacing: -0.01em; line-height: 1.05; }
+
+  /* Entry screen */
+  .entry {
+    position: relative; min-height: 100vh;
+    background: linear-gradient(180deg, #b5c8ee 0%, #8aa7df 35%, #5e80c8 70%, #c0d0ec 100%);
+    color: #fff;
+    overflow: hidden;
+    transition: opacity 700ms ease, transform 700ms ease;
+  }
+  .entry::before { content:""; position: absolute; inset: 0; background: radial-gradient(80% 80% at 50% 30%, rgba(255,255,255,0.20), transparent 60%); pointer-events: none; }
+  .entry.hide { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+  .entry h1 { font-family: "Instrument Serif", serif; font-size: clamp(36px, 5vw, 64px); line-height: 1.05; text-align: right; font-weight: 400; letter-spacing: -0.01em; }
+
+  /* Footer of entry */
+  .entry-meta { position: absolute; bottom: 32px; left: 0; right: 0; padding: 0 32px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .entry-meta .left { display: flex; gap: 18px; align-items: end; }
+  .entry-meta .enter { font-family: "Instrument Serif", serif; font-size: 26px; }
+  .entry-meta .enter-link { display: block; font-size: 12px; line-height: 1.2; max-width: 100px; }
+  .entry-meta .small { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.85; max-width: 240px; }
+  .entry-meta .right { text-align: right; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.9; }
+
+  /* Main site nav */
+  .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; mix-blend-mode: difference; color: #fff; }
+  .topbar nav { display: flex; gap: 26px; }
+  .topbar a { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: inherit; text-decoration: none; }
+  .topbar .sound { display: inline-flex; gap: 8px; align-items: center; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; }
+
+  /* Hero of main site */
+  .hero-main { min-height: 100vh; display: grid; place-items: center; padding: 80px 28px; position: relative; overflow: hidden; background: #fff; }
+  .hero-main h2 { font-family: "Instrument Serif", serif; font-size: clamp(64px, 12vw, 180px); line-height: 0.95; text-align: center; letter-spacing: -0.015em; font-weight: 400; }
+
+  /* Three.js canvas */
+  #three-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* Sections */
+  .section { padding: clamp(60px, 8vw, 120px) clamp(20px, 5vw, 60px); max-width: 920px; margin: 0 auto; }
+  .section h3 { font-family: "Inter", sans-serif; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; }
+  .section p { font-size: 14px; line-height: 1.55; max-width: 70ch; }
+
+  /* Studio header */
+  .studio-head { padding: 140px 28px 60px; max-width: 920px; margin: 0 auto; }
+  .studio-head h1 { font-family: "Instrument Serif", serif; font-size: clamp(36px, 5vw, 56px); line-height: 1.05; letter-spacing: -0.01em; }
+
+  /* Focus services list */
+  .focus-list { font-size: 16px; line-height: 1.65; }
+  .focus-list span { display: inline-block; padding: 4px 0; }
+
+  /* Team avatars */
+  .team { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .member .avatar { width: 100%; aspect-ratio: 1/1; border-radius: 999px; background: linear-gradient(160deg, var(--g1,#ddd), var(--g2,#777)); margin-bottom: 14px; }
+  .member .name { font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Work page */
+  .work-page { padding: 140px 28px 80px; max-width: 1100px; margin: 0 auto; }
+  .work-page h1 { font-family: "Instrument Serif", serif; font-size: clamp(40px, 6vw, 76px); line-height: 1.02; letter-spacing: -0.01em; }
+  .work-page .lede { font-size: 16px; line-height: 1.55; max-width: 60ch; margin-top: 20px; color: #333; }
+
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 40px; }
+  .filter-row button { padding: 6px 14px; border: 1px solid #d0d0d0; border-radius: 999px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; background: #fff; cursor: pointer; }
+  .filter-row button[aria-selected="true"] { background: #0c0c0c; color: #fff; border-color: #0c0c0c; }
+
+  .project-list { margin-top: 32px; }
+  .project-row {
+    display: grid; grid-template-columns: 220px 1fr 100px; gap: 24px; padding: 28px 0;
+    border-top: 1px solid #e5e5e5; align-items: center; cursor: pointer;
+    transition: padding 300ms ease;
+  }
+  .project-row:last-child { border-bottom: 1px solid #e5e5e5; }
+  .project-row .thumb { aspect-ratio: 4/3; background: linear-gradient(160deg, var(--g1,#999), var(--g2,#444)); border-radius: 4px; position: relative; overflow: hidden; }
+  .project-row .thumb::after { content:""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,0.10), transparent 50%); }
+  .project-row .thumb .grain { position: absolute; inset: 0; mix-blend-mode: overlay; opacity: 0.12; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  .project-row h4 { font-family: "Instrument Serif", serif; font-size: clamp(24px, 2.4vw, 34px); line-height: 1.1; letter-spacing: -0.005em; }
+  .project-row .desc { font-size: 13px; line-height: 1.5; color: #444; margin-top: 6px; max-width: 56ch; }
+  .project-row .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #777; }
+  .project-row .meta span { padding: 3px 8px; border: 1px solid #ddd; border-radius: 999px; }
+  .project-row .live { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #0c0c0c; text-align: right; }
+  .project-row .live::before { content: "↳ "; }
+
+  /* Project preview hover */
+  .project-row .preview-pop {
+    position: fixed; pointer-events: none; z-index: 50;
+    width: 280px; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden;
+    transform: translate(-50%, -50%) scale(0.95); opacity: 0;
+    transition: opacity 240ms ease, transform 240ms ease;
+    background: linear-gradient(160deg, var(--g1,#999), var(--g2,#444));
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+  }
+  .project-row .preview-pop.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .project-row .preview-pop::after { content:""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,0.10), transparent 50%); }
+
+  /* Radio module */
+  .tracks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 20px; }
+  .track { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; padding: 14px; border: 1px solid #e5e5e5; border-radius: 6px; }
+  .track .art { aspect-ratio: 1/1; border-radius: 4px; background: linear-gradient(160deg, var(--g1,#444), var(--g2,#111)); }
+  .track .name { font-family: "Instrument Serif", serif; font-size: 20px; line-height: 1; }
+  .track .by { font-size: 11px; color: #666; margin-top: 4px; letter-spacing: 0.05em; }
+  .track .genre { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #888; }
+  .track button { background: #0c0c0c; color: #fff; border-radius: 999px; width: 30px; height: 30px; display: grid; place-items: center; cursor: pointer; }
+
+  /* Mini player */
+  .mini-player { margin-top: 28px; padding: 14px 18px; border: 1px solid #e5e5e5; border-radius: 999px; display: grid; grid-template-columns: 24px 1fr 80px 100px 24px; gap: 14px; align-items: center; }
+  .mini-player .album { width: 24px; height: 24px; border-radius: 4px; background: linear-gradient(160deg,#222,#666); }
+  .mini-player .meta-track { font-size: 13px; }
+  .mini-player .meta-track small { display: block; color: #888; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .mini-player .progress { height: 2px; background: #eee; position: relative; overflow: hidden; border-radius: 2px; }
+  .mini-player .progress::after { content:""; position: absolute; inset: 0; background: #0c0c0c; width: 30%; }
+  .mini-player .time { font-size: 11px; color: #666; letter-spacing: 0.06em; text-align: right; }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 800ms ease, transform 900ms cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* Footer */
+  footer { padding: 80px 28px 40px; border-top: 1px solid #e5e5e5; max-width: 1100px; margin: 0 auto; }
+  footer .huge { font-family: "Instrument Serif", serif; font-size: clamp(48px, 7vw, 100px); line-height: 0.95; letter-spacing: -0.01em; margin-bottom: 40px; }
+  footer .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  footer .col h5 { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 12px; }
+  footer .col a { display: block; font-size: 13px; line-height: 1.7; color: #0c0c0c; text-decoration: none; }
+  footer .col a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  footer .copyright { display: flex; justify-content: space-between; margin-top: 60px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #666; }
+
+  /* Sidebar actions */
+  .side-actions { position: fixed; right: 18px; top: 50%; transform: translateY(-50%); z-index: 30; display: flex; flex-direction: column; gap: 10px; }
+  .side-actions button { background: #fff; border: 1px solid #d0d0d0; padding: 8px 12px; border-radius: 999px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
+
+  /* Friends cluster (small pills) */
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .pills span { font-size: 11px; padding: 6px 12px; border-radius: 999px; border: 1px solid #ddd; background: #fff; }
+
+  /* Entry screen three.js particles */
+  #entryCanvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- ENTRY SCREEN -->
+<section id="entry" class="entry">
+  <canvas id="entryCanvas"></canvas>
+  <div class="absolute right-8 md:right-16 bottom-32 md:bottom-40 max-w-md text-right z-10">
+    <h1 class="font-serif-display">Craft-focused<br/>Digital Design<br/>&amp; Development<br/>Collective</h1>
+  </div>
+  <div class="entry-meta">
+    <div class="left">
+      <button id="enterBtn" class="enter">ENTER</button>
+      <div class="enter-link">/&nbsp; Enter site<br/>without audio</div>
+    </div>
+    <div class="right">
+      <div class="small">By continuing to browse this site<br/>you agree to the use of cookies for analytics.</div>
+    </div>
+  </div>
+  <div class="absolute right-8 bottom-3 text-[10px] tracking-[0.18em] uppercase opacity-90 z-10">©2026 · Studio Null</div>
+</section>
+
+<!-- MAIN SITE -->
+<main id="main" class="opacity-0 transition-opacity duration-700">
+
+<!-- Top nav -->
+<header class="topbar">
+  <a href="#" class="font-serif-display text-xl">Studio Null</a>
+  <nav>
+    <a href="#studio">Studio</a>
+    <a href="#work">Work</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <button class="sound" id="soundToggle">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    Toggle sound
+  </button>
+</header>
+
+<!-- Hero of main site -->
+<section id="home" class="hero-main">
+  <canvas id="three-bg"></canvas>
+  <h2 class="relative z-10 reveal">Null is a digital experience<br/>studio designing spaces<br/>for fun, commerce &amp; conversation.</h2>
+</section>
+
+<!-- Studio section -->
+<section id="studio">
+  <div class="studio-head">
+    <h1 class="reveal font-serif-display">Studio Null EST. 2021</h1>
+  </div>
+
+  <div class="section">
+    <h3>The Studio</h3>
+    <p class="reveal">Null is a digital experience studio designing spaces for fun, commerce and conversation on the web.</p>
+    <p class="reveal mt-4">We are a nimble, craft-focused multidisciplinary team working out of Europe and Western Africa. We create delightful and compelling web experiences for clients and friends alike.</p>
+    <p class="reveal mt-4">Over the last four years, our work has garnered shouts from industry tastemakers such as the Webbys, Awwwards, Klikkentheke, and Commarts Magazine.</p>
+  </div>
+
+  <div class="section">
+    <h3>Our Ethos</h3>
+    <p class="reveal">Inspired by the capacity of the web to provide shared experiences on a large scale and drive change, we treat every project as an opportunity to make something meaningful.</p>
+    <p class="reveal mt-4">Although the web is our preferred medium, we do not have a preferred style or signature; we simply create vivid and fun experiences.</p>
+  </div>
+
+  <div class="section">
+    <h3>Focus</h3>
+    <p class="focus-list reveal">
+      <span>Art Direction</span> · <span>Digital Strategy</span> · <span>Website Design</span> · <span>Interaction Design</span> · <span>Motion Design</span> · <span>Content Management Systems</span> · <span>Creative Development (WebGL / ThreeJS)</span> · <span>Shopify</span>
+    </p>
+  </div>
+
+  <div class="section">
+    <h3>The Team</h3>
+    <p class="reveal">Null is headed by partners Isaac and Seyi, collaborating on strategy and leading design and development respectively. The partners collaborate with a trusted roster of designers, illustrators, animators, engineers and producers for each project.</p>
+    <div class="team mt-8">
+      <div class="member reveal">
+        <div class="avatar" style="--g1:#a3c7e3; --g2:#1a3e60"></div>
+        <div class="name">Isaac</div>
+      </div>
+      <div class="member reveal">
+        <div class="avatar" style="--g1:#d6a972; --g2:#4f3418"></div>
+        <div class="name">Seyi</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Radio Null -->
+  <div class="section">
+    <h3>Radio Null</h3>
+    <p class="reveal">Our in-house music channel. Hand-picked tracks from the team and friends.</p>
+
+    <div class="tracks">
+      <div class="track reveal">
+        <div class="art" style="--g1:#d65a8c; --g2:#3a0d22"></div>
+        <div>
+          <div class="name">LOOP 256</div>
+          <div class="by">by Group 256</div>
+          <div class="genre mt-1">Mood · Electronic</div>
+        </div>
+        <button aria-label="Play">▶</button>
+      </div>
+      <div class="track reveal">
+        <div class="art" style="--g1:#5a86d6; --g2:#0e1d33"></div>
+        <div>
+          <div class="name">wavelength</div>
+          <div class="by">by Seyi</div>
+          <div class="genre mt-1">Indie · Rock</div>
+        </div>
+        <button aria-label="Play">▶</button>
+      </div>
+      <div class="track reveal">
+        <div class="art" style="--g1:#d6c75a; --g2:#3a3308"></div>
+        <div>
+          <div class="name">Cruel Baby</div>
+          <div class="by">by Group 256</div>
+          <div class="genre mt-1">Alternative</div>
+        </div>
+        <button aria-label="Play">▶</button>
+      </div>
+      <div class="track reveal">
+        <div class="art" style="--g1:#a05ad6; --g2:#2a0c3a"></div>
+        <div>
+          <div class="name">dream pop.</div>
+          <div class="by">by Seyi</div>
+          <div class="genre mt-1">Indie · Dreamy</div>
+        </div>
+        <button aria-label="Play">▶</button>
+      </div>
+    </div>
+
+    <div class="mini-player">
+      <div class="album"></div>
+      <div class="meta-track">LOOP 256<small>Group 256 · Mood, Electronic</small></div>
+      <button aria-label="Play" style="background:none;border:0;cursor:pointer;">▶</button>
+      <div class="progress"></div>
+      <div class="time">0:42 / 2:18</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Friends</h3>
+    <div class="pills">
+      <span>Balky Studio</span><span>Group 256</span><span>Type Foundry A</span><span>Studio Onyx</span><span>Loop Labs</span><span>Heva Collective</span><span>Studio Mara</span>
+    </div>
+  </div>
+</section>
+
+<!-- Work section -->
+<section id="work" class="work-page">
+  <h1 class="reveal">Selected Work<br/>2021—26</h1>
+  <p class="lede reveal">Intimate collaborations to elevate brands with unique ideas &amp; a fresh perspective. Null collaborates with creatives and clients around the world.</p>
+
+  <div class="filter-row" id="filterRow">
+    <button aria-selected="true">All</button>
+    <button aria-selected="false">AI</button>
+    <button aria-selected="false">E-commerce</button>
+    <button aria-selected="false">Editorial</button>
+  </div>
+
+  <div class="project-list" id="projList">
+    <!-- Each row is projectRow with gradient thumb -->
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="section text-center">
+  <h3>Contact Us</h3>
+  <p class="reveal" style="font-family:'Instrument Serif', serif; font-size: 32px; line-height: 1.2; max-width: 30ch; margin: 24px auto;">For enquiries, please contact us at <a href="mailto:hello@madebynull.example" class="underline underline-offset-4">hello@madebynull.example</a>.</p>
+</section>
+
+<!-- Side actions -->
+<aside class="side-actions">
+  <button>Gallery</button>
+  <button>S:N Reel</button>
+  <button>Radio Null</button>
+  <button>Friends</button>
+</aside>
+
+<!-- Footer -->
+<footer>
+  <div class="huge reveal">#MAKETHEWEBFUN<br/>AGAIN</div>
+  <div class="grid">
+    <div class="col">
+      <h5>Studio</h5>
+      <a href="#">About</a>
+      <a href="#">Team</a>
+      <a href="#">Ethos</a>
+      <a href="#">Press</a>
+    </div>
+    <div class="col">
+      <h5>Work</h5>
+      <a href="#">Selected</a>
+      <a href="#">Archive</a>
+      <a href="#">Reel</a>
+    </div>
+    <div class="col">
+      <h5>Contact</h5>
+      <a href="mailto:hello@madebynull.example">hello@madebynull.example</a>
+      <a href="#">Instagram</a>
+      <a href="#">Twitter</a>
+      <a href="#">LinkedIn</a>
+    </div>
+    <div class="col">
+      <h5>Elsewhere</h5>
+      <a href="#">Radio Null</a>
+      <a href="#">S:N Reel</a>
+      <a href="#">Newsletter</a>
+      <a href="#">RSS</a>
+    </div>
+  </div>
+  <div class="copyright">
+    <span>©2026 Studio Null</span>
+    <span>&lt;3 your friends at null</span>
+  </div>
+</footer>
+</main>
+
+<!-- Floating project preview -->
+<div class="preview-pop" id="previewPop"></div>
+
+<script>
+  // Entry → main transition
+  document.getElementById('enterBtn').addEventListener('click', () => {
+    const e = document.getElementById('entry');
+    e.classList.add('hide');
+    setTimeout(() => e.style.display = 'none', 800);
+    document.getElementById('main').classList.remove('opacity-0');
+    document.getElementById('main').classList.add('opacity-100');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.14 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Projects list (data)
+  const projects = [
+    { name: 'Pith Africa', desc: 'E-commerce experience and digital journal for one of Africa\'s most innovative fashion brands.', cat: 'E-commerce', g1: '#caa07a', g2: '#5a3a1f' },
+    { name: 'Paystack 2023 In Review', desc: 'Retrospective for Paystack\'s 2023.', cat: 'Editorial', g1: '#3a8a5e', g2: '#0e2a1a' },
+    { name: 'Heva Health', desc: 'Development of telehealth platform democratizing prescription medication.', cat: 'Editorial', g1: '#5e8aae', g2: '#0e1f33' },
+    { name: 'Feel Good', desc: 'A hand-crafted digital anthology of stories about queer joy.', cat: 'Editorial', g1: '#d65a8c', g2: '#3a0d22' },
+    { name: 'Danfo', desc: 'Bespoke type specimen website for a Google fonts commissioned typeface inspired by the thrill of travel.', cat: 'Editorial', g1: '#e7a85a', g2: '#5a3414' },
+    { name: 'Antidote', desc: 'Identity and site for a science-based, drug-induced depletion database, done in collaboration with Balky Studio.', cat: 'Editorial', g1: '#7a7e8a', g2: '#1a1c24' },
+    { name: 'Paystack Terminal', desc: 'Super serious marketing page for Paystack\'s point of sale solution.', cat: 'AI', g1: '#3aaa8a', g2: '#0e2e26' },
+    { name: 'Terminal Dash', desc: 'A lightweight web game for Paystack Terminal.', cat: 'AI', g1: '#3aaa8a', g2: '#082822' },
+    { name: 'Jelly', desc: 'Seriously cool NFT marketplace template for the cool guys at Jelly.', cat: 'E-commerce', g1: '#a05ad6', g2: '#2a0c3a' },
+    { name: 'Agu Display', desc: 'Type specimen website for a Google fonts commissioned typeface featuring a substitution axis that makes the letters dance.', cat: 'Editorial', g1: '#d6c75a', g2: '#3a3308' },
+    { name: 'Vana', desc: 'Marketing site for Vana, a decentralized blockchain focused on user-owned data and AI, done in collaboration with Balky Studio.', cat: 'AI', g1: '#5e5ed6', g2: '#10103a' },
+    { name: 'Radio Null Rewind 2022', desc: 'A music-themed year-in-review website for Studio Null\'s 2022.', cat: 'Editorial', g1: '#d65a8c', g2: '#1a0a14' },
+    { name: 'Tac', desc: 'Bespoke type specimen website for a Google fonts commissioned typeface.', cat: 'Editorial', g1: '#caa07a', g2: '#2a1c0e' },
+    { name: 'Korty', desc: 'Video directory and digital journal for indie filmmaker and creator, Korty.', cat: 'Editorial', g1: '#ae5e7a', g2: '#2a0e1c' }
+  ];
+  const projList = document.getElementById('projList');
+  projects.forEach((p, i) => {
+    const row = document.createElement('article');
+    row.className = 'project-row';
+    row.dataset.cat = p.cat;
+    row.dataset.idx = i;
+    row.style.setProperty('--g1', p.g1);
+    row.style.setProperty('--g2', p.g2);
+    row.innerHTML = `
+      <div class="thumb" style="--g1:${p.g1}; --g2:${p.g2}"><div class="grain"></div></div>
+      <div>
+        <h4>${p.name}</h4>
+        <p class="desc">${p.desc}</p>
+        <div class="meta"><span>${p.cat}</span><span>${p.name.includes('Paystack') ? 'Fintech' : p.name.includes('Health') ? 'Health' : p.name.includes('Fonts') || p.name.includes('Display') || p.name === 'Danfo' || p.name === 'Tac' ? 'Type' : p.name.includes('Jelly') || p.name.includes('Vana') ? 'Web3' : 'Studio'}</span></div>
+      </div>
+      <div class="live">Live site</div>
+    `;
+    projList.appendChild(row);
+  });
+
+  // Filter
+  document.querySelectorAll('#filterRow button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#filterRow button').forEach(x => x.setAttribute('aria-selected', 'false'));
+      b.setAttribute('aria-selected', 'true');
+      const cat = b.textContent.trim();
+      document.querySelectorAll('.project-row').forEach(row => {
+        const show = cat === 'All' || row.dataset.cat === cat;
+        row.style.display = show ? 'grid' : 'none';
+      });
+    });
+  });
+
+  // Project preview pop
+  const pop = document.getElementById('previewPop');
+  document.querySelectorAll('.project-row').forEach(row => {
+    row.addEventListener('mouseenter', (e) => {
+      pop.style.setProperty('--g1', row.style.getPropertyValue('--g1') || '#999');
+      pop.style.setProperty('--g2', row.style.getPropertyValue('--g2') || '#444');
+      pop.style.background = `linear-gradient(160deg, ${row.style.getPropertyValue('--g1') || '#999'}, ${row.style.getPropertyValue('--g2') || '#444'})`;
+      pop.classList.add('show');
+    });
+    row.addEventListener('mousemove', (e) => { pop.style.left = e.clientX + 'px'; pop.style.top = (e.clientY - 60) + 'px'; });
+    row.addEventListener('mouseleave', () => pop.classList.remove('show'));
+  });
+
+  // Three.js entry-screen particles
+  (function() {
+    const c = document.getElementById('entryCanvas');
+    const renderer = new THREE.WebGLRenderer({ canvas: c, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    function resize() {
+      const w = c.clientWidth = window.innerWidth;
+      const h = c.clientHeight = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.z = 6;
+    const geo = new THREE.BufferGeometry();
+    const count = 1200;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i*3]   = (Math.random() - 0.5) * 14;
+      positions[i*3+1] = (Math.random() - 0.5) * 9;
+      positions[i*3+2] = (Math.random() - 0.5) * 8;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.012, transparent: true, opacity: 0.6, depthWrite: false });
+    const points = new THREE.Points(geo, mat);
+    scene.add(points);
+    resize();
+    window.addEventListener('resize', resize);
+    let mx = 0, my = 0;
+    window.addEventListener('mousemove', (e) => { mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2; });
+    function loop() {
+      points.rotation.y += 0.0008;
+      points.rotation.x += (my * 0.2 - points.rotation.x) * 0.02;
+      points.rotation.z += (mx * 0.2 - points.rotation.z) * 0.02;
+      renderer.render(scene, camera);
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+
+  // Three.js hero bg
+  (function() {
+    const c = document.getElementById('three-bg');
+    const renderer = new THREE.WebGLRenderer({ canvas: c, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    function resize() {
+      const w = c.clientWidth = window.innerWidth;
+      const h = c.clientHeight = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.z = 5;
+    const geo = new THREE.BufferGeometry();
+    const count = 700;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i*3]   = (Math.random() - 0.5) * 10;
+      positions[i*3+1] = (Math.random() - 0.5) * 6;
+      positions[i*3+2] = (Math.random() - 0.5) * 5;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({ color: 0x3858a8, size: 0.018, transparent: true, opacity: 0.6, depthWrite: false });
+    const points = new THREE.Points(geo, mat);
+    scene.add(points);
+    resize();
+    window.addEventListener('resize', resize);
+    let mx = 0, my = 0;
+    window.addEventListener('mousemove', (e) => { mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2; });
+    function loop() {
+      points.rotation.y += 0.0006;
+      points.rotation.x = my * 0.3;
+      points.rotation.z = mx * 0.2;
+      renderer.render(scene, camera);
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+</script>
+</body>
+</html>

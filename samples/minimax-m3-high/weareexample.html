@@ -1,0 +1,436 @@
+<!--
+  WE ARE EXAMPLE — Recreation
+  Original URL: https://www.weareexample.com/
+  Recreation by: MiniMax M3 (high)
+
+  KEY DESIGN OBSERVATIONS
+  - Editorial / magazine-style agency site. Two type families do the heavy
+    lifting: an ultra-bold CONDENSED SANS for display headlines (original:
+    "American Grotesk Compressed", weight 900) and a friendly grotesk for
+    body / labels (original: "American Grotesk").
+  - Off-white warm canvas (243, 243, 240) with a charcoal dark section as
+    footer. Subtle pink / yellow / blue swatches used as highlight accents
+    on small UI markers.
+  - Hero: huge display headline "We make BRANDS AND PLACES FAMOUS" with two
+    small "polaroid" images overlapping the text at slight rotations — a
+    collage treatment that gives the page personality immediately.
+  - Project cards: tall images with a heavy display headline underneath +
+    a short "metric block" (numbers / numbers / outcomes). 2-up grid.
+  - Section pattern repeats: a small intro paragraph (grotesk, ~32px),
+    followed by a HUGE category headline in the condensed sans, repeated 5-6
+    times vertically (Destinations & Placemaking, Hospitality, Consumer
+    Brands, etc.). On scroll these are stagger-revealed.
+  - A big manifesto section ("WE HELP / EARN THEIR NAME...") appears in two
+    columns and uses the same ultra-bold sans at huge sizes.
+  - "FOR EXAMPLE" newsletter block + an audio/podcast split, then article
+    "cards" with eyebrow labels (WHAT WE'RE READING / NEWSLETTER / PODCAST).
+  - Footer: dark navy (rgb 14, 22, 35) with a colossal serif/sans headline
+    "THE BEST CLIENT RELATIONSHIPS START WITH A GOOD CONVERSATION."
+  - Image treatment: photographs have a subtle film grain, slightly muted.
+
+  CHALLENGES SOLVED
+  - The original uses American Grotesk (paid). Substituted with Bebas Neue
+    (condensed) + Anton (compressed) from Google Fonts which together
+    capture the tight, heavy, magazine feel.
+  - "Polaroid" overlap collage: reproduced with absolute-positioned image
+    cards, slight rotation transforms, drop shadows, and a thin white border.
+  - Repeated category headlines: rebuilt as a vertical list of staggered
+    reveals using IntersectionObserver so they animate in one after the
+    other on scroll.
+  - Article "cards" with eyebrow labels and read indicators (↳ READ): kept
+    exactly that pattern (small caps eyebrow → display headline → tag →
+    read arrow CTA).
+
+  NOTES ON ASSETS
+  - No real project photography, brand logos, or team portraits. Each visual
+    uses an original abstract gradient composition sized to the same
+    aspect ratio as the source. Body copy was paraphrased; no proprietary
+    tagline was reused.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>We Are Example — Brand Strategy, PR & Placemaking (Recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Anton"', '"Bebas Neue"', 'sans-serif'],
+          condensed: ['"Anton"', 'sans-serif'],
+          body: ['"Inter"', 'sans-serif'],
+          italic: ['"Playfair Display"', 'serif'],
+        },
+        colors: {
+          paper: '#f3f3f0',
+          cream: '#f8f8ef',
+          ink: '#0e1623',
+          ash: '#1f1f1f',
+          muted: '#424242',
+          pink: '#ffdede',
+          yellow: '#ffea00',
+          rule: '#dddddd',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --c-paper: #f3f3f0;
+    --c-cream: #f8f8ef;
+    --c-ink: #0e1623;
+    --c-ash: #1f1f1f;
+    --c-muted: #424242;
+    --c-rule: #dddddd;
+    --c-pink: #ffdede;
+    --c-yellow: #ffea00;
+  }
+  html, body { background: var(--c-paper); color: var(--c-ink); font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+  body { overflow-x: hidden; }
+
+  .font-display { font-family: "Anton", "Bebas Neue", sans-serif; letter-spacing: -0.005em; line-height: 0.95; text-transform: uppercase; }
+  .font-condensed { font-family: "Anton", "Bebas Neue", sans-serif; letter-spacing: 0; line-height: 0.95; text-transform: uppercase; }
+  .font-italic { font-family: "Playfair Display", serif; font-style: italic; }
+
+  /* Hero display headline scale */
+  .h1-mega { font-family: "Anton", sans-serif; font-size: clamp(64px, 13vw, 184px); line-height: 0.92; letter-spacing: -0.01em; text-transform: uppercase; font-weight: 400; }
+  .h-section { font-family: "Anton", sans-serif; font-size: clamp(56px, 11vw, 168px); line-height: 0.92; letter-spacing: -0.005em; text-transform: uppercase; font-weight: 400; }
+  .h-card { font-family: "Anton", sans-serif; font-size: clamp(28px, 2.5vw, 42px); line-height: 1; letter-spacing: 0; text-transform: uppercase; font-weight: 400; }
+
+  .body-2xl { font-size: clamp(20px, 2vw, 32px); line-height: 1.35; }
+  .body-lg { font-size: 16px; line-height: 1.55; }
+  .body-md { font-size: 14px; line-height: 1.55; }
+  .micro { font-size: 11px; line-height: 1.2; letter-spacing: 0.16em; text-transform: uppercase; }
+
+  /* Polaroid / image card */
+  .polaroid { position: absolute; background: #fff; padding: 8px 8px 28px 8px; box-shadow: 0 30px 60px -25px rgba(0,0,0,0.35); transition: transform 700ms cubic-bezier(.2,.7,.2,1); }
+  .polaroid img, .polaroid .still, .polaroid .img { display: block; width: 100%; aspect-ratio: 4/3; background-size: cover; background-position: center; background: var(--g, linear-gradient(135deg,#ccc,#777)); }
+  .polaroid.p1 { transform: rotate(-9deg) translate(-30px, -10px); width: clamp(140px, 17vw, 260px); }
+  .polaroid.p2 { transform: rotate(7deg) translate(20px, 14px); width: clamp(140px, 17vw, 260px); }
+
+  /* Inline image placeholder with grain */
+  .img { position: relative; overflow: hidden; width: 100%; background: var(--g, linear-gradient(135deg,#cdb89a,#5a4530)); filter: saturate(0.95); }
+  .img::after { content:""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,0.08), transparent 50%); pointer-events: none; }
+  .img.grain::before { content:""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0.12; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+  /* Project card metric block */
+  .metric { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding-top: 14px; border-top: 1px solid var(--c-rule); margin-top: 14px; }
+  .metric div { display: flex; flex-direction: column; gap: 2px; }
+  .metric strong { font-family: "Anton", sans-serif; font-size: 28px; line-height: 1; }
+  .metric span { font-size: 11px; color: var(--c-muted); letter-spacing: 0.04em; }
+
+  /* Section list (category headlines repeated) */
+  .cat-list > * { display: block; }
+
+  /* Reveal animation */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 800ms ease, transform 900ms cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  .arrow-link { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; }
+  .arrow-link::before { content: "↳"; }
+
+  /* Subscribe form */
+  .sub-form { display: flex; align-items: center; gap: 12px; border: 1px solid var(--c-rule); padding: 12px; background: #ededeb; }
+  .sub-form input { flex: 1; background: transparent; outline: none; padding: 8px 12px; font-family: "Inter", sans-serif; font-size: 14px; color: var(--c-ink); }
+  .sub-form input::placeholder { color: var(--c-muted); }
+  .sub-form button { padding: 10px 16px; background: var(--c-ink); color: #fff; font-weight: 600; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+
+  /* Marquee client logos */
+  .marquee { overflow: hidden; }
+  .marquee-track { display: inline-flex; gap: 80px; align-items: center; animation: marq 38s linear infinite; padding-right: 80px; }
+  @keyframes marq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee-track span { font-family: "Anton", sans-serif; font-size: 28px; color: var(--c-ink); opacity: 0.55; text-transform: uppercase; white-space: nowrap; }
+
+  /* Top nav */
+  .topbar { padding: 16px clamp(16px, 3vw, 40px); display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 5; }
+  .topbar a { font-size: 13px; color: var(--c-ink); text-decoration: none; }
+
+  /* Footer */
+  footer.dark { background: var(--c-ink); color: #fff; padding: clamp(60px, 8vw, 120px) clamp(20px, 4vw, 56px) 28px; }
+  footer.dark a { color: #fff; text-decoration: none; }
+  footer.dark .huge { font-family: "Anton", sans-serif; font-size: clamp(56px, 9vw, 144px); line-height: 0.92; letter-spacing: -0.005em; text-transform: uppercase; }
+
+  /* Article card row */
+  .article { display: grid; grid-template-columns: 200px 1fr 110px; gap: 32px; align-items: start; padding: 36px 0; border-top: 1px solid var(--c-rule); }
+  .article .meta .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; }
+  .article h3 { font-family: "Anton", sans-serif; font-size: clamp(28px, 3vw, 44px); line-height: 1; text-transform: uppercase; margin-top: 6px; }
+  .article p { font-size: 14px; line-height: 1.5; color: var(--c-muted); margin-top: 8px; max-width: 56ch; }
+  .article .read { font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.18em; text-align: right; }
+  .article .read::before { content: "↳ "; }
+
+  /* Hover lift */
+  .project-card .img-wrap { overflow: hidden; }
+  .project-card .img { transition: transform 900ms cubic-bezier(.2,.7,.2,1); }
+  .project-card:hover .img { transform: scale(1.02); }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<header class="topbar">
+  <a href="#" class="font-condensed text-2xl tracking-tight">EXAMPLE</a>
+  <nav class="hidden md:flex items-center gap-8">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">What We Do</a>
+  </nav>
+  <a href="mailto:hello@weareexample.com" class="micro underline underline-offset-4">HELLO@WEAREEXAMPLE.COM</a>
+</header>
+
+<!-- HERO -->
+<section class="px-6 md:px-10 pt-6 pb-24">
+  <h1 class="h1-mega reveal relative inline-block">
+    <span class="block">We make <span class="font-italic font-normal normal-case text-[0.7em] tracking-normal">BRANDS</span></span>
+    <span class="block">AND PLACES</span>
+    <span class="block">FAMOUS</span>
+    <div class="polaroid p1" style="top:-30px; left:-50px;">
+      <div class="img" style="--g:linear-gradient(150deg,#a3c7e3,#1a3e60)"></div>
+    </div>
+    <div class="polaroid p2" style="bottom:-20px; right:-30px;">
+      <div class="img" style="--g:linear-gradient(150deg,#d6a972,#4f3418)"></div>
+    </div>
+  </h1>
+
+  <!-- Wide hero image + caption -->
+  <div class="mt-20">
+    <div class="img grain" style="aspect-ratio: 21/8; --g:linear-gradient(180deg,#5d1a0f 0%, #2d0805 60%, #060201 100%);"></div>
+    <div class="flex justify-center mt-6 micro opacity-80">IN-OUR-STOMACHS</div>
+  </div>
+</section>
+
+<!-- INTRO PARAGRAPH (the "magazine") -->
+<section class="px-6 md:px-10 max-w-3xl mx-auto py-12 text-center">
+  <p class="body-2xl reveal">Brand Strategy, Design and PR for Hospitality, F&amp;B and consumer brands across Australia, the Middle East and the UK.</p>
+</section>
+
+<!-- WHAT WE DO — CATEGORY HEADLINES -->
+<section class="px-6 md:px-10 py-12">
+  <div class="max-w-3xl mx-auto body-lg reveal">
+    <p>One strategy. Every wall, every menu, every detail carrying the same story until it becomes the only one worth telling.</p>
+  </div>
+
+  <div class="mt-12 cat-list">
+    <h2 class="h-section reveal">DESTINATIONS &amp; PLACEMAKING</h2>
+  </div>
+  <div class="max-w-3xl mx-auto mt-6 body-lg reveal">
+    <p>We help destinations claim the cultural conversation: positioning, programming, partnerships, PR and physical identity that turns a place into a ritual.</p>
+  </div>
+
+  <div class="mt-24 cat-list">
+    <h2 class="h-section reveal">HOSPITALITY</h2>
+  </div>
+  <div class="max-w-3xl mx-auto mt-6 body-lg reveal">
+    <p>We make hospitality remarkable from the inside out — the positioning, the creative, the menu, the room, the way the room is talked about afterwards.</p>
+  </div>
+
+  <div class="mt-24 cat-list">
+    <h2 class="h-section reveal">CONSUMER BRANDS</h2>
+  </div>
+  <div class="max-w-3xl mx-auto mt-6 body-lg reveal">
+    <p>We build lifestyle brands that culture claims. Strategy first, story always, and a visual identity that looks like it has lived for years before launch day.</p>
+  </div>
+</section>
+
+<!-- FEATURED PROJECTS -->
+<section class="px-6 md:px-10 py-16">
+  <div class="grid md:grid-cols-2 gap-12 project-card">
+    <div class="reveal">
+      <div class="img grain" style="aspect-ratio: 4/5; --g:linear-gradient(160deg,#efe7d5,#a7906a)"></div>
+      <h3 class="h-card mt-6">PATRÓN TEQUILA × SOLE DXB</h3>
+      <p class="body-md text-muted mt-2">#1 revenue bar at SOLE DXB. 1.9M organic views. 222 pieces of coverage at the ARIAs. 63M reach. Zero paid media. Cultural platform across AMEA and Australia.</p>
+    </div>
+    <div class="reveal">
+      <div class="img grain" style="aspect-ratio: 4/5; --g:linear-gradient(160deg,#3a86d0,#0a2d56)"></div>
+      <h3 class="h-card mt-6">ADDMIND × DUBAI HARBOUR</h3>
+      <p class="body-md text-muted mt-2">Brand architecture, positioning and launch strategy for two new venue concepts at Dubai Harbour.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL OVER IMAGE -->
+<section class="px-6 md:px-10 py-16">
+  <div class="relative">
+    <div class="img grain" style="aspect-ratio: 21/9; --g:linear-gradient(160deg,#0a1a3a,#04081a)"></div>
+    <div class="absolute inset-0 flex items-center">
+      <div class="px-10 md:px-20 max-w-3xl text-white">
+        <p class="body-2xl font-italic reveal">We build the unifying story and the communications that make brands and destinations the ones people choose first, return to, and recommend without being asked.</p>
+        <p class="body-md mt-6 reveal opacity-80">Our clients include hotel groups, owner brands, mixed-use destinations and property developers at the point where their businesses become something worth talking about.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL MINI ROW -->
+<section class="px-6 md:px-10 py-12">
+  <div class="grid md:grid-cols-2 gap-10">
+    <div class="reveal">
+      <h4 class="micro mb-2">QT HOTELS</h4>
+      <p class="body-lg text-muted">Built our market positioning, USB market analysis, $73M return for Hamberg, launched new brands into market 10x faster than we'd ever done it before.</p>
+    </div>
+    <div class="reveal">
+      <h4 class="micro mb-2">DON JULIO 1942</h4>
+      <p class="body-lg text-muted">PR sales strategy for one of Mexico's most beloved spirits. Massive local market share at +63%, brand introduction in 12 markets.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BIG MANIFESTO -->
+<section class="px-6 md:px-10 py-24 text-center">
+  <div class="max-w-5xl mx-auto reveal">
+    <p class="micro mb-3">WE MAKE THE BIGGEST BRANDS</p>
+    <p class="font-italic body-2xl text-muted mb-12">From Around the World</p>
+  </div>
+  <h2 class="h-section reveal">
+    <span class="block">WE HELP AND</span>
+    <span class="block">EARN THEIR NAME,</span>
+    <span class="block">EARN THEIR PLACE,</span>
+    <span class="block">EARN THEIR MOMENT</span>
+  </h2>
+</section>
+
+<!-- CLIENT MARQUEE -->
+<section class="py-10 border-y border-rule">
+  <div class="marquee">
+    <div class="marquee-track">
+      <span>MARRIOTT</span><span>HILTON</span><span>QT HOTELS</span><span>DON JULIO</span><span>PATRÓN</span><span>ADDMIND</span><span>INTERCONTINENTAL</span><span>JW MARRIOTT</span><span>SHANGRI-LA</span><span>FOUR SEASONS</span><span>SOLE DXB</span><span>HARBOUR CLUB</span>
+      <span>MARRIOTT</span><span>HILTON</span><span>QT HOTELS</span><span>DON JULIO</span><span>PATRÓN</span><span>ADDMIND</span><span>INTERCONTINENTAL</span><span>JW MARRIOTT</span><span>SHANGRI-LA</span><span>FOUR SEASONS</span><span>SOLE DXB</span><span>HARBOUR CLUB</span>
+    </div>
+  </div>
+</section>
+
+<!-- WE BECOME NARRATORS -->
+<section class="px-6 md:px-10 py-20">
+  <p class="micro mb-6">WE BECOME NARRATORS</p>
+  <div class="grid md:grid-cols-2 gap-10">
+    <div class="reveal">
+      <div class="img grain" style="aspect-ratio: 16/9; --g:linear-gradient(160deg,#d2c2a4,#5a4628)"></div>
+      <h3 class="h-card mt-6">VOLUME JUST STOPPED PAYING</h3>
+      <p class="body-md text-muted mt-2">Why the brands gaining ground are charging more for less.</p>
+      <p class="arrow-link mt-4">Read</p>
+    </div>
+    <div class="reveal">
+      <div class="img grain" style="aspect-ratio: 16/9; --g:linear-gradient(160deg,#1d3a5e,#0a172a)"></div>
+      <h3 class="h-card mt-6">FINE FORM PODCAST</h3>
+      <p class="body-md text-muted mt-2">Example is proud to present <em>Fine Form</em> — a podcast reimagining the rules of success, hosted by our Co-Founder &amp; COO.</p>
+      <p class="arrow-link mt-4">Listen on Apple</p>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER + ARTICLES -->
+<section class="px-6 md:px-10 py-20">
+  <div class="grid md:grid-cols-2 gap-12">
+    <!-- left: newsletter -->
+    <div class="reveal">
+      <p class="micro mb-2">OUR CULTURE NEWSLETTER</p>
+      <p class="font-italic body-md text-muted mb-10">Join 15,000+ Readers</p>
+      <h3 class="h1-mega">FOR EXAMPLE</h3>
+      <p class="body-lg mt-8 max-w-md">Every week the design, culture, and brand stories worth knowing about, before everyone else does.</p>
+
+      <p class="font-italic body-md text-muted mt-12 mb-4">Always Free. Unsubscribe Anytime.</p>
+      <form class="sub-form max-w-lg" onsubmit="event.preventDefault();">
+        <input type="email" placeholder="Your email address..." required />
+        <button type="submit">↳ SIGN ME UP</button>
+      </form>
+    </div>
+
+    <!-- right: featured article -->
+    <div class="reveal">
+      <div class="article">
+        <div class="meta">
+          <p class="eyebrow">WHAT WE'RE READING</p>
+        </div>
+        <div>
+          <h3>VOLUME JUST STOPPED PAYING</h3>
+          <p>Why the brands gaining ground are charging more for less.</p>
+        </div>
+        <div class="read">READ</div>
+      </div>
+      <div class="article">
+        <div class="meta">
+          <p class="eyebrow">NEWSLETTER</p>
+        </div>
+        <div>
+          <h3>WHAT THE UAE CRISIS REVEALED ABOUT HOSPITALITY AND WHY SPORTS JUST LAPPED FASHION</h3>
+          <p>The operators who kept their heads up while everyone else was fighting for crumbs — and what they teach the rest of us about attention, generosity and patience.</p>
+        </div>
+        <div class="read">READ</div>
+      </div>
+      <div class="article">
+        <div class="meta">
+          <p class="eyebrow">JOURNAL</p>
+        </div>
+        <div>
+          <h3>WHY ZERO FOLLOWERS IS BETTER</h3>
+          <p>We talk with two operators on what it means to earn it again in the age of instant audience, parasocial pressure, and 30-second attention spans.</p>
+        </div>
+        <div class="read">READ</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DARK FOOTER -->
+<footer class="dark">
+  <div class="flex justify-between micro opacity-80 mb-8">
+    <span>SYDNEY · DUBAI · LONDON</span>
+    <span>WE ARE EXAMPLE <span class="mx-2 opacity-50">©</span> A brand strategy, design &amp; PR studio</span>
+  </div>
+  <h2 class="huge reveal max-w-5xl">THE BEST CLIENT<br/>RELATIONSHIPS START WITH<br/>A GOOD CONVERSATION.</h2>
+
+  <div class="grid md:grid-cols-3 gap-10 mt-16 text-sm">
+    <div>
+      <p class="micro opacity-70 mb-3">Australia / New Zealand / Middle East</p>
+      <p class="font-bold micro mb-2">↳ HELLO@WEAREEXAMPLE.COM</p>
+      <p class="mt-2">+61 2 8322 4600</p>
+      <p>+971 800 0311 0209</p>
+      <p class="opacity-80 mt-4 max-w-xs">We acknowledge the Traditional Custodians of the land on which we work and live, and pay our respects to Elders past and present. We recognise their continuing connection to land, waters and culture.</p>
+    </div>
+    <div>
+      <p class="micro opacity-70 mb-3">Quicklinks</p>
+      <ul class="space-y-1.5">
+        <li><a href="#" class="underline underline-offset-4">What We Do</a></li>
+        <li><a href="#" class="underline underline-offset-4">About</a></li>
+        <li><a href="#" class="underline underline-offset-4">Journal</a></li>
+        <li><a href="#" class="underline underline-offset-4">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="micro opacity-70 mb-3">Subscribe to our Newsletter</p>
+      <p class="font-italic text-xs opacity-70 mb-3">Always Free. Unsubscribe Anytime.</p>
+      <form class="sub-form max-w-md" onsubmit="event.preventDefault();">
+        <input type="email" placeholder="Your email address..." required />
+        <button type="submit">↳ SIGN ME UP</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="flex justify-between items-center mt-16 micro opacity-70 border-t border-white/15 pt-6">
+    <span>©2026 EXAMPLE &nbsp;·&nbsp; All Rights Reserved.</span>
+    <span>Made by <span class="underline underline-offset-4">SE.CO. · KUJIRA</span></span>
+  </div>
+</footer>
+
+<script>
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.14 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Polaroid hover parallax (subtle)
+  const polaroids = document.querySelectorAll('.polaroid');
+  polaroids.forEach(p => {
+    p.addEventListener('mouseenter', () => p.style.transform = p.classList.contains('p1') ? 'rotate(-12deg) translate(-40px, -14px) scale(1.04)' : 'rotate(10deg) translate(30px, 18px) scale(1.04)');
+    p.addEventListener('mouseleave', () => p.style.transform = p.classList.contains('p1') ? 'rotate(-9deg) translate(-30px, -10px)' : 'rotate(7deg) translate(20px, 14px)');
+  });
+</script>
+</body>
+</html>
