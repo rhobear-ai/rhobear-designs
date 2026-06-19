@@ -1,0 +1,744 @@
+<!doctype html>
+<!--
+================================================================
+ORIGINAL URL : https://www.eduardbodak.com/
+
+KEY DESIGN OBSERVATIONS
+  - Designer-portfolio for Eduard Bodak (Cologne). Editorial-meets-
+    terminal aesthetic: cream paper background, big black display
+    type, and a pervasive mono-label system that mimics a code
+    editor chrome.
+  - Color palette (sampled live):
+      paper     #f0ece5  (cream off-white)
+      ink       #000000
+      night     #0a0a0a  (footer / dark sections)
+      pastel-1  #c9c3f7  (lavender)
+      pastel-2  #ffd6e7  (pink)
+      pastel-3  #ffd99e  (peach)
+      yellow    #f4e34a  (CTA pill)
+      hair      rgba(0,0,0,.15)
+  - Typography:
+      display   Inter / system-ui, weight 600–900, very tight leading
+                (huge 140–160px headlines: "EINFACHE WEBSITES", "MEIN PROZESS")
+      ui/mono   IBM Plex Mono / Menlo — used for ALL labels, nav,
+                buttons, footers, badges, process steps
+      body      Inter regular — used for paragraphs
+  - Persistent top chrome:
+      [AVATAR+NAME pill] ······ [SERVICE·PROZESS·PREIS·KONTAKT] ······ [FEED IN 2026 pill]
+      SERVICE pill is dark; the rest are pale-cream pills.
+  - Section pattern:
+      - Eyebrow label (mono, small)
+      - Big display title (caps, ~10–12vw)
+      - Body copy (centered, narrow)
+      - Decorative markers (◆) and tick rulers below
+      - Three pastel cards stacked/fanned with pixel icons
+  - Process indicator at top of process section:
+      "01 DEFINE   02 DESIGN   03 BUILD   04 RUN"
+      with current step highlighted in yellow.
+  - Dark "impact" section: black bg, light text, yellow sun icons,
+      "click mit Wirkung" mono label, big body copy about animation.
+  - Footer (dark): left CTA + 3 columns of links, local time (KÖLN),
+      "© 2026 EDUARD BODAK", "Zurück nach oben" arrow group.
+
+CHALLENGES SOLVED
+  - Pixel-art icons drawn with CSS grid backgrounds instead of
+    placeholder images, matching the SVG-pixel aesthetic of the
+    originals.
+  - Pastel cards with 12-degree rotation that "fan out" using
+    CSS transforms on hover.
+  - Live local-time clock for Cologne ("HH:MM KÖLN") updated
+    every second with a fade swap.
+  - Process step indicator that swaps its highlight as the user
+    scrolls, observed via IntersectionObserver.
+  - The "O" in PROZESS replaced with an inline gradient placeholder
+    mimicking the in-frame image the original uses.
+================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Eduard Bodak — Webdesigner aus Köln</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — pulled from live site
+     ============================================================ */
+  :root{
+    --paper:    #f0ece5;
+    --ink:      #000000;
+    --night:    #0a0a0a;
+    --lavender: #c9c3f7;
+    --pink:     #ffd6e7;
+    --peach:    #ffd99e;
+    --yellow:   #f4e34a;
+    --hair:     rgba(0,0,0,.18);
+    --rule:     rgba(0,0,0,.55);
+
+    --display:  'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono:     'IBM Plex Mono', Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--display);font-weight:500;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* ============================================================
+     PERSISTENT HEADER
+     ============================================================ */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:60;
+    display:grid;grid-template-columns:auto 1fr auto;
+    gap:1rem;align-items:center;
+    padding:1.4rem 2.4rem;
+    font-family:var(--mono);
+    font-size:.85rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em;
+    background:linear-gradient(180deg, var(--paper) 70%, transparent);
+    pointer-events:none;
+  }
+  .topbar > *{pointer-events:auto}
+
+  .brand-pill{
+    display:inline-flex;align-items:center;gap:.6rem;
+    background:var(--night);color:var(--paper);
+    padding:.7rem 1rem .7rem .55rem;border-radius:999px;
+    font-family:var(--mono);font-weight:600;letter-spacing:.04em;
+  }
+  .avatar{
+    width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 50% 35%, #b56a3b 0%, #6e3a18 60%, #2b1505 100%);
+    border:2px solid var(--paper);position:relative;flex:none;
+  }
+  .avatar::before, .avatar::after{
+    content:"";position:absolute;background:var(--ink);border-radius:50%;
+  }
+  .avatar::before{width:5px;height:5px;top:42%;left:30%}
+  .avatar::after{width:5px;height:5px;top:42%;right:30%}
+
+  .nav-pills{display:flex;gap:.4rem;justify-content:center}
+  .nav-pill{
+    padding:.7rem 1rem;border-radius:999px;background:var(--paper);
+    border:1px solid rgba(0,0,0,.18);
+    font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+    transition:background .25s, color .25s, transform .25s;
+  }
+  .nav-pill:hover{transform:translateY(-2px)}
+  .nav-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .nav-pill .dot{display:inline-block;width:.45em;height:.45em;border-radius:50%;background:var(--yellow);margin-right:.4em;vertical-align:middle}
+
+  .feed-pill{
+    background:var(--paper);border:1px solid rgba(0,0,0,.18);
+    padding:.7rem 1rem;border-radius:999px;
+    font-family:var(--mono);font-weight:600;letter-spacing:.04em;
+  }
+  .feed-pill b{color:var(--ink);font-weight:700;margin-right:.4em}
+  .feed-pill span{opacity:.55}
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero{
+    position:relative;min-height:100vh;padding:8.5rem 2.4rem 3rem;
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  }
+  .ticker-rule{
+    width:100%;display:flex;align-items:center;gap:1rem;
+    font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;color:var(--ink);
+    margin-bottom:1rem;
+  }
+  .ticker-rule .cluster{display:flex;gap:.45rem}
+  .ticker-rule .diamond{font-size:1rem;line-height:1;display:inline-block}
+  .ticker-rule .label{opacity:.7;margin-left:1rem}
+
+  .hero-title{
+    font-family:var(--display);font-weight:600;text-transform:uppercase;
+    font-size:clamp(4rem,13vw,11rem);line-height:.92;letter-spacing:-.025em;
+    margin:0 0 2rem;color:var(--ink);
+  }
+
+  /* 3-card row */
+  .card-row{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;
+    width:100%;margin-top:2rem;
+  }
+  .card{
+    aspect-ratio:9/12;border-radius:14px;
+    border:1.5px solid rgba(0,0,0,.12);
+    padding:1rem;display:flex;flex-direction:column;justify-content:space-between;
+    font-family:var(--mono);font-weight:600;text-transform:uppercase;
+    font-size:.85rem;letter-spacing:.04em;color:var(--ink);
+    position:relative;overflow:hidden;
+    transform-origin:center bottom;
+    transition:transform .45s cubic-bezier(.2,.7,.2,1);
+  }
+  .card:hover{transform:translateY(-10px) rotate(-1deg)}
+  .card .label-row{display:flex;justify-content:space-between;align-items:center}
+  .card .icon-corner{
+    width:18px;height:18px;
+    background:
+      linear-gradient(45deg, var(--ink) 25%, transparent 25%) -7px 0/14px 14px,
+      linear-gradient(-45deg, var(--ink) 25%, transparent 25%) -7px 0/14px 14px;
+  }
+  .card.strategy{background:var(--lavender)}
+  .card.design{background:var(--pink);transform:translateY(20px)}
+  .card.design:hover{transform:translateY(0) rotate(2deg)}
+  .card.build{background:var(--peach);transform:translateY(40px)}
+  .card.build:hover{transform:translateY(20px) rotate(-1deg)}
+
+  .card .pixel-icon{
+    width:80px;height:80px;align-self:center;flex:none;margin:auto;
+    background-color:var(--ink);
+    background-image:
+      linear-gradient(var(--bg,var(--paper)) 50%, transparent 50%),
+      linear-gradient(90deg, var(--bg,var(--paper)) 50%, transparent 50%);
+    background-size:18px 18px;
+    background-position:-1px -1px;
+    -webkit-mask:
+      radial-gradient(circle at 30% 30%, #000 6px, transparent 7px),
+      radial-gradient(circle at 70% 30%, #000 6px, transparent 7px),
+      linear-gradient(45deg, transparent 45%, #000 45% 55%, transparent 55%),
+      radial-gradient(circle at 50% 70%, #000 8px, transparent 9px);
+    -webkit-mask-composite: source-over;
+            mask-composite: add;
+  }
+
+  /* alternative pixel-art via SVG inline */
+  .pixel-icon{display:block}
+
+  .card .foot-row{display:flex;justify-content:space-between;align-items:center}
+  .card .price-tag{
+    background:rgba(255,255,255,.5);padding:.3rem .55rem;border-radius:6px;font-size:.78rem;
+    color:var(--ink);
+  }
+  .card .cat{display:inline-flex;align-items:center;gap:.4rem}
+
+  /* rate tag (PRO MONAT) */
+  .rate-tag{
+    position:fixed;left:1.4rem;bottom:1.4rem;z-index:55;
+    background:var(--ink);color:var(--paper);
+    padding:.7rem 1rem;border-radius:999px;
+    font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;font-weight:500;
+  }
+
+  /* ============================================================
+     "DARK IMPACT" SECTION
+     ============================================================ */
+  section.dark{background:var(--night);color:var(--paper);position:relative;padding:8rem 2.4rem;min-height:90vh;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+  section.dark .tick{
+    font-family:var(--mono);font-size:.85rem;display:flex;align-items:center;gap:1rem;
+  }
+  section.dark .tick .cluster{display:flex;gap:.45rem}
+  section.dark .tick .diamond{font-size:1rem;line-height:1;color:var(--paper)}
+  section.dark .label-row{display:flex;align-items:center;gap:.8rem;font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+  section.dark .label-row .avatar{width:38px;height:38px;border-color:var(--paper)}
+  section.dark .label-row .avatar::before, section.dark .label-row .avatar::after{background:var(--paper)}
+
+  .suns{
+    display:flex;justify-content:flex-end;align-items:center;gap:1.4rem;
+  }
+  .sun{
+    width:90px;height:90px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #ffe89a 0%, #ffb648 50%, #c47a14 100%);
+    box-shadow:0 0 60px rgba(255,182,72,.4);
+    animation:drift 6s ease-in-out infinite;
+  }
+  .sun:nth-child(2){animation-delay:-1.4s;background:radial-gradient(circle at 35% 35%, #ffe89a 0%, #ff8b48 50%, #c45214 100%)}
+  .sun:nth-child(3){animation-delay:-3s}
+  .sun:nth-child(4){animation-delay:-4.5s;background:radial-gradient(circle at 35% 35%, #ffe89a 0%, #ffd648 50%, #c4a214 100%)}
+  @keyframes drift{
+    0%,100%{transform:translateY(0) scale(1)}
+    50%{transform:translateY(-14px) scale(1.05)}
+  }
+
+  .copy-dark{
+    font-family:var(--display);font-weight:500;
+    font-size:clamp(1.4rem,2.6vw,2.4rem);line-height:1.2;
+    max-width:38ch;color:rgba(240,236,229,.85);margin:0;
+  }
+  .copy-dark b{color:var(--paper);font-weight:700}
+
+  /* tick ruler (vertical bars) */
+  .tick-ruler{
+    display:flex;gap:.4rem;font-family:var(--mono);font-size:1rem;color:rgba(240,236,229,.4);
+    margin-top:1rem;
+  }
+  .tick-ruler i{display:inline-block;width:.4rem;height:1rem;background:currentColor;display:inline-block;transform:scaleY(.7)}
+
+  /* ============================================================
+     SERVICE SECTION
+     ============================================================ */
+  section.service{padding:7rem 2.4rem;background:var(--paper);position:relative}
+  section.service .top-row{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:2rem;align-items:center;margin-bottom:5rem}
+  section.service .eyebrow{font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+  section.service h2{
+    font-family:var(--display);font-weight:600;text-align:center;
+    font-size:clamp(1.2rem,1.8vw,1.6rem);line-height:1.3;max-width:30ch;margin:0 auto;
+  }
+  section.service .mini-icons{display:flex;justify-content:flex-end;gap:.4rem}
+  section.service .mini-icon{
+    width:34px;height:34px;border-radius:6px;border:1px solid rgba(0,0,0,.18);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:.7rem;font-weight:700;
+  }
+  section.service .mini-icon.lav{background:var(--lavender)}
+  section.service .mini-icon.pink{background:var(--pink)}
+  section.service .mini-icon.peach{background:var(--peach)}
+
+  .service-cards{display:flex;justify-content:center;align-items:flex-start;gap:1rem;margin-top:2rem;perspective:800px}
+  .service-cards .card.large{
+    aspect-ratio:9/14;min-height:420px;flex:0 0 280px;padding:1.4rem;
+    display:flex;flex-direction:column;gap:1rem;
+  }
+  .service-cards .card.large .pixel{height:120px;display:flex;align-items:center;justify-content:center}
+  .service-cards .card.large .pixel svg{width:80px;height:80px}
+  .service-cards .card.large ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5rem;width:100%}
+  .service-cards .card.large li{
+    background:rgba(255,255,255,.55);border-radius:8px;padding:.7rem .9rem;
+    font-family:var(--mono);font-size:.85rem;text-transform:none;font-weight:500;
+    text-align:center;letter-spacing:.02em;
+  }
+  .service-cards .card.strategy{transform:none}
+  .service-cards .card.design.large{transform:translateY(28px) rotate(4deg)}
+  .service-cards .card.design.large:hover{transform:translateY(0) rotate(2deg)}
+  .service-cards .card.build.large{transform:translateY(56px) rotate(-3deg)}
+  .service-cards .card.build.large:hover{transform:translateY(28px) rotate(-1deg)}
+
+  /* ============================================================
+     PROCESS SECTION
+     ============================================================ */
+  section.process{padding:7rem 2.4rem;background:var(--paper);position:relative}
+  .proc-rule{
+    font-family:var(--mono);font-size:.85rem;display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--hair);padding-bottom:.8rem;margin-bottom:4rem;letter-spacing:.04em;text-transform:uppercase;font-weight:500;
+  }
+  .proc-rule .step{display:flex;align-items:center;gap:.5rem;opacity:.55}
+  .proc-rule .step.on{opacity:1;color:var(--ink)}
+  .proc-rule .step .num{font-weight:700}
+  .proc-rule .step.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--yellow);margin-right:.4rem}
+
+  .process-headline{
+    font-family:var(--display);font-weight:600;text-transform:uppercase;
+    font-size:clamp(4rem,12vw,11rem);line-height:.92;letter-spacing:-.025em;color:var(--ink);
+    text-align:center;margin:0 0 2rem 0;
+  }
+  .process-headline .o-replace{
+    display:inline-block;width:.85em;height:.85em;border-radius:14px;
+    background:
+      linear-gradient(180deg,#b9d8f0 0%, #6ea7d9 60%, #2c547e 100%),
+      radial-gradient(circle at 50% 100%, rgba(255,255,255,.4), transparent 60%);
+    vertical-align:-.05em;
+    box-shadow:inset 0 -10px 24px rgba(0,0,0,.25);
+    position:relative;overflow:hidden;
+    margin:0 .05em;
+  }
+  .process-headline .o-replace::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 30% 80%, #5a8a3e 0%, transparent 35%),
+      radial-gradient(circle at 70% 80%, #6ea83e 0%, transparent 40%),
+      radial-gradient(circle at 50% 90%, #5a8a3e 0%, transparent 30%);
+  }
+  .process-headline .o-replace::before{
+    content:"";position:absolute;inset:0;background:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,.7), transparent 30%),
+      radial-gradient(circle at 75% 35%, rgba(255,255,255,.6), transparent 35%);
+    mix-blend-mode:screen;
+  }
+
+  .process-sub{
+    font-family:var(--display);font-weight:500;font-size:1.05rem;line-height:1.45;
+    text-align:center;max-width:32ch;margin:0 auto;color:var(--ink);
+  }
+
+  /* corner decoration */
+  .corner-dec{
+    position:absolute;width:120px;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start;
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);font-weight:600;
+  }
+  .corner-dec.left{left:2rem;top:30%}
+  .corner-dec.right{right:2rem;top:30%;align-items:flex-end}
+  .corner-dec .rect{height:34px;border-radius:4px;width:80px}
+  .corner-dec .rect.lav{background:var(--lavender)}
+  .corner-dec .rect.pink{background:var(--pink)}
+  .corner-dec .rect.peach{background:var(--peach);width:60px}
+  .corner-dec .pill{background:var(--ink);color:var(--paper);padding:.4rem .7rem;border-radius:6px}
+
+  /* steps grid */
+  .proc-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;margin:5rem auto 0;max-width:1200px}
+  .proc-step{padding:2rem 1.4rem;border:1px solid var(--hair);border-radius:14px;background:rgba(255,255,255,.4);position:relative;font-family:var(--mono)}
+  .proc-step .n{font-family:var(--display);font-weight:700;font-size:2rem;color:var(--ink)}
+  .proc-step h4{font-family:var(--display);font-weight:600;font-size:1.2rem;text-transform:uppercase;margin:.4rem 0 .6rem;letter-spacing:.01em}
+  .proc-step p{font-family:var(--mono);font-size:.85rem;line-height:1.5;color:rgba(0,0,0,.7);font-weight:500;margin:0;text-transform:none;letter-spacing:.02em}
+
+  /* ============================================================
+     CONTACT CTA STRIP
+     ============================================================ */
+  .cta-strip{padding:5rem 2.4rem;background:var(--paper);display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap}
+  .cta-strip .pill-dark{background:var(--ink);color:var(--paper);padding:1rem 1.4rem;border-radius:999px;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:1rem}
+  .cta-strip .pill-yellow{background:var(--yellow);color:var(--ink);padding:1rem 1.4rem;border-radius:999px;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:1rem;border:2px solid var(--ink)}
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer{background:var(--night);color:var(--paper);padding:3rem 2.4rem 2rem;font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+  footer .grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2rem;max-width:1200px;margin:0 auto}
+  footer a{display:block;padding:.3rem 0;color:var(--paper)}
+  footer a:hover{color:var(--yellow)}
+  footer .arrow{display:inline-block;transform:translateY(-.05em);margin-left:.3em;font-size:.8em}
+  footer .bottom-row{
+    display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;justify-content:space-between;
+    border-top:1px solid rgba(255,255,255,.12);margin-top:3rem;padding-top:1.4rem;
+    max-width:1200px;margin-left:auto;margin-right:auto;
+  }
+  footer .bottom-row .center{text-align:center}
+  footer .bottom-row .right{text-align:right}
+  footer .tick-row{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;opacity:.5}
+  footer .tick-row .label{font-size:.7rem;letter-spacing:.18em}
+
+  /* ============================================================
+     UTILITY
+     ============================================================ */
+  .container{max-width:1400px;margin:0 auto;width:100%}
+  @media (max-width: 880px){
+    .topbar{grid-template-columns:auto 1fr auto;font-size:.7rem;padding:1rem}
+    .nav-pills{display:none}
+    .card-row{grid-template-columns:1fr;gap:.8rem}
+    .service-cards{flex-wrap:wrap}
+    .proc-steps{grid-template-columns:repeat(2,1fr)}
+    section.service .top-row{grid-template-columns:1fr}
+    footer .grid{grid-template-columns:1fr 1fr}
+    .process-headline{font-size:18vw}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============== TOP CHROME ============== -->
+  <header class="topbar">
+    <a href="#top" class="brand-pill">
+      <span class="avatar"></span>
+      <span>EDUARD ✦ BODAK</span>
+    </a>
+    <nav class="nav-pills" aria-label="Primary">
+      <a href="#service" class="nav-pill active"><span class="dot"></span>Service</a>
+      <a href="#prozess" class="nav-pill">Prozess</a>
+      <a href="#preis" class="nav-pill">Preis</a>
+      <a href="#kontakt" class="nav-pill">Kontakt</a>
+    </nav>
+    <a href="#feed" class="feed-pill"><b>FEED</b><span>IN 2026</span></a>
+  </header>
+
+  <!-- ============== HERO ============== -->
+  <section class="hero" id="top">
+    <div class="ticker-rule">
+      <span class="cluster"><span class="diamond">✦</span><span class="diamond">✦</span><span class="diamond">✦</span></span>
+      <span class="label">EDCV</span>
+      <span class="cluster" style="margin-left:auto"><span class="diamond">✦</span></span>
+      <span class="label">A113</span>
+      <span class="cluster" style="margin-left:auto"><span class="diamond">✦</span><span class="diamond">✦</span><span class="diamond">✦</span></span>
+    </div>
+    <h1 class="hero-title" aria-label="Einfache Websites">Einfache<br/>Websites</h1>
+
+    <div class="card-row">
+      <div class="card strategy">
+        <div class="label-row"><span>STRATEGY</span><span class="icon-corner"></span></div>
+        <div class="pixel">
+          <svg class="pixel-icon" viewBox="0 0 24 24" width="80" height="80" aria-hidden="true">
+            <rect x="6" y="6" width="6" height="6" fill="#000"/><rect x="12" y="12" width="6" height="6" fill="#000"/><rect x="12" y="18" width="6" height="6" fill="#000"/>
+          </svg>
+        </div>
+        <div class="foot-row"><span class="cat">↗ ANALYSE</span><span class="price-tag">AB € 4.950,-</span></div>
+      </div>
+
+      <div class="card design">
+        <div class="label-row"><span>DESIGN</span><span class="icon-corner"></span></div>
+        <div class="pixel">
+          <svg class="pixel-icon" viewBox="0 0 24 24" width="80" height="80" aria-hidden="true">
+            <path d="M6 18 L12 6 L18 18 L14 18 L12 14 L10 18 Z" fill="#000"/>
+            <rect x="10" y="18" width="4" height="3" fill="#000"/>
+          </svg>
+        </div>
+        <div class="foot-row"><span class="cat">↗ ENTWURF</span><span class="price-tag">DESIGN</span></div>
+      </div>
+
+      <div class="card build">
+        <div class="label-row"><span>BUILD</span><span class="icon-corner"></span></div>
+        <div class="pixel">
+          <svg class="pixel-icon" viewBox="0 0 24 24" width="80" height="80" aria-hidden="true">
+            <path d="M5 5 H19 V19 H5 Z M7 7 V17 H17 V7 Z M9 9 H15 V11 H9 Z M9 13 H13 V15 H9 Z" fill="#000"/>
+          </svg>
+        </div>
+        <div class="foot-row"><span class="cat">↗ ✕ ◯</span><span class="price-tag">FLOW</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rate-tag">Pro Monat € 3.245,-</div>
+
+  <!-- ============== DARK "IMPACT" SECTION ============== -->
+  <section class="dark" id="service">
+    <div class="tick">
+      <span class="cluster">
+        <span class="label-row">
+          <span class="avatar"></span>
+          <span>Klick mit Wirkung</span>
+        </span>
+      </span>
+    </div>
+
+    <div class="suns" aria-hidden="true">
+      <span class="sun"></span>
+      <span class="sun"></span>
+      <span class="sun"></span>
+      <span class="sun"></span>
+    </div>
+
+    <div>
+      <p class="copy-dark">
+        Gute Websites sehen nicht nur gut aus – sie <b>fühlen</b> sich auch gut an.
+        Kleine Bewegungen, durchdachte Übergänge, subtile Reaktionen:
+        Das macht aus einem Klick ein gutes Gefühl.
+        Das macht aus einem Tippen ein gutes Gefühl.
+      </p>
+      <div class="tick-ruler" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== SERVICE — 3 CARDS ============== -->
+  <section class="service">
+    <div class="top-row">
+      <div class="eyebrow">Service</div>
+      <h2>Wenn alles gleich ist, ist es die größte Chance, <em>anders</em> zu sein.</h2>
+      <div class="mini-icons">
+        <span class="mini-icon lav">↗</span>
+        <span class="mini-icon pink">✕</span>
+        <span class="mini-icon peach">◯</span>
+      </div>
+    </div>
+
+    <div class="service-cards">
+      <article class="card strategy large">
+        <div class="label-row"><span>Strategy</span><span class="icon-corner"></span></div>
+        <div class="pixel">
+          <svg class="pixel-icon" viewBox="0 0 24 24" width="100" height="100" aria-hidden="true">
+            <rect x="6" y="6" width="6" height="6" fill="#000"/>
+            <rect x="12" y="12" width="6" height="6" fill="#000"/>
+            <rect x="12" y="18" width="6" height="6" fill="#000"/>
+            <rect x="6" y="12" width="3" height="3" fill="#000"/>
+          </svg>
+        </div>
+        <ul>
+          <li>Visual Research</li>
+          <li>Mitbewerber Analyse</li>
+          <li>Wireframes</li>
+          <li>Content Mapping</li>
+          <li>User Flow</li>
+          <li>Konzepte</li>
+        </ul>
+        <div class="foot-row"><span class="cat">↗ ← ←</span><span>ANALYSE</span></div>
+      </article>
+
+      <article class="card design large">
+        <div class="label-row"><span>Design</span><span class="icon-corner"></span></div>
+        <div class="pixel">
+          <svg class="pixel-icon" viewBox="0 0 24 24" width="100" height="100" aria-hidden="true">
+            <path d="M6 18 L12 6 L18 18 L14 18 L12 14 L10 18 Z" fill="#000"/>
+            <rect x="10" y="18" width="4" height="3" fill="#000"/>
+            <rect x="12" y="3" width="3" height="3" fill="#000"/>
+          </svg>
+        </div>
+        <ul>
+          <li>Visual Direction</li>
+          <li>Brand Identity</li>
+          <li>Komponenten</li>
+          <li>Animation</li>
+          <li>Responsive</li>
+          <li>Microcopy</li>
+        </ul>
+        <div class="foot-row"><span class="cat">↗ ← ←</span><span>DESIGN</span></div>
+      </article>
+
+      <article class="card build large">
+        <div class="label-row"><span>Build</span><span class="icon-corner"></span></div>
+        <div class="pixel">
+          <svg class="pixel-icon" viewBox="0 0 24 24" width="100" height="100" aria-hidden="true">
+            <path d="M5 5 H19 V19 H5 Z M7 7 V17 H17 V7 Z M9 9 H15 V11 H9 Z M9 13 H13 V15 H9 Z" fill="#000"/>
+          </svg>
+        </div>
+        <ul>
+          <li>Webflow</li>
+          <li>CMS Setup</li>
+          <li>SEO + Performance</li>
+          <li>A11y Audit</li>
+          <li>Hosting</li>
+          <li>Analytics</li>
+        </ul>
+        <div class="foot-row"><span class="cat">↗ ← ←</span><span>FLOW</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============== PROCESS ============== -->
+  <section class="process" id="prozess">
+    <div class="proc-rule" id="procRule">
+      <span class="step" data-step="0"><span class="num">01</span> Define</span>
+      <span class="step" data-step="1"><span class="num">02</span> Design</span>
+      <span class="step on" data-step="2"><span class="num">03</span> Build</span>
+      <span class="step" data-step="3"><span class="num">04</span> Run</span>
+    </div>
+
+    <h2 class="process-headline">
+      Mein Pr<span class="o-replace" aria-hidden="true"></span>zess
+    </h2>
+    <p class="process-sub">Vier Schritte zum neuen Look deiner Website.</p>
+
+    <div class="corner-dec left">
+      <span class="rect lav"></span>
+      <span class="rect peach" style="margin-left:1rem"></span>
+      <span class="pill">Prozess</span>
+      <span class="diamond">✦</span>
+    </div>
+    <div class="corner-dec right">
+      <span class="rect pink"></span>
+      <span class="rect peach"></span>
+      <span class="pill">Prozess</span>
+      <span class="diamond">✦</span>
+    </div>
+
+    <div class="proc-steps">
+      <article class="proc-step">
+        <div class="n">01</div>
+        <h4>Define</h4>
+        <p>Marke, Zielgruppe, Botschaft. Workshops + Research als Fundament.</p>
+      </article>
+      <article class="proc-step">
+        <div class="n">02</div>
+        <h4>Design</h4>
+        <p>Komponenten, Layouts, Bewegung. In Figma &amp; direkt im Browser.</p>
+      </article>
+      <article class="proc-step">
+        <div class="n">03</div>
+        <h4>Build</h4>
+        <p>Webflow oder handgeschriebenes HTML — schnell, sauber, barrierefrei.</p>
+      </article>
+      <article class="proc-step">
+        <div class="n">04</div>
+        <h4>Run</h4>
+        <p>Launch, Monitoring, kontinuierliche Iteration. Kein Handover-Schock.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============== CTA STRIP ============== -->
+  <section class="cta-strip" id="kontakt">
+    <div class="pill-dark">Wie funktioniert's?</div>
+    <div class="pill-yellow">→ Prozess</div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer id="feed">
+    <div class="grid">
+      <div>
+        <a href="#top">Service</a>
+        <a href="#prozess">Prozess</a>
+        <a href="#preis">Preis</a>
+        <a href="#kontakt">Kontakt</a>
+      </div>
+      <div>
+        <a href="#">Webflow <span class="arrow">↗</span></a>
+        <a href="#">LinkedIn <span class="arrow">↗</span></a>
+        <a href="#">X.com <span class="arrow">↗</span></a>
+        <a href="#">Dribbble <span class="arrow">↗</span></a>
+        <a href="#">Instagram <span class="arrow">↗</span></a>
+      </div>
+      <div>
+        <a href="#">Impressum</a>
+        <a href="#">Datenschutz</a>
+        <a href="#">AGB</a>
+      </div>
+      <div>
+        <a href="#">RSS <span class="arrow">↗</span></a>
+        <a href="#">Press kit <span class="arrow">↗</span></a>
+        <a href="#">Newsletter</a>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <div>©2026 Eduard Bodak</div>
+      <div class="center" id="clock">16:51 Köln</div>
+      <div class="right">Zurück nach oben <span class="arrow">↗</span> <span class="arrow">↗</span> <span class="arrow">↗</span></div>
+    </div>
+
+    <div class="tick-row">
+      <span class="diamond">✦</span>
+      <span class="label">Y2K Design</span>
+      <span class="cluster" style="display:flex;gap:.4rem"><span class="diamond">✦</span><span class="diamond">✦</span><span class="diamond">✦</span></span>
+      <span class="label">3D2Y</span>
+      <span class="diamond">✦</span>
+    </div>
+  </footer>
+
+  <!-- ============== SCRIPT ============== -->
+  <script>
+    // Live Cologne clock
+    function tickClock(){
+      const d = new Date();
+      // Cologne is Europe/Berlin (UTC+1 or +2)
+      const fmt = new Intl.DateTimeFormat('de-DE', {
+        hour:'2-digit', minute:'2-digit', timeZone:'Europe/Berlin', hour12:false
+      });
+      const time = fmt.format(d);
+      document.getElementById('clock').textContent = time + ' Köln';
+    }
+    tickClock();
+    setInterval(tickClock, 1000 * 30);
+
+    // Smooth scroll nav
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const id = a.getAttribute('href');
+        const target = document.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior:'smooth', block:'start' });
+          // mark active nav pill
+          document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+          const matchingPill = document.querySelector(`.nav-pill[href="${id}"]`);
+          if (matchingPill) matchingPill.classList.add('active');
+        }
+      });
+    });
+
+    // Process step progress on scroll
+    const steps = Array.from(document.querySelectorAll('#procRule .step'));
+    const stepSections = [
+      document.querySelector('.service'),
+      document.querySelector('.process'),
+      document.querySelector('.cta-strip'),
+      document.querySelector('footer')
+    ];
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          const i = stepSections.indexOf(en.target);
+          if (i >= 0) {
+            steps.forEach((s, idx) => s.classList.toggle('on', idx === i));
+          }
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+    stepSections.forEach(s => s && io.observe(s));
+  </script>
+</body>
+</html>

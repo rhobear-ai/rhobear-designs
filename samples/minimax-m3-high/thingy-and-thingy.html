@@ -1,0 +1,575 @@
+<!doctype html>
+<!--
+================================================================
+ORIGINAL URL : https://www.thingyandthingy.com/
+
+KEY DESIGN OBSERVATIONS
+  - Anti-advertising agency site with a deliberately loud 90s/Win95
+    energy. Big chunky display type, candy-bright sections, irreverent
+    copy. Hero is a full-bleed swiper that rotates through bold
+    headline slides over editorial/action imagery.
+  - Color palette (sampled live):
+      navy       #05051a  (page bg, type ink)
+      lime       #c5ff8d  (hero type + accents)
+      coral      #ff5d4a  (pills, body type)
+      pink       #d285f0  (section bg)
+      peach      #ffceb5  (placeholder block)
+      yellow     #ffd54f  (pills)
+      green      #2c9b56  (pills)
+      pink-2     #ffafd0  (pills)
+      brown      #7a4f2a  (section bg)
+      cream      #f4eede  (final section bg)
+  - Typography:
+      display    Mdnichrome  → stand-in: "Archivo Black" + heavy italic
+      serif      Clifton 205 Tf → stand-in: "DM Serif Display" italic
+      condensed  Vchenrietta Condensed → stand-in: "Bebas Neue" 700
+      body       Inter regular 400
+  - Layout: alternating full-bleed color blocks each with a single
+    huge piece of type + small caption; an animated "WORK FUN MAKE"
+    pill ticker pinned to the bottom of every section.
+  - Persistent chrome: small "THINGY® …AND… THINGY" mark top-center,
+    a red QUICK + navy NAV pill bottom-right that opens a slide-in
+    navigation overlay.
+  - Multiple hero slides (we'll cycle with JS). "WHATEVER!" used as
+    a giant background "WTF" gesture in the anti-advertising section.
+  - Footer: large "EMAIL" word, "COPYRIGHT 2025" chunky black, and a
+    fixed QUICK NAV floating action.
+
+CHALLENGES SOLVED
+  - Multi-slide hero swiper without external libraries; we use CSS
+    keyframes + JS click-to-advance for the slide carousel.
+  - Cross-section pill ticker using position:sticky on the parent
+    and a horizontally-translating track of pills that loops.
+  - Floating QUICK NAV button that morphs into a full-screen
+    navigation overlay with grid of pages.
+  - Replaced brand images (fashion + robot + pizza) with abstract
+    gradient + texture placeholders that respect the same visual
+    weight + aspect ratios.
+================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Thingy &amp; Thingy® — The anti-advertising agency, advertising agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — pulled directly from the live site
+     ============================================================ */
+  :root{
+    --navy:    #05051a;
+    --lime:    #c5ff8d;
+    --coral:   #ff5d4a;
+    --pink:    #d285f0;
+    --pink-2:  #ffafd0;
+    --peach:   #ffceb5;
+    --yellow:  #ffd54f;
+    --green:   #2c9b56;
+    --brown:   #7a4f2a;
+    --brown-2: #8a5b32;
+    --cream:   #f4eede;
+
+    --display: 'Archivo Black', 'Inter', system-ui, sans-serif;
+    --serif:   'DM Serif Display', 'Georgia', serif;
+    --cond:    'Bebas Neue', 'Inter', sans-serif;
+    --body:    'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--navy);color:var(--navy);
+    font-family:var(--body);-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* ============================================================
+     TYPOGRAPHY UTILS
+     ============================================================ */
+  .display{
+    font-family:var(--display);
+    text-transform:uppercase;
+    line-height:.92;
+    letter-spacing:-.005em;
+  }
+  .display.italic{font-style:italic}
+  .serif-it{font-family:var(--serif);font-style:italic}
+  .cond{font-family:var(--cond);letter-spacing:.02em}
+
+  /* ============================================================
+     HERO SWIPER
+     ============================================================ */
+  .hero{
+    position:relative;height:100vh;min-height:560px;overflow:hidden;
+    color:var(--lime);background:var(--navy);
+  }
+  .hero .slides{position:absolute;inset:0;display:flex;width:100%;transition:transform .8s cubic-bezier(.7,.05,.2,1)}
+  .hero .slide{
+    flex:0 0 100%;height:100%;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .hero .slide .bg{position:absolute;inset:0;z-index:0}
+  /* photo placeholders — bold abstract gradients matching the
+     original visual weight of the editorial/action imagery */
+  .slide.s1 .bg{background:
+    radial-gradient(60% 60% at 50% 40%, #4b1228 0%, #2a0814 60%, #08010a 100%),
+    linear-gradient(135deg, #ff5d4a, #d285f0 70%, #05051a);
+  }
+  .slide.s2 .bg{background:
+    radial-gradient(60% 60% at 50% 35%, #2a3e1a 0%, #14240c 60%, #050a02 100%),
+    linear-gradient(180deg, #4f8a2a 0%, #1d3a0d 100%);
+  }
+  .slide.s3 .bg{background:
+    radial-gradient(60% 60% at 50% 40%, #5a2b14 0%, #2a1208 60%, #05051a 100%),
+    linear-gradient(135deg, #c5ff8d, #05051a 80%);
+  }
+  .slide.s4 .bg{background:
+    radial-gradient(60% 60% at 50% 35%, #1a2e44 0%, #050a1a 60%, #05051a 100%),
+    linear-gradient(135deg, #d285f0, #2a4e7a);
+  }
+  .slide .bg::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(60% 40% at 50% 30%, rgba(255,255,255,.15), transparent 70%),
+      radial-gradient(20% 20% at 80% 70%, rgba(255,182,72,.2), transparent 60%);
+    mix-blend-mode:screen;
+  }
+  .slide .bg::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(0,0,0,.10) 0 2px, transparent 2px 5px);
+    mix-blend-mode:multiply;
+  }
+  .slide .content{
+    position:relative;z-index:2;text-align:center;padding:0 1.4rem;max-width:1100px;
+  }
+  .slide h1{
+    font-family:var(--display);color:var(--lime);font-size:clamp(2.6rem,8vw,7rem);
+    line-height:.92;text-transform:uppercase;margin:0;letter-spacing:-.01em;
+    text-shadow:0 2px 0 rgba(0,0,0,.18);
+  }
+  .slide .sub{
+    margin-top:1.4rem;color:var(--lime);font-family:var(--serif);font-style:italic;
+    font-size:clamp(.95rem,1.6vw,1.5rem);letter-spacing:.02em;max-width:32ch;margin-left:auto;margin-right:auto;
+    opacity:.95;
+  }
+  .slide .location{
+    position:absolute;left:50%;transform:translateX(-50%);
+    bottom:6rem;color:var(--lime);font-family:var(--cond);font-weight:700;
+    font-size:clamp(.95rem,1.4vw,1.2rem);letter-spacing:.04em;
+  }
+  .hero .badge{
+    position:absolute;top:2rem;left:50%;transform:translateX(-50%);
+    color:#fff;display:flex;align-items:center;gap:.4em;
+    font-family:var(--display);font-size:clamp(.95rem,1.4vw,1.2rem);
+    text-transform:uppercase;letter-spacing:.02em;z-index:5;
+  }
+  .hero .badge .star{font-size:.85em;opacity:.9}
+  .hero .badge .and{font-family:var(--serif);font-style:italic;font-weight:400;font-size:.8em;opacity:.85}
+
+  /* arrows */
+  .hero .nav-arrows{position:absolute;top:50%;left:0;right:0;display:flex;justify-content:space-between;padding:0 1rem;transform:translateY(-50%);z-index:4;pointer-events:none}
+  .hero .nav-arrows button{pointer-events:auto;background:rgba(5,5,26,.5);color:var(--lime);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;line-height:1;transition:background .25s}
+  .hero .nav-arrows button:hover{background:rgba(5,5,26,.85)}
+
+  /* dots */
+  .hero .dots{position:absolute;bottom:1.4rem;left:0;right:0;display:flex;justify-content:center;gap:.6rem;z-index:5}
+  .hero .dots i{width:8px;height:8px;border-radius:50%;background:rgba(197,255,141,.35);display:block;transition:background .25s, transform .25s;cursor:pointer}
+  .hero .dots i.on{background:var(--lime);transform:scale(1.3)}
+
+  /* ============================================================
+     PILL TICKER (running bar at bottom of every section)
+     ============================================================ */
+  .ticker{position:absolute;left:0;right:0;bottom:0;height:5.5rem;overflow:hidden;pointer-events:none;z-index:3}
+  .ticker .track{display:flex;gap:.7rem;animation:tick 22s linear infinite;align-items:center;height:100%;padding-left:1rem;width:max-content}
+  .ticker .pill-bubble{
+    flex:0 0 auto;
+    border-radius:999px;
+    padding:.6rem 1.2rem .55rem;
+    font-family:var(--display);font-style:italic;
+    font-size:1.1rem;letter-spacing:.02em;
+    color:var(--navy);text-transform:uppercase;
+    border:2px solid var(--navy);
+    box-shadow:2px 2px 0 var(--navy);
+    transform-origin:center;
+  }
+  .ticker .pill-bubble.lime{background:var(--lime)}
+  .ticker .pill-bubble.coral{background:var(--coral)}
+  .ticker .pill-bubble.pink{background:var(--pink-2)}
+  .ticker .pill-bubble.yellow{background:var(--yellow)}
+  .ticker .pill-bubble.green{background:var(--green);color:#fff;border-color:var(--navy)}
+  .ticker .pill-bubble.s12{transform:rotate(-3deg);font-size:1.4rem;padding:.7rem 1.3rem}
+  .ticker .pill-bubble.s11{transform:rotate(2deg)}
+  .ticker .pill-bubble.s10{transform:rotate(-1deg)}
+  .ticker .pill-bubble.s13{transform:rotate(4deg);font-size:1.3rem}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ============================================================
+     SECTIONS (alternating color blocks)
+     ============================================================ */
+  section.block{position:relative;min-height:90vh;padding:6rem 1.4rem 9rem;overflow:hidden;display:flex;align-items:center}
+
+  /* "WHATEVER" / pink-lilac anti-advertising section */
+  section.anti{background:var(--pink);color:var(--navy)}
+  section.anti .giant{
+    font-family:var(--display);text-transform:uppercase;color:var(--navy);
+    font-size:clamp(7rem,28vw,30rem);line-height:.78;letter-spacing:-.03em;
+    position:absolute;left:-3%;top:50%;transform:translateY(-50%);white-space:nowrap;
+    opacity:.95;
+  }
+  section.anti .copy{
+    margin-left:auto;max-width:50%;position:relative;z-index:2;
+    font-family:var(--display);text-transform:uppercase;
+    font-size:clamp(2.6rem,7.4vw,7rem);line-height:.95;letter-spacing:-.01em;
+  }
+  section.anti .copy em{font-family:var(--serif);font-style:italic;font-weight:400;text-transform:none}
+  section.anti .tagline{
+    position:absolute;top:2.2rem;right:2rem;
+    font-family:var(--serif);font-style:italic;font-size:1.1rem;
+  }
+  /* t-rex mascot placeholder */
+  .mascot{
+    position:absolute;right:18%;bottom:5rem;width:18rem;height:18rem;
+    z-index:2;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .mascot .speech{
+    position:absolute;top:-3.5rem;left:-1rem;
+    background:#fff;border:2px solid var(--navy);border-radius:18px;
+    padding:.7rem 1rem;font-family:var(--cond);font-size:1rem;
+    color:var(--navy);transform:rotate(-4deg);
+    box-shadow:3px 3px 0 var(--navy);
+  }
+  .mascot .speech::after{
+    content:"";position:absolute;left:1.4rem;bottom:-14px;
+    border:8px solid transparent;border-top-color:#fff;
+    filter:drop-shadow(2px 2px 0 var(--navy));
+  }
+  .mascot .body{
+    width:100%;height:100%;border-radius:18% 18% 12% 12%;
+    background:linear-gradient(180deg,#3aa55a,#1d6b34);
+    border:3px solid var(--navy;);
+    border:3px solid var(--navy);
+    box-shadow:6px 6px 0 var(--navy);
+    position:relative;
+    background-image:
+      radial-gradient(20% 18% at 30% 28%, rgba(255,255,255,.2), transparent 70%),
+      radial-gradient(10% 10% at 70% 60%, rgba(0,0,0,.3), transparent 70%),
+      repeating-linear-gradient(120deg, rgba(0,0,0,.05) 0 6px, transparent 6px 18px);
+  }
+  .mascot .hair{
+    position:absolute;top:-1rem;left:50%;transform:translateX(-50%);
+    width:8rem;height:4rem;border-radius:50%;
+    background:radial-gradient(circle at 50% 80%, #ffd54f 0%, #f0a500 80%);
+    border:3px solid var(--navy);
+    box-shadow:3px 3px 0 var(--navy);
+  }
+  .mascot .body::before, .mascot .body::after{
+    content:"";position:absolute;background:#fff;border:2px solid var(--navy);
+  }
+  .mascot .body::before{top:30%;left:25%;width:18%;height:18%;border-radius:50%;background:#fff}
+  .mascot .body::after{top:30%;right:25%;width:18%;height:18%;border-radius:50%;background:#fff}
+
+  /* coral/red "WHATEVER" callout section */
+  section.shout{background:var(--coral);color:var(--navy);justify-content:center;text-align:center}
+  section.shout h2{
+    font-family:var(--display);text-transform:uppercase;
+    font-size:clamp(6rem,28vw,30rem);line-height:.82;letter-spacing:-.04em;
+    margin:0;color:var(--navy);transform:rotate(-2deg);
+  }
+
+  /* brown ADVERTISING talent section */
+  section.talent{background:var(--brown);color:var(--pink-2)}
+  section.talent h2{
+    font-family:var(--serif);font-style:italic;
+    font-size:clamp(3rem,7vw,7rem);line-height:1;margin:0;
+    max-width:18ch;text-align:center;margin-left:auto;margin-right:auto;
+  }
+  section.talent h2 strong{
+    font-style:normal;font-weight:400;text-transform:uppercase;
+    font-family:var(--display);letter-spacing:-.005em;
+  }
+
+  /* cream contact section */
+  section.contact{
+    background:var(--cream);color:var(--navy);flex-direction:column;justify-content:center;
+    padding:5rem 1.4rem 6rem;min-height:auto;
+  }
+  section.contact .row{
+    display:grid;grid-template-columns:1fr 1.2fr;gap:3rem;max-width:1400px;margin:0 auto;align-items:center;
+    width:100%;
+  }
+  section.contact h2{
+    font-family:var(--display);text-transform:uppercase;color:var(--coral);
+    font-size:clamp(1.8rem,3.6vw,3.2rem);line-height:1.05;margin:0;letter-spacing:-.005em;
+  }
+  section.contact .small{font-family:var(--body);color:var(--coral);font-size:.85rem;margin-top:.8rem;line-height:1.45;max-width:36ch}
+  section.contact .bigword{
+    font-family:var(--serif);font-style:italic;
+    font-size:clamp(5rem,16vw,16rem);line-height:.95;color:var(--navy);
+    text-align:right;letter-spacing:-.02em;
+  }
+  section.contact .pizza{
+    position:absolute;right:55%;top:6%;width:10rem;height:10rem;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%, #ffd54f 30%, #c8731d 70%, #6b3911 100%);
+    border:4px solid var(--navy);
+    box-shadow:5px 5px 0 var(--navy);
+    z-index:3;
+  }
+  section.contact .pizza::before, .pizza::after{
+    content:"";position:absolute;background:#c4381a;border-radius:50%;border:2px solid var(--navy);
+  }
+  .pizza::before{width:1.4rem;height:1.4rem;top:30%;left:25%}
+  .pizza::after{width:1.6rem;height:1.6rem;top:30%;right:22%;background:#c4381a}
+  section.contact .copyright{
+    font-family:var(--display);text-transform:uppercase;font-size:clamp(2rem,5.6vw,4.6rem);
+    color:var(--navy);margin:2.5rem 0 1rem 0;letter-spacing:-.005em;
+  }
+  section.contact .footer-mark{color:var(--coral);font-family:var(--cond);font-weight:700;font-size:1.1rem;letter-spacing:.04em;text-transform:uppercase}
+
+  /* "THINGY" corner logo */
+  .footer-mark{font-family:var(--display);font-size:1.2rem;color:var(--coral)}
+
+  /* ============================================================
+     PERSISTENT QUICK NAV
+     ============================================================ */
+  .quicknav{
+    position:fixed;right:1rem;bottom:1rem;z-index:80;
+    display:flex;align-items:center;gap:.3rem;
+    pointer-events:auto;
+  }
+  .quicknav button{
+    background:var(--coral);color:#fff;
+    font-family:var(--display);font-size:1rem;
+    padding:.55rem 1.1rem;border-radius:999px;
+    text-transform:uppercase;letter-spacing:.04em;
+    transition:transform .25s, background .25s;
+    border:2px solid var(--navy);
+    box-shadow:3px 3px 0 var(--navy);
+  }
+  .quicknav button.alt{background:var(--pink-2);color:var(--navy)}
+  .quicknav button:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--navy)}
+  .quicknav button:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--navy)}
+
+  /* Big QUICK NAV overlay */
+  #navOverlay{
+    position:fixed;inset:0;z-index:100;background:var(--lime);color:var(--navy);
+    display:none;flex-direction:column;padding:1.4rem 2rem 2rem;
+  }
+  #navOverlay.on{display:flex}
+  #navOverlay header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem}
+  #navOverlay .close{font-family:var(--display);font-size:1.2rem;background:var(--navy);color:var(--lime);padding:.4rem 1rem;border-radius:999px}
+  #navOverlay .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.4rem;
+    margin-top:1rem;
+  }
+  #navOverlay a{
+    display:flex;flex-direction:column;gap:.4rem;
+    padding:1.2rem 1.2rem;background:var(--cream);border:3px solid var(--navy);border-radius:14px;
+    font-family:var(--display);text-transform:uppercase;font-size:1.4rem;
+    box-shadow:5px 5px 0 var(--navy);
+    transition:transform .25s, box-shadow .25s;
+  }
+  #navOverlay a small{font-family:var(--body);font-size:.8rem;text-transform:none;color:var(--navy);opacity:.7;font-weight:500;letter-spacing:.02em}
+  #navOverlay a:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--navy)}
+  #navOverlay .nav-badge{
+    font-family:var(--display);font-size:clamp(2rem,4vw,3.4rem);
+    text-transform:uppercase;line-height:1;letter-spacing:-.01em;margin-bottom:.4rem;
+  }
+
+  /* Section heading variations */
+  .center-headline{
+    font-family:var(--display);text-transform:uppercase;
+    font-size:clamp(2.6rem,7vw,6rem);line-height:.95;
+    color:var(--navy);text-align:center;
+  }
+  .center-headline em{font-family:var(--serif);font-style:italic;font-weight:400;text-transform:none}
+
+  /* utility */
+  .container{max-width:1400px;margin:0 auto}
+
+  /* responsive */
+  @media (max-width: 880px){
+    section.contact .row{grid-template-columns:1fr;gap:1.4rem}
+    section.contact .bigword{text-align:left}
+    section.contact .pizza{position:relative;right:auto;top:auto;width:7rem;height:7rem;margin:1rem 0}
+    section.anti .copy{margin:0;max-width:100%}
+    section.anti .giant{font-size:30vw;left:-5%}
+    .mascot{right:5%;width:10rem;height:10rem;bottom:6rem}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============== HERO SWIPER ============== -->
+  <section class="hero" id="top">
+    <div class="badge">
+      <span>THINGY</span><span class="star">®</span>
+      <span class="and">…and…</span>
+      <span>THINGY</span>
+    </div>
+
+    <div class="slides" id="slides">
+      <div class="slide s1">
+        <div class="bg"></div>
+        <div class="content">
+          <h1>The Microsoft<br/>Windows 95 of<br/>Advertising.</h1>
+          <p class="sub">Because life's too short to take everything so seriously.</p>
+        </div>
+        <div class="location">London, Portland, Los Angeles and Beyond</div>
+      </div>
+      <div class="slide s2">
+        <div class="bg"></div>
+        <div class="content">
+          <h1>Bang. And the<br/>Dirt is Gone.</h1>
+          <p class="sub">We make brands that punch above their weight, then go home for tea.</p>
+        </div>
+        <div class="location">London, Portland, Los Angeles and Beyond</div>
+      </div>
+      <div class="slide s3">
+        <div class="bg"></div>
+        <div class="content">
+          <h1>Inspiring Brands<br/>to Fart About<br/>a Bit.</h1>
+          <p class="sub">Because life's too short to take everything so seriously.</p>
+        </div>
+        <div class="location">London, Portland, Los Angeles and Beyond</div>
+      </div>
+      <div class="slide s4">
+        <div class="bg"></div>
+        <div class="content">
+          <h1>A Multinational<br/>Network of Idiots.</h1>
+          <p class="sub">Friendly ones. Mostly.</p>
+        </div>
+        <div class="location">London, Portland, Los Angeles and Beyond</div>
+      </div>
+    </div>
+
+    <div class="nav-arrows">
+      <button id="prev" aria-label="Previous slide">‹</button>
+      <button id="next" aria-label="Next slide">›</button>
+    </div>
+    <div class="dots" id="dots"></div>
+
+    <!-- TICKER -->
+    <div class="ticker">
+      <div class="track" id="track"></div>
+    </div>
+  </section>
+
+  <!-- ============== SHOUT (CORAL "WHATEVER!") ============== -->
+  <section class="block shout">
+    <h2>WHATEVER!<br/>WHATEVER?!</h2>
+    <div class="ticker"><div class="track" data-mirror></div></div>
+  </section>
+
+  <!-- ============== ANTI-ADVERTISING (PINK + T-REX) ============== -->
+  <section class="block anti">
+    <div class="giant" aria-hidden="true">WTF?!</div>
+    <div class="copy">
+      The <em>Anti-</em>Advertising<br/>Agency,<br/>Advertising<br/>Agency.
+    </div>
+    <div class="tagline">Welcome to Thingy &amp; Thingy®.</div>
+    <div class="mascot">
+      <div class="speech">Nope. Not for me, thanks.</div>
+      <div class="hair"></div>
+      <div class="body"></div>
+    </div>
+    <div class="ticker"><div class="track" data-mirror></div></div>
+  </section>
+
+  <!-- ============== TALENT (BROWN) ============== -->
+  <section class="block talent">
+    <h2>A network of some of the best <strong>ADVERTISING</strong> talent in the world.</h2>
+    <div class="ticker"><div class="track" data-mirror></div></div>
+  </section>
+
+  <!-- ============== CONTACT (CREAM) ============== -->
+  <section class="block contact">
+    <div class="pizza"></div>
+    <div class="row">
+      <div>
+        <h2>If you want to chat, chase debts, or even give us money so we can make you money, then please go ahead.</h2>
+        <p class="small">Congratulations! You win first prize for diligence. Send us a message quoting "Yes I won the first prize for diligence and now I want my reward", to receive your reward.</p>
+      </div>
+      <div class="bigword" style="font-family:var(--serif);font-style:italic">email</div>
+    </div>
+    <div class="copyright">© Copyright 2025</div>
+    <div class="footer-mark">THINGY® Thingy</div>
+    <div class="ticker"><div class="track" data-mirror></div></div>
+  </section>
+
+  <!-- ============== QUICK NAV (persistent) ============== -->
+  <div class="quicknav">
+    <button id="quickBtn">Quick</button>
+    <button class="alt" id="navBtn">Nav</button>
+  </div>
+
+  <!-- ============== NAV OVERLAY ============== -->
+  <div id="navOverlay">
+    <header>
+      <div class="nav-badge">Quick Nav<br/><span style="font-family:var(--serif);font-style:italic;font-weight:400;text-transform:none;font-size:.6em">all the things, none of the faff</span></div>
+      <button class="close" id="navClose">Close ×</button>
+    </header>
+    <div class="grid">
+      <a href="#top"><small>01</small>Home<small>Hero swiper + ticker</small></a>
+      <a href=""><small>02</small>Work<small>Recent case studies</small></a>
+      <a href=""><small>03</small>Approach<small>How we think</small></a>
+      <a href=""><small>04</small>Studio<small>The people</small></a>
+      <a href=""><small>05</small>Happenings<small>News + events</small></a>
+      <a href=""><small>06</small>Shop<small>Merch &amp; prints</small></a>
+      <a href=""><small>07</small>Newsletter<small>Monthly-ish</small></a>
+      <a href=""><small>08</small>Careers<small>Join the idiots</small></a>
+      <a href=""><small>09</small>Press<small>Features &amp; awards</small></a>
+      <a href=""><small>10</small>Privacy<small>Legal bits</small></a>
+    </div>
+  </div>
+
+  <!-- ============== SCRIPT ============== -->
+  <script>
+    /* ---- HERO SWIPER ---- */
+    const slides = document.getElementById('slides');
+    const slidesCount = slides.children.length;
+    const dotsEl = document.getElementById('dots');
+    let idx = 0;
+    function go(n){ idx = (n + slidesCount) % slidesCount; slides.style.transform = `translateX(-${idx*100}%)`; [...dotsEl.children].forEach((d,i)=>d.classList.toggle('on', i===idx)); }
+    for (let i=0;i<slidesCount;i++){ const d = document.createElement('i'); d.addEventListener('click', ()=>go(i)); dotsEl.appendChild(d); }
+    document.getElementById('prev').addEventListener('click', ()=>go(idx-1));
+    document.getElementById('next').addEventListener('click', ()=>go(idx+1));
+    go(0);
+    setInterval(()=>go(idx+1), 5500);
+
+    /* ---- TICKER BUILD ---- */
+    function buildTrack(track){
+      const labels = ['Work','Fun','Make','Work','Fun','Make','Make','Work','Fun','Make','Make','Fun','Make','Work','Fun'];
+      const colors = ['lime','coral','pink','yellow','green'];
+      // triple the labels so the loop is seamless
+      const seq = labels.concat(labels).concat(labels);
+      const html = seq.map((l,i)=>{
+        const c = colors[i % colors.length];
+        const sizes = ['','s10','s11','s12','s13'];
+        const sz = sizes[i % sizes.length];
+        return `<span class="pill-bubble ${c} ${sz}">${l}</span>`;
+      }).join('');
+      track.innerHTML = html + html; // doubled for infinite loop
+    }
+    document.querySelectorAll('.track').forEach(t => buildTrack(t));
+
+    /* ---- QUICK NAV OVERLAY ---- */
+    const overlay = document.getElementById('navOverlay');
+    function openNav(){ overlay.classList.add('on'); document.body.style.overflow='hidden'; }
+    function closeNav(){ overlay.classList.remove('on'); document.body.style.overflow=''; }
+    document.getElementById('quickBtn').addEventListener('click', openNav);
+    document.getElementById('navBtn').addEventListener('click', openNav);
+    document.getElementById('navClose').addEventListener('click', closeNav);
+    overlay.addEventListener('click', (e)=>{ if (e.target === overlay) closeNav(); });
+    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeNav(); });
+  </script>
+</body>
+</html>
