@@ -1,0 +1,294 @@
+/* RHOBEAR Designs editor chrome — derived from rhobear-app design tokens + rhobear-dark.css */
+
+:root {
+  --rb-brand: #7c5cff;
+  --rb-brand-soft: #9a82ff;
+  --rb-brand-glow: rgba(124, 92, 255, 0.22);
+  --rb-bg: #08080a;
+  --rb-panel: #161618;
+  --rb-panel-2: #1a1a1f;
+  --rb-border: rgba(124, 92, 255, 0.22);
+  --rb-text: #e6e6e8;
+  --rb-text-muted: #9a9aa2;
+  --rb-danger: #e94560;
+  --rb-success: #3dd68c;
+  --rb-radius: 8px;
+  --rb-font: 'DM Sans', system-ui, sans-serif;
+  --rb-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --rb-toolbar-h: 52px;
+  --rb-status-h: 28px;
+  --rb-sidebar-w: 280px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--rb-font);
+  color: var(--rb-text);
+  background: var(--rb-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Toolbar */
+.rb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--rb-toolbar-h);
+  padding: 0 12px;
+  background: var(--rb-panel);
+  border-bottom: 1px solid var(--rb-border);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.rb-toolbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.rb-logo {
+  color: var(--rb-brand);
+  font-size: 1.25rem;
+}
+
+.rb-toolbar__title {
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.rb-toolbar__subtitle {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--rb-text-muted);
+  font-family: var(--rb-mono);
+}
+
+.rb-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-left: 1px solid var(--rb-border);
+}
+
+.rb-btn {
+  appearance: none;
+  border: 1px solid var(--rb-border);
+  background: var(--rb-panel-2);
+  color: var(--rb-text);
+  font-family: var(--rb-font);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--rb-radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.rb-btn:hover {
+  background: #222228;
+  border-color: var(--rb-brand-glow);
+}
+
+.rb-btn--primary {
+  background: var(--rb-brand);
+  border-color: var(--rb-brand);
+  color: #fff;
+}
+
+.rb-btn--primary:hover {
+  background: var(--rb-brand-soft);
+  border-color: var(--rb-brand-soft);
+}
+
+.rb-btn--icon {
+  min-width: 32px;
+  padding: 6px 8px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.rb-btn--active,
+.rb-btn--toggle.rb-btn--active {
+  background: rgba(124, 92, 255, 0.18);
+  border-color: var(--rb-brand);
+  color: var(--rb-brand-soft);
+}
+
+.rb-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Workspace */
+.rb-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.rb-sidebar {
+  width: var(--rb-sidebar-w);
+  background: var(--rb-panel);
+  border-color: var(--rb-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.rb-sidebar--left {
+  border-right: 1px solid var(--rb-border);
+}
+
+.rb-sidebar--right {
+  width: 300px;
+  border-left: 1px solid var(--rb-border);
+  overflow-y: auto;
+}
+
+.rb-panel {
+  border-bottom: 1px solid var(--rb-border);
+}
+
+.rb-panel__header {
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  font-family: var(--rb-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rb-text-muted);
+  background: var(--rb-panel-2);
+  border-bottom: 1px solid var(--rb-border);
+}
+
+.rb-panel__body {
+  padding: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.rb-sidebar--left .rb-panel__body {
+  max-height: none;
+  flex: 1;
+}
+
+.rb-canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  background: #0f0f12;
+  position: relative;
+}
+
+.rb-canvas {
+  height: 100%;
+}
+
+/* Status */
+.rb-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--rb-status-h);
+  padding: 0 12px;
+  font-size: 0.72rem;
+  font-family: var(--rb-mono);
+  color: var(--rb-text-muted);
+  background: var(--rb-panel-2);
+  border-top: 1px solid var(--rb-border);
+  flex-shrink: 0;
+}
+
+/* Modals */
+.rb-modal {
+  border: 1px solid var(--rb-border);
+  border-radius: 12px;
+  padding: 0;
+  background: var(--rb-panel);
+  color: var(--rb-text);
+  max-width: 520px;
+  width: 90vw;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+.rb-modal--wide {
+  max-width: 90vw;
+  width: 90vw;
+  height: 85vh;
+}
+
+.rb-modal::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.rb-modal__content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.rb-modal__content h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.rb-modal__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--rb-text-muted);
+}
+
+.rb-modal textarea {
+  width: 100%;
+  font-family: var(--rb-mono);
+  font-size: 0.8rem;
+  background: var(--rb-bg);
+  color: var(--rb-text);
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius);
+  padding: 10px;
+  resize: vertical;
+}
+
+.rb-modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.rb-modal__actions--top {
+  justify-content: space-between;
+  align-items: center;
+}
+
+#preview-frame {
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius);
+  background: #fff;
+}
+
+.rb-sidebar.is-hidden,
+.rb-panel.is-hidden {
+  display: none !important;
+}

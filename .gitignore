@@ -1,0 +1,6 @@
+editor/node_modules/
+editor/dist/
+editor/test-results/
+editor/playwright-report/
+.DS_Store
+*.log

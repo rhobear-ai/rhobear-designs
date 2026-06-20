@@ -1,9 +1,22 @@
 # Rhobear Designs
 
-Design assets and model comparison samples for the RHOBEAR brand.
+Design assets, the **RHOBEAR Website Editor**, and model comparison samples for the RHOBEAR brand.
+
+## Website Editor (primary product)
+
+MIT-licensed visual editor — import local HTML, edit on canvas, export HTML/CSS/ZIP.
+
+```bash
+cd editor
+npm install
+npm run dev      # http://localhost:5180
+```
+
+See [`editor/README.md`](editor/README.md) for full docs and `npm run test:e2e` for smoke tests.
 
 ## Structure
 
+- `editor/` — **Website editor** (GrapesJS + RHOBEAR chrome, MIT)
 - `samples/` — Model benchmark folders; each model gets one folder for its finished work
 - `brand/` — Logo, colors, typography guidelines *(planned)*
 - `assets/` — Icons, illustrations, imagery *(planned)*

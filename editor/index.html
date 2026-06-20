@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RHOBEAR Designs — Website Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
+    <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
+  </head>
+  <body>
+    <div id="app" class="rb-app">
+      <!-- Top toolbar -->
+      <header class="rb-toolbar" data-testid="toolbar">
+        <div class="rb-toolbar__brand">
+          <span class="rb-logo" aria-hidden="true">◆</span>
+          <div>
+            <strong class="rb-toolbar__title">RHOBEAR Designs</strong>
+            <span class="rb-toolbar__subtitle" id="doc-title" data-testid="doc-title">Untitled page</span>
+          </div>
+        </div>
+
+        <div class="rb-toolbar__group" role="group" aria-label="File">
+          <button type="button" class="rb-btn" data-action="new" data-testid="btn-new" title="New blank page">New</button>
+          <button type="button" class="rb-btn" data-action="open-html" data-testid="btn-open-html" title="Open HTML file">Open HTML</button>
+          <button type="button" class="rb-btn" data-action="open-folder" data-testid="btn-open-folder" title="Open folder of assets">Open Folder</button>
+          <button type="button" class="rb-btn rb-btn--primary" data-action="save-html" data-testid="btn-save-html" title="Download HTML">Save HTML</button>
+          <button type="button" class="rb-btn" data-action="export-zip" data-testid="btn-export-zip" title="Export HTML + CSS as ZIP">Export ZIP</button>
+        </div>
+
+        <div class="rb-toolbar__group" role="group" aria-label="Edit">
+          <button type="button" class="rb-btn rb-btn--icon" data-action="undo" data-testid="btn-undo" title="Undo" aria-label="Undo">↶</button>
+          <button type="button" class="rb-btn rb-btn--icon" data-action="redo" data-testid="btn-redo" title="Redo" aria-label="Redo">↷</button>
+          <button type="button" class="rb-btn" data-action="delete" data-testid="btn-delete" title="Delete selected">Delete</button>
+          <button type="button" class="rb-btn" data-action="duplicate" data-testid="btn-duplicate" title="Duplicate selected">Duplicate</button>
+        </div>
+
+        <div class="rb-toolbar__group" role="group" aria-label="Insert">
+          <button type="button" class="rb-btn" data-action="add-section" data-testid="btn-add-section">Section</button>
+          <button type="button" class="rb-btn" data-action="add-text" data-testid="btn-add-text">Text</button>
+          <button type="button" class="rb-btn" data-action="add-image" data-testid="btn-add-image">Image</button>
+          <button type="button" class="rb-btn" data-action="embed" data-testid="btn-embed">Embed</button>
+        </div>
+
+        <div class="rb-toolbar__group" role="group" aria-label="View">
+          <button type="button" class="rb-btn rb-btn--icon rb-btn--active" data-action="device-desktop" data-testid="btn-device-desktop" title="Desktop" aria-label="Desktop">🖥</button>
+          <button type="button" class="rb-btn rb-btn--icon" data-action="device-tablet" data-testid="btn-device-tablet" title="Tablet" aria-label="Tablet">📱</button>
+          <button type="button" class="rb-btn rb-btn--icon" data-action="device-mobile" data-testid="btn-device-mobile" title="Mobile" aria-label="Mobile">📲</button>
+          <button type="button" class="rb-btn" data-action="preview" data-testid="btn-preview">Preview</button>
+        </div>
+
+        <div class="rb-toolbar__group" role="group" aria-label="Panels">
+          <button type="button" class="rb-btn rb-btn--toggle rb-btn--active" data-action="toggle-blocks" data-testid="btn-toggle-blocks" data-panel="blocks">Blocks</button>
+          <button type="button" class="rb-btn rb-btn--toggle rb-btn--active" data-action="toggle-layers" data-testid="btn-toggle-layers" data-panel="layers">Layers</button>
+          <button type="button" class="rb-btn rb-btn--toggle rb-btn--active" data-action="toggle-styles" data-testid="btn-toggle-styles" data-panel="styles">Styles</button>
+        </div>
+      </header>
+
+      <!-- Main workspace -->
+      <div class="rb-workspace">
+        <aside class="rb-sidebar rb-sidebar--left" id="panel-blocks" data-testid="panel-blocks">
+          <div class="rb-panel__header">Blocks</div>
+          <div id="gjs-blocks" class="rb-panel__body"></div>
+        </aside>
+
+        <main class="rb-canvas-wrap" data-testid="canvas-wrap">
+          <div id="gjs" class="rb-canvas"></div>
+        </main>
+
+        <aside class="rb-sidebar rb-sidebar--right">
+          <section class="rb-panel" id="panel-layers" data-testid="panel-layers">
+            <div class="rb-panel__header">Layers</div>
+            <div id="gjs-layers" class="rb-panel__body"></div>
+          </section>
+          <section class="rb-panel" id="panel-styles" data-testid="panel-styles">
+            <div class="rb-panel__header">Styles</div>
+            <div id="gjs-styles" class="rb-panel__body"></div>
+          </section>
+          <section class="rb-panel" id="panel-traits" data-testid="panel-traits">
+            <div class="rb-panel__header">Settings</div>
+            <div id="gjs-traits" class="rb-panel__body"></div>
+          </section>
+        </aside>
+      </div>
+
+      <!-- Status bar -->
+      <footer class="rb-status" data-testid="status-bar">
+        <span id="status-message" data-testid="status-message">Ready</span>
+        <span id="status-selection" data-testid="status-selection">No selection</span>
+      </footer>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="file-html" accept=".html,.htm,text/html" hidden data-testid="input-html" />
+    <input type="file" id="file-folder" webkitdirectory directory multiple hidden data-testid="input-folder" />
+    <input type="file" id="file-image" accept="image/*" hidden data-testid="input-image" />
+
+    <!-- Embed modal -->
+    <dialog id="embed-modal" class="rb-modal" data-testid="embed-modal">
+      <form method="dialog" class="rb-modal__content" id="embed-form">
+        <h2>Embed HTML / iframe</h2>
+        <p class="rb-modal__hint">Paste raw HTML, a script tag, or an iframe embed code.</p>
+        <textarea
+          id="embed-code"
+          rows="8"
+          placeholder='<iframe src="..." ...></iframe>'
+          data-testid="embed-code-input"
+        ></textarea>
+        <div class="rb-modal__actions">
+          <button type="button" class="rb-btn" data-action="embed-cancel" data-testid="btn-embed-cancel">Cancel</button>
+          <button type="submit" class="rb-btn rb-btn--primary" data-testid="btn-embed-insert">Insert</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Preview modal -->
+    <dialog id="preview-modal" class="rb-modal rb-modal--wide" data-testid="preview-modal">
+      <div class="rb-modal__content">
+        <div class="rb-modal__actions rb-modal__actions--top">
+          <strong>Live Preview</strong>
+          <button type="button" class="rb-btn" data-action="preview-close" data-testid="btn-preview-close">Close</button>
+        </div>
+        <iframe id="preview-frame" title="Preview" data-testid="preview-frame"></iframe>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

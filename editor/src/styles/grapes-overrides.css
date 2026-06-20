@@ -1,0 +1,123 @@
+/* GrapesJS canvas + panels skinned to RHOBEAR */
+
+.gjs-one-bg {
+  background-color: #161618 !important;
+}
+
+.gjs-two-color {
+  color: #e6e6e8 !important;
+}
+
+.gjs-three-bg {
+  background-color: #1a1a1f !important;
+  color: #9a9aa2 !important;
+}
+
+.gjs-four-color,
+.gjs-four-color-h:hover {
+  color: #9a82ff !important;
+}
+
+.gjs-editor {
+  height: 100% !important;
+}
+
+.gjs-cv-canvas {
+  background: #0f0f12 !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+}
+
+.gjs-pn-panel {
+  display: none !important;
+}
+
+.gjs-block {
+  border-radius: 8px !important;
+  border: 1px solid rgba(124, 92, 255, 0.18) !important;
+  background: #1a1a1f !important;
+  color: #e6e6e8 !important;
+  min-height: 48px !important;
+  transition: border-color 0.15s, background 0.15s !important;
+}
+
+.gjs-block:hover {
+  border-color: #7c5cff !important;
+  background: rgba(124, 92, 255, 0.12) !important;
+}
+
+.gjs-block__media {
+  color: #7c5cff !important;
+}
+
+.gjs-layer {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.75rem !important;
+}
+
+.gjs-layer.gjs-selected {
+  background: rgba(124, 92, 255, 0.15) !important;
+}
+
+.gjs-sm-sector .gjs-sm-title {
+  background: #1a1a1f !important;
+  border-color: rgba(124, 92, 255, 0.18) !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.gjs-field {
+  background: #08080a !important;
+  border-color: rgba(124, 92, 255, 0.22) !important;
+  color: #e6e6e8 !important;
+  border-radius: 6px !important;
+}
+
+.gjs-field:focus {
+  border-color: #7c5cff !important;
+  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.25) !important;
+}
+
+.gjs-btn-prim {
+  background: #7c5cff !important;
+  border-color: #7c5cff !important;
+}
+
+.gjs-toolbar-item {
+  color: #7c5cff !important;
+}
+
+.gjs-highlighter,
+.gjs-highlighter-sel {
+  outline-color: #7c5cff !important;
+}
+
+.gjs-resizer-h {
+  border-color: #7c5cff !important;
+}
+
+.gjs-badge {
+  background: #7c5cff !important;
+}
+
+.gjs-mdl-dialog {
+  background: #161618 !important;
+  color: #e6e6e8 !important;
+  border: 1px solid rgba(124, 92, 255, 0.22) !important;
+  border-radius: 12px !important;
+}
+
+.gjs-mdl-title {
+  color: #e6e6e8 !important;
+}
+
+.gjs-am-assets-cont {
+  background: #161618 !important;
+}
+
+.gjs-clm-tags #gjs-clm-new {
+  color: #7c5cff !important;
+}
