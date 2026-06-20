@@ -9,10 +9,10 @@ intact) + an overlay edit layer → annotate, never re-render → functions neve
 vendored GrapesJS. Shared owned headless core (doc model / command bus / serializer) so the AI phase slots in.
 
 ## Waves (queue: 1 → 2 → 3, then STOP; owner+Iron Man build UX together)
-- [~] **Wave 1 — make-it-ours** (DISPATCHED 2026-06-20T21:28:41Z; wave-watch armed; Neo on completion)
+- [x] **Wave 1 — make-it-ours** ✅ merged + build-verified (HEAD dd5d2bd)
   - [ ] g1-vendor-grapes — vendor GrapesJS+plugins into src/vendor, NOTICES, build off vendored
-  - [ ] core1-doc-model — headless doc model + command bus + serializer (no UI)
-- [ ] **Wave 2 — live-fidelity engine** (queued)
+  - [x] core1-doc-model — relocated to editor/src/core; node --test green (PR #3 merged)
+- [~] **Wave 2 — live-fidelity engine** (DISPATCHED 22:10Z; wave-watch armed)
   - [ ] iframe live-render (scripts/CSS/fonts intact)
   - [ ] overlay picker + postMessage bridge + inline-text
   - [ ] style-override injector + diff serializer
