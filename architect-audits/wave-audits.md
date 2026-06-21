@@ -17,3 +17,5 @@ gen-a-studios PR #16 MERGED into build/editor-v1 (7 template recreations: Lusion
 an1-pattern-analysis PR #19 MERGED: template interaction-pattern map (patterns.json) + RECOMMENDATIONS.md landed — foundation for the next-round scroll-control + 3D rotate/roughness/spin tools. (ai-spinners #14 = rhobear-plans, not my lane; ignored.)
 
 ## 2026-06-21T03:29:27Z -- review_closed -- le2-stash-expand #20: element stash expansion MERGED (targeting 250+ elements; expected, I dispatched it). No bounces/open. tn1(thumbs) + td1(3D core) still building.
+
+## 2026-06-21T08:09:40Z -- review_closed -- pkg1: release packaging (#23) MERGED into build/editor-v1 — docs/NOTICES/metadata; no app/UX change. Editor is release-organized.
