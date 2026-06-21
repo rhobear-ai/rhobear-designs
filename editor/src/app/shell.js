@@ -230,6 +230,7 @@ export function bootShell() {
       refs.projName.value = ''; renderProjects(); setStatus(`Saved project "${name}"`);
     },
     'replace': () => live.beginReplace(),
+    'select-parent': () => live.selectParent(),
 
     'undo': () => { if (mode === 'build') build.undo(); refreshUndo(); },
     'redo': () => { if (mode === 'build') build.redo(); refreshUndo(); },
@@ -317,8 +318,6 @@ export function bootShell() {
     refs.fileImage.value = '';
   });
 
-  // grab handle → drag-to-move the selected element (live mode)
-  if (refs.floatGrab) refs.floatGrab.addEventListener('mousedown', (e) => { e.preventDefault(); live.startMove(); });
 
   // element library (the stash) in the live-mode Add rail
   function renderElementLibrary() {
@@ -354,9 +353,16 @@ export function bootShell() {
       chips.appendChild(chip);
     }
     host.innerHTML = '';
+    // Media: upload an image or paste an image/GIF URL (bucket browse comes with the media lib)
+    const media = document.createElement('div'); media.className = 'rb-media-row';
+    const up = document.createElement('button'); up.type = 'button'; up.className = 'rb-btn'; up.style.width = '100%'; up.textContent = '⬆  Add image / media';
+    up.addEventListener('click', () => refs.fileImage.click());
+    const u = document.createElement('input'); u.className = 'rb-input'; u.placeholder = 'or paste an image / GIF URL…'; u.style.marginTop = '6px';
+    u.addEventListener('change', () => { if (u.value) { live.insertImage(u.value, 'media'); u.value = ''; } });
+    media.appendChild(up); media.appendChild(u);
     const hint = document.createElement('p'); hint.className = 'rb-lib-hint';
-    hint.textContent = 'Click to add. Select a container first to nest inside it.';
-    host.appendChild(chips); host.appendChild(hint); host.appendChild(grid);
+    hint.textContent = 'Click an element to add · drag it onto the canvas · select a container to nest.';
+    host.appendChild(media); host.appendChild(chips); host.appendChild(hint); host.appendChild(grid);
     renderGrid();
   }
 

@@ -274,6 +274,24 @@ html, body {
 }
 .rb-advanced-toggle:hover { color: var(--rb-brand-soft); border-color: var(--rb-brand-glow); }
 
+/* Gradient swatches */
+.rb-swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.rb-grad { height: 28px; border: 1px solid var(--rb-border-soft); border-radius: 6px; cursor: pointer; padding: 0; background-size: cover; }
+.rb-grad:hover { border-color: var(--rb-brand); box-shadow: 0 0 0 2px var(--rb-brand-faint); }
+
+/* Opacity slider */
+.rb-range { flex: 1; accent-color: var(--rb-brand); cursor: pointer; }
+.rb-range__val { font: 500 0.72rem var(--rb-mono); color: var(--rb-text-muted); min-width: 38px; text-align: right; }
+
+/* Shadow presets */
+.rb-preset-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.rb-preset {
+  appearance: none; cursor: pointer; border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2);
+  color: var(--rb-text-muted); font: 500 0.7rem var(--rb-font); padding: 5px 10px; border-radius: 999px;
+}
+.rb-preset:hover { color: var(--rb-text); border-color: var(--rb-brand-glow); }
+.rb-preset.is-active { color: var(--rb-brand-soft); background: var(--rb-brand-faint); border-color: var(--rb-brand); }
+
 /* GrapesJS managers mount points (Build mode) live inside inspector body */
 #gjs-styles, #gjs-traits, #gjs-layers, #gjs-blocks { width: 100%; }
 
@@ -355,6 +373,8 @@ html, body {
 .rb-setting { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .rb-setting__label { font-size: 0.78rem; font-weight: 600; }
 .rb-setting__hint { font-size: 0.72rem; color: var(--rb-text-faint); }
+
+.rb-media-row { padding: 0 0 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border-soft); }
 
 /* Element library (the stash) */
 .rb-lib-cats { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }

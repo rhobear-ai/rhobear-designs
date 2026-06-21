@@ -112,6 +112,53 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await expect(page.getByTestId('inspector')).not.toHaveClass(/is-hidden/);
   });
 
+  test('inspector opacity slider changes the element (Effects apply)', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await frame.locator('h1').click();
+    await page.getByTestId('inspector-live').locator('.rb-sector__head', { hasText: 'Effects' }).click();
+    const range = page.getByTestId('inspector-live').locator('.rb-range');
+    await range.evaluate((el) => { el.value = '40'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    // inline opacity is set immediately (the computed value then transitions toward it)
+    const inline = await frame.locator('h1').evaluate((e) => e.style.opacity);
+    expect(Number(inline)).toBeCloseTo(0.4, 1);
+    await page.waitForTimeout(400);
+    const op = await frame.locator('h1').evaluate((e) => getComputedStyle(e).opacity);
+    expect(Number(op)).toBeLessThan(0.9);
+  });
+
+  test('inspector shadow preset applies a box-shadow', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await frame.locator('h1').click();
+    await page.getByTestId('inspector-live').locator('.rb-sector__head', { hasText: 'Effects' }).click();
+    await page.getByTestId('inspector-live').locator('.rb-preset').nth(2).click();
+    const sh = await frame.locator('h1').evaluate((e) => e.style.boxShadow);
+    expect(sh && sh !== 'none').toBeTruthy();
+  });
+
+  test('double-click makes an element editable; single click does not', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await frame.locator('h1').click();
+    expect(await frame.locator('h1').getAttribute('contenteditable')).toBeNull();
+    await frame.locator('h1').dblclick();
+    expect(await frame.locator('h1').getAttribute('contenteditable')).toBe('true');
+  });
+
+  test('gradient swatch sets a background-image', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('.card').waitFor();
+    await frame.locator('.card').click();
+    await page.getByTestId('inspector-live').locator('.rb-grad').first().click({ force: true });
+    const bg = await frame.locator('.card').evaluate((e) => e.style.backgroundImage);
+    expect(bg).toContain('gradient');
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);
