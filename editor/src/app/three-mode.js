@@ -192,6 +192,6 @@ for (const host of document.querySelectorAll('.rb-3d-embed[data-rb-3d]:not([data
 
 function buildEmbedHtml(json) {
   const attr = JSON.stringify(json).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<div class="rb-3d-embed" data-rb-3d="${attr}" style="width:100%;height:520px;position:relative;background:#0d0f10;border-radius:12px;overflow:hidden">` +
+  return `<div class="rb-3d-embed" data-rb-3d="${attr}" style="width:100%;height:520px;position:relative;background:transparent;overflow:hidden">` +
     `<script type="module">${EMBED_RUNTIME}</script></div>`;
 }
