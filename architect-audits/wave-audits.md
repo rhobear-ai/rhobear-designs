@@ -12,3 +12,6 @@ FLAG: verify-gate (build/tests + path check, as W1 needed) + W3 dispatch DEFERRE
 
 ##  -- review_closed -- gen-a
 gen-a-studios PR #16 MERGED into build/editor-v1 (7 template recreations: Lusion, Active Theory, Locomotive, Immersive Garden, makemepulse, Aristide Benoist, Dogstudio). Expected — part of the dispatched generation wave; now in the template gallery. Nothing open/bounced.
+
+## 2026-06-21T02:12:29Z -- review_closed -- neo-sweep-20260621-014729
+an1-pattern-analysis PR #19 MERGED: template interaction-pattern map (patterns.json) + RECOMMENDATIONS.md landed — foundation for the next-round scroll-control + 3D rotate/roughness/spin tools. (ai-spinners #14 = rhobear-plans, not my lane; ignored.)
