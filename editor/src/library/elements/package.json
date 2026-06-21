@@ -1,0 +1,16 @@
+{
+  "name": "@rhobear/editor-library-elements",
+  "version": "0.0.0",
+  "description": "Headless element library — a categorized, self-contained catalog of reusable UI snippets (navs, heros, buttons, cards, sections, footers, forms, galleries, testimonials) carved from the 51 sample templates. Pure data + a loader, no UI.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./_entry.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "manifest.json"
+  ]
+}
