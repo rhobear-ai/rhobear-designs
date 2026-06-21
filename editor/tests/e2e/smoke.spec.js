@@ -260,6 +260,38 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await expect(page.getByTestId('inspector-3d')).toContainText('Color');
   });
 
+  test('3D: color + metalness from the inspector apply (no mid-edit reset)', async ({ page }) => {
+    await page.getByTestId('btn-mode-3d').click();
+    await page.getByTestId('three-rail').locator('.rb-quick-btn', { hasText: 'box' }).click();
+    await page.getByTestId('three-rail').locator('.rb-lib-card').first().click();
+    const insp = page.getByTestId('inspector-3d');
+    await insp.locator('input[type="color"]').evaluate((el) => { el.value = '#ff0000'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    await insp.locator('.rb-range').first().evaluate((el) => { el.value = '80'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    const j = JSON.parse(await page.evaluate(() => window.__RB_EDITOR__.shell.three.scene.toJSON()));
+    expect(j.objects[0].color.toLowerCase()).toBe('#ff0000');
+    expect(j.objects[0].metalness).toBeGreaterThan(0.5);
+  });
+
+  test('3D: deselect ("set it down") and delete an object', async ({ page }) => {
+    await page.getByTestId('btn-mode-3d').click();
+    await page.getByTestId('three-rail').locator('.rb-quick-btn', { hasText: 'sphere' }).click();
+    await page.getByTestId('three-rail').locator('.rb-lib-card').first().click();
+    await page.getByTestId('inspector-3d').getByText('Set it down').click();
+    await expect(page.getByTestId('inspector-3d')).toContainText('Click an object');
+    await page.getByTestId('three-rail').locator('.rb-lib-card').first().click();
+    await page.getByTestId('inspector-3d').getByText('Delete').click();
+    expect(JSON.parse(await page.evaluate(() => window.__RB_EDITOR__.shell.three.scene.toJSON())).objects.length).toBe(0);
+  });
+
+  test('3D: save scene to stash appears under "Saved" in the live Add panel', async ({ page }) => {
+    await page.addInitScript(() => localStorage.removeItem('rb-user-stash'));
+    await page.getByTestId('btn-mode-3d').click();
+    await page.getByTestId('three-rail').locator('.rb-quick-btn', { hasText: 'torus' }).click();
+    await page.getByTestId('three-rail').getByText('Save scene to stash').click();
+    await page.getByTestId('btn-mode-live').click();
+    await expect(page.getByTestId('element-library').locator('.rb-lib-cat', { hasText: 'saved' })).toBeVisible();
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);

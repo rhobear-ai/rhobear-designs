@@ -23,6 +23,10 @@ const listCategories = () => _ELEMENT_CATS;
 const listElements = (cat) => _ELEMENTS.filter((e) => e.category === cat);
 const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 
+// User stash — items the user saved (e.g. a 3D scene), kept locally + shown in the Add panel.
+function userStash() { try { return JSON.parse(localStorage.getItem('rb-user-stash') || '[]'); } catch (_e) { return []; } }
+function addUserStash(el) { const a = userStash(); a.unshift(el); try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); } catch (_e) {} }
+
 // Quick structural inserts (clean defaults — distinct from the category filters)
 const QUICK = [
   { name: 'Section', html: '<section style="padding:64px 24px"><div style="max-width:1080px;margin:0 auto"><h2 style="margin:0 0 12px">Section title</h2><p style="color:#555;max-width:60ch;line-height:1.6">Body text — double-click to edit.</p></div></section>' },
@@ -110,7 +114,10 @@ export function bootShell() {
   });
 
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
-  const three = createThreeMode({ host: refs.threeHost, railEl: refs.threeRail, inspectorEl: refs.inspector3d, fileInput: refs.file3d, onStatus: setStatus });
+  const three = createThreeMode({
+    host: refs.threeHost, railEl: refs.threeRail, inspectorEl: refs.inspector3d, fileInput: refs.file3d, onStatus: setStatus,
+    onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) {} },
+  });
 
   // templates gallery
   const gallery = createTemplatesGallery({
@@ -260,8 +267,8 @@ export function bootShell() {
     'replace': () => live.beginReplace(),
     'select-parent': () => live.selectParent(),
 
-    'undo': () => { if (mode === 'build') build.undo(); else live.undo(); refreshUndo(); },
-    'redo': () => { if (mode === 'build') build.redo(); else live.redo(); refreshUndo(); },
+    'undo': () => undoCurrent(),
+    'redo': () => redoCurrent(),
     'duplicate': () => { mode === 'build' ? build.duplicate() : live.duplicateSelected(); },
     'delete': () => { mode === 'build' ? build.remove() : live.deleteSelected(); },
 
@@ -363,21 +370,22 @@ export function bootShell() {
   function renderElementLibrary() {
     const host = refs.elementLibrary;
     if (!host) return;
-    const cats = listCategories();
+    const cats = (userStash().length ? ['saved'] : []).concat(listCategories());
     if (!cats || !cats.length) return;
     let active = cats[0];
     const chips = document.createElement('div'); chips.className = 'rb-lib-cats';
     const grid = document.createElement('div'); grid.className = 'rb-lib-grid';
     function renderGrid() {
       grid.innerHTML = '';
-      for (const el of listElements(active)) {
+      const els = active === 'saved' ? userStash() : listElements(active);
+      for (const el of els) {
         const card = document.createElement('button');
         card.type = 'button'; card.className = 'rb-lib-card';
         card.title = `${el.name || el.id} · ${el.category} — click to add or drag onto the canvas`;
         card.innerHTML = `<span class="rb-lib-card__name">${escapeHtml(el.name || el.id)}</span>`;
         card.draggable = true;
-        card.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/plain', el.id); live.beginDragInsert(getElement(el.id)); });
-        card.addEventListener('click', () => live.insertElement(getElement(el.id)));
+        card.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/plain', el.id); live.beginDragInsert(el); });
+        card.addEventListener('click', () => live.insertElement(el));
         grid.appendChild(card);
       }
     }
@@ -459,6 +467,20 @@ export function bootShell() {
     e.preventDefault();
     const p = (refs.aiPrompt.value || '').trim();
     if (p) { refs.aiPrompt.value = ''; sendAi(p); }
+  });
+
+  // ---- global undo/redo + Esc (works in every mode) ----
+  function undoCurrent() { if (mode === '3d') three.undo(); else if (mode === 'build') build.undo(); else live.undo(); refreshUndo(); }
+  function redoCurrent() { if (mode === '3d') three.redo(); else if (mode === 'build') build.redo(); else live.redo(); refreshUndo(); }
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t.getAttribute && t.getAttribute('contenteditable') === 'true'));
+    if (e.key === 'Escape' && !typing) { if (mode === '3d') three.deselect(); else if (mode === 'live') live.deselect(); return; }
+    if (typing) return; // let native text undo work in fields
+    const z = e.key === 'z' || e.key === 'Z';
+    const y = e.key === 'y' || e.key === 'Y';
+    if ((e.ctrlKey || e.metaKey) && z) { e.preventDefault(); if (e.shiftKey) redoCurrent(); else undoCurrent(); }
+    else if ((e.ctrlKey || e.metaKey) && y) { e.preventDefault(); redoCurrent(); }
   });
 
   // boot: live mode + onboarding
