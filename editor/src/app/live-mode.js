@@ -56,6 +56,8 @@ export function createLiveMode(refs) {
   let draggingEl = null;     // existing element being reordered
   let dropLine = null;
   let onOutline = null;
+  let history = []; let hi = -1; let snapTimer = null; let mo = null; let restoring = false;
+  let pickTargetLink = null; let textbar = null; let linkEl = null;
 
   const setStatus = (m) => { if (onStatus) onStatus(m); };
 
@@ -98,7 +100,41 @@ export function createLiveMode(refs) {
     doc.addEventListener('dragend', onDragEnd, true);
     win.addEventListener('scroll', reposition, true);
     refreshOutline();
+    history = []; hi = -1; snap(); startObserving();
   }
+
+  // ---- undo / redo (snapshot the page, cleaned of editor-only attrs) ----
+  function cleanBodyHtml() {
+    const clone = doc.body.cloneNode(true);
+    clone.querySelectorAll('[contenteditable]').forEach((n) => n.removeAttribute('contenteditable'));
+    clone.querySelectorAll('[draggable]').forEach((n) => n.removeAttribute('draggable'));
+    const dl = clone.querySelector('#rb-drop-line'); if (dl) dl.remove();
+    return clone.innerHTML;
+  }
+  function snap() {
+    if (!doc || restoring) return;
+    const html = cleanBodyHtml();
+    if (history[hi] === html) return;
+    history = history.slice(0, hi + 1); history.push(html); hi = history.length - 1;
+    if (history.length > 50) { history.shift(); hi--; }
+  }
+  function snapDebounced() { clearTimeout(snapTimer); snapTimer = setTimeout(snap, 350); }
+  function startObserving() {
+    if (mo) mo.disconnect();
+    mo = new win.MutationObserver(() => { if (!restoring) snapDebounced(); });
+    mo.observe(doc.body, { childList: true, subtree: true, attributes: true, characterData: true });
+  }
+  function restoreSnap(html) {
+    restoring = true;
+    deselect();
+    if (dropLine && dropLine.parentNode) dropLine.remove();
+    doc.body.innerHTML = html;
+    doc.body.appendChild(dropLine);
+    refreshOutline();
+    setTimeout(() => { restoring = false; }, 0);
+  }
+  function undo() { if (hi > 0) { hi--; restoreSnap(history[hi]); setStatus('Undo'); } else setStatus('Nothing to undo'); }
+  function redo() { if (hi < history.length - 1) { hi++; restoreSnap(history[hi]); setStatus('Redo'); } }
 
   function rectOf(el) { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; }
 
@@ -112,9 +148,19 @@ export function createLiveMode(refs) {
   function onClick(e) {
     const el = e.target;
     if (!el || el.nodeType !== 1 || el === dropLine) return;
+    // link-target picking: one click to choose where a link jumps
+    if (pickTargetLink) {
+      e.preventDefault(); e.stopPropagation();
+      if (el !== doc.body && el !== doc.documentElement) {
+        if (!el.id) el.id = 'rb-sec-' + Date.now().toString(36);
+        pickTargetLink.setAttribute('href', '#' + el.id);
+        setStatus(`Link now jumps to #${el.id}`);
+      }
+      pickTargetLink = null; injectStyle('rb-pick', ''); snap();
+      return;
+    }
     if (el.getAttribute('contenteditable') === 'true') return; // let caret work while editing
     e.preventDefault(); e.stopPropagation();
-    // clicking the page background must NOT select the whole body
     if (el === doc.body || el === doc.documentElement) { deselect(); return; }
     selectElement(el);
   }
@@ -127,7 +173,8 @@ export function createLiveMode(refs) {
     el.setAttribute('contenteditable', 'true');
     el.draggable = false;
     el.focus();
-    setStatus('Editing text — click away when done');
+    showTextbar(el);
+    setStatus('Editing text — change font, size, color above; click away when done');
   }
 
   function onFocusOut(e) {
@@ -135,7 +182,7 @@ export function createLiveMode(refs) {
     if (el && el.getAttribute && el.getAttribute('contenteditable') === 'true') {
       el.removeAttribute('contenteditable');
       el.draggable = true;
-      dirty = true;
+      dirty = true; hideTextbar(); snap();
     }
   }
 
@@ -330,7 +377,7 @@ export function createLiveMode(refs) {
       ['↰  Select parent', selectParent],
       ['↑  Move up', () => moveSelected(-1)],
       ['↓  Move down', () => moveSelected(1)],
-      ['✎  Edit text', () => { selectedEl.setAttribute('contenteditable', 'true'); selectedEl.draggable = false; selectedEl.focus(); }],
+      ['✎  Edit text', () => { selectedEl.setAttribute('contenteditable', 'true'); selectedEl.draggable = false; selectedEl.focus(); showTextbar(selectedEl); }],
       ['🗑  Delete', deleteSelected],
     ];
     m.innerHTML = '';
@@ -376,6 +423,70 @@ export function createLiveMode(refs) {
       { label: 'Height', prop: 'height', type: 'text', value: el.style.height || '' },
     ] }));
     inspectorBody.appendChild(renderEffectsSector(el, cs));
+    if (linkInfo()) inspectorBody.appendChild(renderLinkSector());
+  }
+
+  // ---- contextual text toolbar (font / size / color / bold / italic while editing) ----
+  function ensureTextbar() {
+    if (textbar) return textbar;
+    textbar = document.createElement('div'); textbar.className = 'rb-textbar';
+    document.body.appendChild(textbar);
+    return textbar;
+  }
+  function mkBtn(label, fn) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rb-textbar__btn'; b.textContent = label;
+    b.addEventListener('mousedown', (e) => { e.preventDefault(); fn(); });
+    return b;
+  }
+  function showTextbar(el) {
+    const bar = ensureTextbar(); bar.innerHTML = '';
+    const cs = win.getComputedStyle(el);
+    const font = document.createElement('select'); font.className = 'rb-select rb-textbar__font';
+    const f0 = document.createElement('option'); f0.value = ''; f0.textContent = 'Font'; font.appendChild(f0);
+    for (const fo of listFonts()) { const o = document.createElement('option'); o.value = fo.family; o.textContent = fo.family; font.appendChild(o); }
+    font.addEventListener('change', () => { if (font.value) applyFont(font.value); });
+    const size = document.createElement('input'); size.type = 'number'; size.className = 'rb-input rb-textbar__size'; size.min = '8'; size.max = '200';
+    size.value = String(parseInt(cs.fontSize, 10) || 16);
+    size.addEventListener('input', () => setStyle('font-size', size.value + 'px'));
+    const color = document.createElement('input'); color.type = 'color'; color.className = 'rb-swatch'; color.value = rgbToHex(cs.color);
+    color.addEventListener('input', () => setStyle('color', color.value));
+    const bold = mkBtn('B', () => { doc.execCommand('bold'); dirty = true; }); bold.style.fontWeight = '800';
+    const ital = mkBtn('i', () => { doc.execCommand('italic'); dirty = true; }); ital.style.fontStyle = 'italic';
+    bar.appendChild(font); bar.appendChild(size); bar.appendChild(color); bar.appendChild(bold); bar.appendChild(ital);
+    const fr = frame.getBoundingClientRect(); const r = el.getBoundingClientRect();
+    bar.style.top = `${Math.max(56, fr.top + r.top - 46)}px`; bar.style.left = `${fr.left + r.left}px`;
+    bar.classList.add('is-open');
+  }
+  function hideTextbar() { if (textbar) textbar.classList.remove('is-open'); }
+
+  // ---- link editing ----
+  function linkInfo() {
+    if (!selectedEl) { linkEl = null; return null; }
+    linkEl = (selectedEl.tagName === 'A') ? selectedEl : (selectedEl.querySelector ? selectedEl.querySelector('a') : null);
+    return linkEl;
+  }
+  function pageAnchors() {
+    const out = []; if (!doc) return out;
+    doc.querySelectorAll('[id]').forEach((el) => { if (el.id && el.id !== 'rb-drop-line' && el.id.indexOf('rb-edit') !== 0) out.push({ id: el.id }); });
+    return out;
+  }
+  function renderLinkSector() {
+    const body = document.createElement('div');
+    const hf = document.createElement('div'); hf.className = 'rb-field'; hf.innerHTML = '<span class="rb-field__label">Link URL</span>';
+    const hrow = document.createElement('div'); hrow.className = 'rb-field__row';
+    const input = document.createElement('input'); input.className = 'rb-input'; input.value = linkEl.getAttribute('href') || ''; input.placeholder = 'https://… or #section';
+    input.addEventListener('change', () => { linkEl.setAttribute('href', input.value); dirty = true; snap(); setStatus('Link updated'); });
+    hrow.appendChild(input); hf.appendChild(hrow); body.appendChild(hf);
+    const jf = document.createElement('div'); jf.className = 'rb-field'; jf.innerHTML = '<span class="rb-field__label">Jump to a section on this page</span>';
+    const sel = document.createElement('select'); sel.className = 'rb-select';
+    const o0 = document.createElement('option'); o0.value = ''; o0.textContent = '— choose a section —'; sel.appendChild(o0);
+    for (const a of pageAnchors()) { const o = document.createElement('option'); o.value = '#' + a.id; o.textContent = '#' + a.id; sel.appendChild(o); }
+    sel.addEventListener('change', () => { if (sel.value) { linkEl.setAttribute('href', sel.value); input.value = sel.value; dirty = true; snap(); setStatus('Link jumps to ' + sel.value); } });
+    jf.appendChild(sel); body.appendChild(jf);
+    const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'rb-btn'; pick.style.width = '100%'; pick.textContent = '🎯 Pick a spot on the page';
+    pick.addEventListener('click', () => { pickTargetLink = linkEl; injectStyle('rb-pick', 'body *{outline:1px dashed rgba(45,212,191,.5)!important}'); setStatus('Now click the spot this link should jump to'); });
+    body.appendChild(pick);
+    return renderSector({ name: 'Link', open: true, extra: body });
   }
 
   function renderSector(g) {
@@ -505,7 +616,7 @@ export function createLiveMode(refs) {
   return {
     load, deselect, duplicateSelected, deleteSelected, moveSelected, selectParent,
     insertElement, insertImage, beginReplace, beginDragInsert,
-    setOutlineHandler, getOutline, selectNode,
+    setOutlineHandler, getOutline, selectNode, undo, redo,
     getExport, isDirty: () => dirty, hasSelection: () => !!selectedEl, reposition,
   };
 }

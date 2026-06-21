@@ -21,6 +21,18 @@ const listCategories = () => _ELEMENT_CATS;
 const listElements = (cat) => _ELEMENTS.filter((e) => e.category === cat);
 const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 
+// Quick structural inserts (clean defaults — distinct from the category filters)
+const QUICK = [
+  { name: 'Section', html: '<section style="padding:64px 24px"><div style="max-width:1080px;margin:0 auto"><h2 style="margin:0 0 12px">Section title</h2><p style="color:#555;max-width:60ch;line-height:1.6">Body text — double-click to edit.</p></div></section>' },
+  { name: 'Header', html: '<header style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px"><strong>Brand</strong><nav style="display:flex;gap:20px"><a href="#">Home</a><a href="#">About</a><a href="#">Contact</a></nav></header>' },
+  { name: 'Nav', html: '<nav style="display:flex;gap:20px;padding:14px 24px"><a href="#">Home</a><a href="#">Work</a><a href="#">About</a><a href="#">Contact</a></nav>' },
+  { name: 'Footer', html: '<footer style="padding:40px 24px;text-align:center;color:#888">© 2026 Brand · <a href="#">Privacy</a> · <a href="#">Terms</a></footer>' },
+  { name: 'Heading', html: '<h2 style="font-size:2rem;margin:0">Heading</h2>' },
+  { name: 'Text', html: '<p style="line-height:1.6;color:#444">New paragraph — double-click to edit.</p>' },
+  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#2dd4bf;color:#04110f;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
+  { name: 'Image', html: '' },
+];
+
 const $ = (id) => document.getElementById(id);
 const qa = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -232,8 +244,8 @@ export function bootShell() {
     'replace': () => live.beginReplace(),
     'select-parent': () => live.selectParent(),
 
-    'undo': () => { if (mode === 'build') build.undo(); refreshUndo(); },
-    'redo': () => { if (mode === 'build') build.redo(); refreshUndo(); },
+    'undo': () => { if (mode === 'build') build.undo(); else live.undo(); refreshUndo(); },
+    'redo': () => { if (mode === 'build') build.redo(); else live.redo(); refreshUndo(); },
     'duplicate': () => { mode === 'build' ? build.duplicate() : live.duplicateSelected(); },
     'delete': () => { mode === 'build' ? build.remove() : live.deleteSelected(); },
 
@@ -353,6 +365,16 @@ export function bootShell() {
       chips.appendChild(chip);
     }
     host.innerHTML = '';
+    // Quick structural inserts (header / nav / footer / section / …)
+    const quick = document.createElement('div'); quick.className = 'rb-quick';
+    quick.innerHTML = '<span class="rb-field__label">Quick add</span>';
+    const qgrid = document.createElement('div'); qgrid.className = 'rb-quick-grid';
+    for (const q of QUICK) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rb-quick-btn'; b.textContent = q.name;
+      b.addEventListener('click', () => { if (q.name === 'Image') refs.fileImage.click(); else live.insertElement({ name: q.name, html: q.html }); });
+      qgrid.appendChild(b);
+    }
+    quick.appendChild(qgrid); host.appendChild(quick);
     // Media: upload an image or paste an image/GIF URL (bucket browse comes with the media lib)
     const media = document.createElement('div'); media.className = 'rb-media-row';
     const up = document.createElement('button'); up.type = 'button'; up.className = 'rb-btn'; up.style.width = '100%'; up.textContent = '⬆  Add image / media';

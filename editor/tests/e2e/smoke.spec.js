@@ -172,6 +172,37 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     expect(await frame.locator('body').getAttribute('draggable')).not.toBe('true');
   });
 
+  test('quick-add inserts a structural footer', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await page.getByTestId('element-library').locator('.rb-quick-btn', { hasText: 'Footer' }).click();
+    await expect(frame.locator('footer')).toHaveCount(1);
+  });
+
+  test('undo reverts a live-mode insert', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await page.getByTestId('element-library').locator('.rb-quick-btn', { hasText: 'Footer' }).click();
+    await expect(frame.locator('footer')).toHaveCount(1);
+    await page.waitForTimeout(500); // MutationObserver snapshot debounce
+    await page.getByTestId('btn-undo').click();
+    await expect(frame.locator('footer')).toHaveCount(0);
+  });
+
+  test('link editing: Link controls appear and retarget the href', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('a').first().waitFor();
+    await frame.locator('a').first().click();
+    const href = page.getByTestId('inspector-live').locator('input[placeholder*="#section"]');
+    await expect(href).toBeVisible();
+    await href.fill('#contact');
+    await href.blur();
+    expect(await frame.locator('a').first().getAttribute('href')).toBe('#contact');
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);

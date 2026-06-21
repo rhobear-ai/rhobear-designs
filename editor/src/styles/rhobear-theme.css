@@ -376,6 +376,29 @@ html, body {
 
 .rb-media-row { padding: 0 0 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border-soft); }
 
+/* Quick structural inserts */
+.rb-quick { padding-bottom: 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border-soft); }
+.rb-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 5px; }
+.rb-quick-btn {
+  appearance: none; cursor: pointer; border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2);
+  color: var(--rb-text); font: 500 0.68rem var(--rb-font); padding: 7px 4px; border-radius: var(--rb-radius-sm);
+}
+.rb-quick-btn:hover { border-color: var(--rb-brand); background: var(--rb-brand-faint); color: var(--rb-brand-soft); }
+
+/* Contextual text toolbar (while editing text) */
+.rb-textbar {
+  position: fixed; z-index: 40; display: none; align-items: center; gap: 6px; padding: 6px;
+  background: var(--rb-panel-3); border: 1px solid var(--rb-border); border-radius: 999px; box-shadow: var(--rb-shadow);
+}
+.rb-textbar.is-open { display: flex; }
+.rb-textbar__font { width: 120px; }
+.rb-textbar__size { width: 56px; }
+.rb-textbar__btn {
+  appearance: none; cursor: pointer; width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2); color: var(--rb-text); font-size: 0.85rem;
+}
+.rb-textbar__btn:hover { border-color: var(--rb-brand); color: var(--rb-brand-soft); }
+
 /* Element library (the stash) */
 .rb-lib-cats { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .rb-lib-cat {
