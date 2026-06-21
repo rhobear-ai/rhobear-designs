@@ -159,6 +159,19 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     expect(bg).toContain('gradient');
   });
 
+  test('clicking the page background never selects/drags <body>', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await frame.locator('h1').click();
+    await expect(page.getByTestId('inspector-tag')).toContainText('h1');
+    // click empty background → must clear, not select <body>
+    await frame.locator('body').click({ position: { x: 3, y: 3 } });
+    await expect(page.getByTestId('inspector-tag')).not.toContainText('body');
+    // body is never draggable
+    expect(await frame.locator('body').getAttribute('draggable')).not.toBe('true');
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);

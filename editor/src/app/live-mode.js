@@ -114,6 +114,8 @@ export function createLiveMode(refs) {
     if (!el || el.nodeType !== 1 || el === dropLine) return;
     if (el.getAttribute('contenteditable') === 'true') return; // let caret work while editing
     e.preventDefault(); e.stopPropagation();
+    // clicking the page background must NOT select the whole body
+    if (el === doc.body || el === doc.documentElement) { deselect(); return; }
     selectElement(el);
   }
 
@@ -138,6 +140,8 @@ export function createLiveMode(refs) {
   }
 
   function selectElement(el) {
+    // never select/drag the page itself — that's what dragged "everything"
+    if (!el || el.nodeType !== 1 || el === doc.body || el === doc.documentElement) return;
     if (selectedEl && selectedEl !== el) selectedEl.draggable = false;
     selectedEl = el;
     el.draggable = true;
@@ -152,8 +156,9 @@ export function createLiveMode(refs) {
   }
 
   function selectParent() {
-    if (selectedEl && selectedEl.parentElement && selectedEl.parentElement !== doc.body) selectElement(selectedEl.parentElement);
-    else if (selectedEl && selectedEl.parentElement === doc.body) selectElement(doc.body);
+    const p = selectedEl && selectedEl.parentElement;
+    if (p && p !== doc.body && p !== doc.documentElement) selectElement(p);
+    else setStatus('Already at the top-level section');
   }
 
   function deselect() {
@@ -198,9 +203,20 @@ export function createLiveMode(refs) {
     const el = e.target;
     if (dragPayload) return;
     if (!el || el.nodeType !== 1) return;
+    if (el === doc.body || el === doc.documentElement) { e.preventDefault(); return; }
     if (el.getAttribute('contenteditable') === 'true') { e.preventDefault(); return; }
     draggingEl = el; selectElement(el);
-    try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'rb-move'); } catch (_e) {}
+    try {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'rb-move');
+      // small drag image so we don't drag a giant semi-transparent ghost of the whole block
+      const ghost = doc.createElement('div');
+      ghost.textContent = (el.tagName || 'el').toLowerCase();
+      ghost.style.cssText = 'position:absolute;top:-1000px;left:-1000px;padding:4px 9px;background:#2dd4bf;color:#04110f;font:600 12px sans-serif;border-radius:6px';
+      doc.body.appendChild(ghost);
+      e.dataTransfer.setDragImage(ghost, 0, 0);
+      setTimeout(() => ghost.remove(), 0);
+    } catch (_e) {}
   }
   function onDragOver(e) {
     if (!dragPayload && !draggingEl) return;
