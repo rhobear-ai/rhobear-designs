@@ -26,6 +26,14 @@ const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 // User stash — items the user saved (e.g. a 3D scene), kept locally + shown in the Add panel.
 function userStash() { try { return JSON.parse(localStorage.getItem('rb-user-stash') || '[]'); } catch (_e) { return []; } }
 function addUserStash(el) { const a = userStash(); a.unshift(el); try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); } catch (_e) {} }
+// Drop stale pre-fix 3D saves (old format had no data-rb-3d + an opaque bg + a runtime that no longer mounts).
+function migrateUserStash() {
+  try {
+    const a = userStash();
+    const cleaned = a.filter((el) => { const h = String(el.html || ''); return !(h.includes('rb-3d-embed') && !h.includes('data-rb-3d')); });
+    if (cleaned.length !== a.length) localStorage.setItem('rb-user-stash', JSON.stringify(cleaned));
+  } catch (_e) {}
+}
 
 // Quick structural inserts (clean defaults — distinct from the category filters)
 const QUICK = [
@@ -294,12 +302,20 @@ export function bootShell() {
       const c = aiConfig();
       if (c.provider) $('ai-provider').value = c.provider;
       if (c.key) $('ai-key').value = c.key;
+      if ($('ai-baseurl')) $('ai-baseurl').value = c.baseUrl || '';
+      if ($('ai-model')) $('ai-model').value = c.model || '';
+      syncProviderFields();
       refs.aiPanel.classList.remove('is-open'); refs.settingsModal.showModal();
     },
     'settings-close': () => refs.settingsModal.close(),
     'settings-save': () => {
       try {
-        localStorage.setItem('rb-ai', JSON.stringify({ provider: $('ai-provider').value, key: $('ai-key').value }));
+        const cfg = { provider: $('ai-provider').value, key: $('ai-key').value };
+        const bu = $('ai-baseurl') && $('ai-baseurl').value.trim();
+        const md = $('ai-model') && $('ai-model').value.trim();
+        if (bu) cfg.baseUrl = bu;
+        if (md) cfg.model = md;
+        localStorage.setItem('rb-ai', JSON.stringify(cfg));
       } catch (_e) { /* ignore */ }
       refs.settingsModal.close();
       aiRefresh();
@@ -433,6 +449,14 @@ export function bootShell() {
 
   // ---- AI assist (bring-your-own key) ----
   function aiConfig() { try { return JSON.parse(localStorage.getItem('rb-ai') || '{}'); } catch (_e) { return {}; } }
+  // OpenAI-compatible providers need a Base URL + explicit model; native ones don't.
+  function syncProviderFields() {
+    const p = $('ai-provider') && $('ai-provider').value;
+    const custom = p === 'compatible' || p === 'openai';
+    const buRow = $('ai-baseurl-row'); const mdRow = $('ai-model-row');
+    if (buRow) buRow.hidden = p !== 'compatible';
+    if (mdRow) mdRow.hidden = !custom;
+  }
   function addAiMsg(role, text) {
     const el = document.createElement('div');
     el.className = `rb-ai-msg rb-ai-msg--${role}`;
@@ -460,7 +484,7 @@ export function bootShell() {
     const ctx = (mode === 'live') ? live.getSelectionHtml() : (build.getHtmlCss().html || '');
     const user = `${prompt}\n\nSelected element (return its complete replacement if you change it):\n\`\`\`html\n${ctx}\n\`\`\``;
     try {
-      const text = await aiChat({ provider: c.provider, apiKey: c.key, model: c.model, system: SYSTEM_PROMPT, user });
+      const text = await aiChat({ provider: c.provider, apiKey: c.key, model: c.model, baseUrl: c.baseUrl, system: SYSTEM_PROMPT, user });
       const { html, reply } = parseEdit(text);
       pending.textContent = reply;
       if (html && mode === 'live') { if (live.applyAIEdit(html)) setStatus('AI applied a change'); }
@@ -475,6 +499,7 @@ export function bootShell() {
     const p = (refs.aiPrompt.value || '').trim();
     if (p) { refs.aiPrompt.value = ''; sendAi(p); }
   });
+  if ($('ai-provider')) $('ai-provider').addEventListener('change', syncProviderFields);
 
   // ---- global undo/redo + Esc (works in every mode) ----
   function undoCurrent() { if (mode === '3d') three.undo(); else if (mode === 'build') build.undo(); else live.undo(); refreshUndo(); }
@@ -491,6 +516,7 @@ export function bootShell() {
   });
 
   // boot: live mode + onboarding
+  migrateUserStash();
   setMode('live');
   try { renderElementLibrary(); } catch (_e) { /* library optional */ }
   setStatus('Editor ready — open a page or build from scratch');

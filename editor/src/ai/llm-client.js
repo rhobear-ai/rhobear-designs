@@ -9,23 +9,32 @@ export const PROVIDER_MODELS = {
   anthropic: 'claude-sonnet-4-6',
   openai: 'gpt-4o',
   google: 'gemini-2.0-flash',
+  compatible: 'MiniMax-M3',
 };
 
 export const PROVIDER_LABELS = {
   anthropic: 'Anthropic (Claude)',
   openai: 'OpenAI',
   google: 'Google (Gemini)',
+  compatible: 'OpenAI-compatible (MiniMax, etc.)',
+};
+
+/** Default base URLs for OpenAI-style providers (no trailing slash). */
+export const PROVIDER_BASE_URLS = {
+  openai: 'https://api.openai.com/v1',
+  compatible: 'https://api.minimax.io/v1',
 };
 
 /**
- * @param {{provider:string, apiKey:string, model?:string, system:string, user:string}} opts
+ * @param {{provider:string, apiKey:string, model?:string, system:string, user:string, baseUrl?:string}} opts
  * @returns {Promise<string>} assistant text
  */
-export async function chat({ provider, apiKey, model, system, user }) {
+export async function chat({ provider, apiKey, model, system, user, baseUrl }) {
   if (!apiKey) throw new Error('No API key set — add one in settings.');
   const m = model || PROVIDER_MODELS[provider];
   if (provider === 'anthropic') return anthropic(apiKey, m, system, user);
-  if (provider === 'openai') return openai(apiKey, m, system, user);
+  if (provider === 'openai') return openai(apiKey, m, system, user, baseUrl || PROVIDER_BASE_URLS.openai);
+  if (provider === 'compatible') return openai(apiKey, m, system, user, baseUrl || PROVIDER_BASE_URLS.compatible);
   if (provider === 'google') return google(apiKey, m, system, user);
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -46,14 +55,25 @@ async function anthropic(key, model, system, user) {
   return (d.content || []).map((c) => c.text || '').join('');
 }
 
-async function openai(key, model, system, user) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
-  });
+async function openai(key, model, system, user, baseUrl) {
+  const root = String(baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
+  const url = `${root}/chat/completions`;
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+    });
+  } catch (e) {
+    // "Failed to fetch" = network/CORS, not an HTTP error — give an actionable message.
+    throw new Error(
+      `Could not reach ${root} — the request was blocked before a response (network down, bad Base URL, ` +
+      `or the provider doesn't allow browser/CORS calls). Check the Base URL in settings.`
+    );
+  }
   const d = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((d.error && d.error.message) || `OpenAI error ${res.status}`);
+  if (!res.ok) throw new Error((d.error && d.error.message) || `Provider error ${res.status}`);
   return d.choices && d.choices[0] && d.choices[0].message ? d.choices[0].message.content : '';
 }
 

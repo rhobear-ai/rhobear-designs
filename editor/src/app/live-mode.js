@@ -78,6 +78,8 @@ export function createLiveMode(refs) {
     injectStyle('rb-edit-transitions', EDIT_TRANSITIONS);
     injectStyle('rb-edit-cursor', EDIT_CURSOR);
     injectStyle('rb-overrides', '');
+    // force any 3D embed transparent (older saves had an opaque black bg inline)
+    injectStyle('rb-embed-fix', '.rb-3d-embed{background:transparent!important}');
     dropLine = doc.createElement('div'); dropLine.id = 'rb-drop-line';
     dropLine.style.cssText = 'position:fixed;height:3px;background:#2dd4bf;z-index:2147483647;pointer-events:none;box-shadow:0 0 8px #2dd4bf;display:none';
     doc.body.appendChild(dropLine);
@@ -319,6 +321,7 @@ export function createLiveMode(refs) {
   function insertElement(elObj, atTarget, after) {
     if (!doc || !elObj) return;
     const node = nodeFromElObj(elObj);
+    if (node.classList && node.classList.contains('rb-3d-embed')) node.style.background = 'transparent';
     if (pendingReplace && selectedEl && selectedEl.parentNode) {
       selectedEl.parentNode.replaceChild(node, selectedEl);
       pendingReplace = false; dirty = true; setStatus(`Replaced with ${elObj.name || 'element'}`);

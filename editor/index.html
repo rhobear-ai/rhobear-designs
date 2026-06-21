@@ -195,7 +195,18 @@
             <option value="anthropic">Anthropic (Claude)</option>
             <option value="openai">OpenAI</option>
             <option value="google">Google (Gemini)</option>
+            <option value="compatible">OpenAI-compatible (MiniMax, etc.)</option>
           </select>
+        </div>
+        <div class="rb-setting" id="ai-baseurl-row" hidden>
+          <span class="rb-setting__label">Base URL</span>
+          <input type="text" class="rb-input" id="ai-baseurl" placeholder="https://api.minimax.io/v1" data-testid="ai-baseurl" />
+          <span class="rb-setting__hint">The provider's OpenAI-compatible endpoint root (no <code>/chat/completions</code>). Must allow browser/CORS calls.</span>
+        </div>
+        <div class="rb-setting" id="ai-model-row" hidden>
+          <span class="rb-setting__label">Model</span>
+          <input type="text" class="rb-input" id="ai-model" placeholder="MiniMax-M3" data-testid="ai-model" />
+          <span class="rb-setting__hint">Exact model id the provider expects.</span>
         </div>
         <div class="rb-setting">
           <span class="rb-setting__label">API key</span>
