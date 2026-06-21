@@ -18,6 +18,7 @@ import { importHtml, exportHtml } from '../engine/io.js';
 import { createOverlay } from '../engine/overlay.js';
 import { computeSelectorPath, isTextEditableTag } from '../engine/inline-edit.js';
 import { createOverrideStore, toStylesheet } from '../engine/style-overrides.js';
+import { listFonts, getFont, fontStack } from '../library/fonts/index.js';
 
 const EDIT_TRANSITIONS =
   '*{transition:background-color .25s ease,color .25s ease,border-color .25s ease,' +
@@ -62,14 +63,20 @@ export function createLiveMode(refs) {
     injectStyle('rb-edit-transitions', EDIT_TRANSITIONS);
     ensureOverrideStyle();
 
-    // overlay tracking the iframe
+    // overlay tracking the iframe. overlayEl COINCIDES with the iframe (inset:0
+    // over it), so the overlay's coordinate origin is already the iframe's
+    // top-left — pass a zero-origin box so the engine doesn't add the iframe's
+    // parent-viewport offset again (that double-offset was the ~1-line drop).
     if (overlay) overlay.destroy();
-    overlay = createOverlay(overlayEl, frame);
+    overlay = createOverlay(overlayEl, frame, {
+      fixedIframeBox: { x: 0, y: 0, width: overlayEl.clientWidth, height: overlayEl.clientHeight },
+    });
 
     // interaction listeners (same-origin srcdoc → direct)
     doc.addEventListener('mousemove', onHover, true);
     doc.addEventListener('mouseleave', () => overlay && overlay.showHover(null));
     doc.addEventListener('click', onClick, true);
+    doc.addEventListener('contextmenu', onContext, true);
     doc.addEventListener('input', onInlineInput, true);
     win.addEventListener('scroll', reposition, true);
   }
@@ -147,9 +154,14 @@ export function createLiveMode(refs) {
     if (selectedEl && overlay) overlay.showSelection(rectOf(selectedEl));
   }
   function setStyle(prop, value) {
-    if (!selectedPath) return;
-    store.setStyle(selectedPath, prop, value);
-    applyOverrideStylesheet();
+    if (!selectedEl) return;
+    // Apply inline for reliable, immediate, high-specificity effect (Fill /
+    // Text / Spacing / Effects all "just work" — beats the page's own CSS).
+    try { selectedEl.style.setProperty(prop, value); } catch (_e) { /* invalid value */ }
+    // Also record in the override store for clean export + future AI/undo.
+    if (selectedPath) { store.setStyle(selectedPath, prop, value); applyOverrideStylesheet(); }
+    dirty = true;
+    if (overlay && selectedEl) overlay.showSelection(rectOf(selectedEl));
   }
 
   // ---- intent inspector (clean, no dial-wall) ----
@@ -161,6 +173,7 @@ export function createLiveMode(refs) {
         { label: 'Background', prop: 'background-color', type: 'color', value: cs.backgroundColor },
       ]},
       { id: 'text', name: 'Text', open: true, fields: [
+        { label: 'Font', prop: 'font-family', type: 'font', value: cs.fontFamily },
         { label: 'Color', prop: 'color', type: 'color', value: cs.color },
         { label: 'Size', prop: 'font-size', type: 'text', value: cs.fontSize },
         { label: 'Weight', prop: 'font-weight', type: 'select', value: cs.fontWeight,
@@ -208,7 +221,16 @@ export function createLiveMode(refs) {
     label.className = 'rb-field__label'; label.textContent = f.label;
     const row = document.createElement('div'); row.className = 'rb-field__row';
     let input;
-    if (f.type === 'select') {
+    if (f.type === 'font') {
+      input = document.createElement('select'); input.className = 'rb-select';
+      const cur = document.createElement('option'); cur.value = ''; cur.textContent = '— font —';
+      input.appendChild(cur);
+      for (const fo of listFonts()) {
+        const o = document.createElement('option'); o.value = fo.family; o.textContent = fo.family;
+        input.appendChild(o);
+      }
+      input.addEventListener('change', () => { if (input.value) applyFont(input.value); });
+    } else if (f.type === 'select') {
       input = document.createElement('select'); input.className = 'rb-select';
       for (const o of f.options) {
         const opt = document.createElement('option'); opt.value = o; opt.textContent = o;
@@ -259,6 +281,77 @@ export function createLiveMode(refs) {
     selectedEl.parentNode.removeChild(selectedEl);
     deselect(); dirty = true; setStatus('Deleted element');
   }
+  function moveSelected(dir) {
+    const el = selectedEl; if (!el || !el.parentNode) return;
+    if (dir < 0 && el.previousElementSibling) el.parentNode.insertBefore(el, el.previousElementSibling);
+    else if (dir > 0 && el.nextElementSibling) el.parentNode.insertBefore(el.nextElementSibling, el);
+    dirty = true; reposition(); positionFloatbar(el); setStatus('Moved element');
+  }
+
+  // ---- insert from the element library (chips/buttons/cards/sections…) ----
+  function insertElement(elObj) {
+    if (!doc || !elObj) return;
+    if (elObj.css) {
+      const cur = doc.getElementById('rb-lib-css');
+      injectStyle('rb-lib-css', (cur ? cur.textContent : '') + '\n' + elObj.css);
+    }
+    const tmp = doc.createElement('div');
+    tmp.innerHTML = String(elObj.html || '').trim();
+    const node = tmp.firstElementChild || tmp;
+    const container = (selectedEl && /^(div|section|main|article|aside|nav|footer|header|ul|ol|form|body)$/i.test(selectedEl.tagName))
+      ? selectedEl : doc.body;
+    container.appendChild(node);
+    dirty = true; setStatus(`Inserted ${elObj.name || 'element'}`);
+    try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
+    selectElement(node);
+  }
+
+  // ---- fonts (load into the iframe + apply) ----
+  function loadFontInFrame(family) {
+    const f = getFont(family); if (!f || !doc) return;
+    const id = 'rb-font-' + family.replace(/\W+/g, '-');
+    if (doc.getElementById(id)) return;
+    const link = doc.createElement('link'); link.id = id; link.rel = 'stylesheet'; link.href = f.cssUrl;
+    doc.head.appendChild(link);
+  }
+  function applyFont(family) { loadFontInFrame(family); setStyle('font-family', fontStack(family)); }
+
+  // ---- right-click context menu ----
+  let ctxEl = null;
+  function ensureCtx() {
+    if (ctxEl) return ctxEl;
+    ctxEl = document.createElement('div');
+    ctxEl.className = 'rb-ctx';
+    document.body.appendChild(ctxEl);
+    document.addEventListener('click', hideCtx, true);
+    window.addEventListener('blur', hideCtx);
+    return ctxEl;
+  }
+  function hideCtx() { if (ctxEl) ctxEl.classList.remove('is-open'); }
+  function onContext(e) {
+    e.preventDefault();
+    const el = e.target; if (!el || el.nodeType !== 1) return;
+    selectElement(el);
+    const fr = frame.getBoundingClientRect();
+    const m = ensureCtx();
+    const items = [
+      ['⧉  Duplicate', () => duplicateSelected()],
+      ['↑  Move up', () => moveSelected(-1)],
+      ['↓  Move down', () => moveSelected(1)],
+      ['✎  Edit text', () => { if (selectedEl) { selectedEl.setAttribute('contenteditable', 'true'); selectedEl.focus(); } }],
+      ['🗑  Delete', () => deleteSelected()],
+    ];
+    m.innerHTML = '';
+    for (const [label, fn] of items) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'rb-ctx__item'; b.textContent = label;
+      b.addEventListener('click', (ev) => { ev.stopPropagation(); hideCtx(); fn(); });
+      m.appendChild(b);
+    }
+    m.style.left = `${fr.left + e.clientX}px`;
+    m.style.top = `${fr.top + e.clientY}px`;
+    m.classList.add('is-open');
+  }
 
   // ---- export ----
   function captureEditedHtml() {
@@ -284,7 +377,7 @@ export function createLiveMode(refs) {
   function isDirty() { return dirty; }
   function hasSelection() { return !!selectedEl; }
 
-  return { load, deselect, duplicateSelected, deleteSelected, getExport, isDirty, hasSelection, reposition };
+  return { load, deselect, duplicateSelected, deleteSelected, moveSelected, insertElement, getExport, isDirty, hasSelection, reposition };
 }
 
 /** Best-effort rgb()/hex → #hex for <input type=color>. */

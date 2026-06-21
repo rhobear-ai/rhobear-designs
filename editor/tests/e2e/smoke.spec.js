@@ -67,6 +67,19 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await expect(page.getByTestId('inspector-live')).toBeVisible();
   });
 
+  test('element library: categories render and a card inserts into the live page', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    const lib = page.getByTestId('element-library');
+    await expect(lib.locator('.rb-lib-cat').first()).toBeVisible();
+    const beforeSections = await frame.locator('section, div, button, a').count();
+    await lib.locator('.rb-lib-card').first().click();
+    // insertion grows the DOM and auto-selects the new element (inspector opens)
+    await expect.poll(async () => frame.locator('section, div, button, a').count()).toBeGreaterThan(beforeSections);
+    await expect(page.getByTestId('inspector')).not.toHaveClass(/is-hidden/);
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);

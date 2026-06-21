@@ -8,6 +8,15 @@ import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { createLiveMode } from './live-mode.js';
 import { createBuildMode } from './build-mode.js';
+// Import the element manifest JSON directly — the library's index.js loader is
+// node:fs-based (browser-incompatible); Vite bundles JSON natively.
+import elementsManifest from '../library/elements/manifest.json';
+
+const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
+const _ELEMENT_CATS = [...new Set(_ELEMENTS.map((e) => e.category))];
+const listCategories = () => _ELEMENT_CATS;
+const listElements = (cat) => _ELEMENTS.filter((e) => e.category === cat);
+const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 
 const $ = (id) => document.getElementById(id);
 const qa = (sel) => Array.from(document.querySelectorAll(sel));
@@ -34,6 +43,7 @@ export function bootShell() {
     fileHtml: $('file-html'),
     fileFolder: $('file-folder'),
     fileImage: $('file-image'),
+    elementLibrary: $('element-library'),
   };
 
   let mode = 'live';
@@ -229,8 +239,47 @@ export function bootShell() {
     refs.fileImage.value = '';
   });
 
+  // element library (the stash) in the live-mode Add rail
+  function renderElementLibrary() {
+    const host = refs.elementLibrary;
+    if (!host) return;
+    const cats = listCategories();
+    if (!cats || !cats.length) return;
+    let active = cats[0];
+    const chips = document.createElement('div'); chips.className = 'rb-lib-cats';
+    const grid = document.createElement('div'); grid.className = 'rb-lib-grid';
+    function renderGrid() {
+      grid.innerHTML = '';
+      for (const el of listElements(active)) {
+        const card = document.createElement('button');
+        card.type = 'button'; card.className = 'rb-lib-card';
+        card.title = `${el.name || el.id} · ${el.category}`;
+        card.innerHTML = `<span class="rb-lib-card__name">${escapeHtml(el.name || el.id)}</span>`;
+        card.addEventListener('click', () => live.insertElement(getElement(el.id)));
+        grid.appendChild(card);
+      }
+    }
+    for (const c of cats) {
+      const chip = document.createElement('button');
+      chip.type = 'button'; chip.className = 'rb-lib-cat' + (c === active ? ' is-active' : '');
+      chip.textContent = c;
+      chip.addEventListener('click', () => {
+        active = c;
+        host.querySelectorAll('.rb-lib-cat').forEach((x) => x.classList.toggle('is-active', x.textContent === c));
+        renderGrid();
+      });
+      chips.appendChild(chip);
+    }
+    host.innerHTML = '';
+    const hint = document.createElement('p'); hint.className = 'rb-lib-hint';
+    hint.textContent = 'Click to add. Select a container first to nest inside it.';
+    host.appendChild(chips); host.appendChild(hint); host.appendChild(grid);
+    renderGrid();
+  }
+
   // boot: live mode + onboarding
   setMode('live');
+  try { renderElementLibrary(); } catch (_e) { /* library optional */ }
   setStatus('Editor ready — open a page or build from scratch');
 
   return { setMode, live, build, get mode() { return mode; } };

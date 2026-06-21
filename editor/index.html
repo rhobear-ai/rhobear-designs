@@ -68,11 +68,8 @@
             <div class="rb-rail__pane is-active" data-rail-pane="add" data-testid="rail-pane-add">
               <!-- Build mode: GrapesJS blocks -->
               <div id="gjs-blocks" data-build-only></div>
-              <!-- Live mode: quick add hint -->
-              <div data-live-only class="is-gone">
-                <p class="rb-modal__hint" style="padding:6px 2px">Editing a live page. Click any element on the canvas to select it, then edit text inline or restyle it in the inspector.</p>
-                <button type="button" class="rb-btn" data-action="open-html" style="width:100%">Open a different page…</button>
-              </div>
+              <!-- Live mode: element library (the stash) -->
+              <div data-live-only class="is-gone" id="element-library" data-testid="element-library"></div>
             </div>
             <div class="rb-rail__pane" data-rail-pane="layers" data-testid="rail-pane-layers">
               <div id="gjs-layers"></div>
