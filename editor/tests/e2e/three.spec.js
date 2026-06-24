@@ -9,7 +9,7 @@
  *
  *         1. addPrimitive('box')
  *         2. select the new box
- *         3. setColor('#2dd4bf')  — verify the material color changed
+ *         3. setColor('#e94560')  — verify the material color changed
  *         4. listObjects()       — verify the box is listed
  *         5. toJSON() / fromJSON() round-trip — verify state survives
  *
@@ -80,7 +80,7 @@ test.describe('3D engine — own Three.js scene', () => {
       // 2. select it
       h.select(id);
       // 3. recolor
-      h.setColor(id, '#2dd4bf');
+      h.setColor(id, '#e94560');
       // 4. check listObjects() shape
       const list = h.listObjects();
       // 5. check the material color changed (the engine stores
@@ -99,8 +99,8 @@ test.describe('3D engine — own Three.js scene', () => {
     expect(result.list.length).toBe(1);
     expect(result.list[0]).toMatchObject({ id: result.id, type: 'box' });
     expect(result.list[0].name).toMatch(/^box/);
-    expect(result.liveColor).toBe('2dd4bf', 'material.color.getHexString() should match');
-    expect(result.entryColor).toBe('#2dd4bf', 'registry entry color should match');
+    expect(result.liveColor).toBe('e94560', 'material.color.getHexString() should match');
+    expect(result.entryColor).toBe('#e94560', 'registry entry color should match');
     expect(result.selected).toBe(result.id, 'getSelected() should return the box id');
   });
 
