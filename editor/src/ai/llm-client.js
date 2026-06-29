@@ -5,6 +5,11 @@
  * without it; with a key, the assistant returns edits the editor applies.
  * MIT — RHOBEAR Designs (original)
  */
+
+// External provider endpoints — fully-qualified third-party URLs.
+// NOT internal RHOBEAR routes (so no backend route is expected for these).
+const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
+
 export const PROVIDER_MODELS = {
   anthropic: 'claude-sonnet-4-6',
   openai: 'gpt-4o',
@@ -83,7 +88,7 @@ export async function testConnection({ provider, apiKey, model, baseUrl }) {
 }
 
 async function anthropic(key, model, system, user) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(ANTHROPIC_MESSAGES_URL, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
