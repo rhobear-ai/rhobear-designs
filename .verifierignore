@@ -1,0 +1,9 @@
+# RHOBEAR Verifier ignore — exclude code that is not ours to gate on.
+# Vendored third-party libraries (e.g. GrapesJS dist) — upstream code, not RHOBEAR-authored.
+**/vendor/**
+editor/src/vendor/
+# Minified / bundled dist artifacts.
+**/*.min.js
+**/dist/**
+# Model-generated demo/sample output — evidence, not authored source.
+samples/

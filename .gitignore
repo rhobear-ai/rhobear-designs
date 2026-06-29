@@ -1,0 +1,9 @@
+editor/node_modules/
+editor/dist/
+editor/test-results/
+editor/playwright-report/
+.DS_Store
+*.log
+# Runtime data (API generates these)
+service/data/
+.code-graph/

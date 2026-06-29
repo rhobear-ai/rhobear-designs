@@ -1,0 +1,19 @@
+
+## 2026-06-20T22:33:08Z -- review_closed -- W2 live-fidelity engine
+neo-sweep-20260620-222130 merged into build/editor-v1: PR #5 e2-live-render, PR #6 e2-override-serializer.
+3rd lane e2-overlay-picker: lane=DONE rc=0 2026-06-20T22:32:02Z PR=#7 OPEN. W2 INCOMPLETE until it lands.
+FLAG: verify-gate (build/tests + path check, as W1 needed) + W3 dispatch DEFERRED to next full wake / owner. Do not advance yet.
+
+## 2026-06-20T23:12:42Z -- review_closed -- w3-roundout: w3-modeb-wire PR #8 MERGED (Mode-B mount API over vendored GrapesJS). 1/3 W3 lanes in; w3-import-export + w3-fidelity-tests still pending. NOT advancing -- W3 verify gate runs when all 3 land.
+
+## 2026-06-20T23:14:37Z -- wave_done -- w3-roundout: all 3 lanes merged (PRs #8/#9/#10: mode-b, import/export, fidelity-tests). VERIFY GATE: ci=ok build=ok core=ok engine=ok fidelity=ok. LAST swarm wave done -- UX phase (owner+Iron Man, by hand) is next.
+
+## 2026-06-21T00:47:45Z -- review_closed -- w-gen-samples: gen-b-craft PR #15 MERGED (7 new templates: Resn, Hello Monday, Build in Amsterdam, Cuberto, 14islands, Exo Ape, Robin Noguier). gen-a/gen-c still in flight. Expected.
+
+##  -- review_closed -- gen-a
+gen-a-studios PR #16 MERGED into build/editor-v1 (7 template recreations: Lusion, Active Theory, Locomotive, Immersive Garden, makemepulse, Aristide Benoist, Dogstudio). Expected — part of the dispatched generation wave; now in the template gallery. Nothing open/bounced.
+
+## 2026-06-21T02:12:29Z -- review_closed -- neo-sweep-20260621-014729
+an1-pattern-analysis PR #19 MERGED: template interaction-pattern map (patterns.json) + RECOMMENDATIONS.md landed — foundation for the next-round scroll-control + 3D rotate/roughness/spin tools. (ai-spinners #14 = rhobear-plans, not my lane; ignored.)
+
+## 2026-06-21T03:29:27Z -- review_closed -- le2-stash-expand #20: element stash expansion MERGED (targeting 250+ elements; expected, I dispatched it). No bounces/open. tn1(thumbs) + td1(3D core) still building.

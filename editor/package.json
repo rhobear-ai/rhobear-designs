@@ -1,0 +1,72 @@
+{
+  "name": "@rhobear/designs-editor",
+  "version": "1.0.0",
+  "description": "Free, MIT-licensed Canva-style website editor — Edit Live Site, Build from scratch, 3D Studio. Three modes, owned Three.js engine, BYO-LLM AI assist, 62 templates, 351-element stash, 52 open-license fonts. 100% client-side, no backend.",
+  "license": "MIT",
+  "type": "module",
+  "author": "RHOBEAR Designs (https://github.com/deariencampbell1-sys/rhobear-designs)",
+  "homepage": "https://github.com/deariencampbell1-sys/rhobear-designs#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deariencampbell1-sys/rhobear-designs.git",
+    "directory": "editor"
+  },
+  "bugs": {
+    "url": "https://github.com/deariencampbell1-sys/rhobear-designs/issues"
+  },
+  "keywords": [
+    "website-editor",
+    "visual-editor",
+    "grapesjs",
+    "three",
+    "threejs",
+    "3d",
+    "webgl",
+    "no-code",
+    "low-code",
+    "design-tool",
+    "page-builder",
+    "byo-llm",
+    "ai-assistant",
+    "static-site",
+    "mit",
+    "open-source",
+    "rhobear",
+    "rhobear-designs"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "start": "vite preview --port 4173 --host",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "files": [
+    "index.html",
+    "vite.config.js",
+    "playwright.config.js",
+    "LICENSE",
+    "README.md",
+    "DEPLOY.md",
+    "src/",
+    "tests/"
+  ],
+  "dependencies": {
+    "file-saver": "^2.0.5",
+    "grapesjs": "^0.22.6",
+    "grapesjs-blocks-basic": "^1.0.2",
+    "grapesjs-custom-code": "^1.0.2",
+    "grapesjs-plugin-forms": "^2.0.6",
+    "grapesjs-preset-webpage": "^1.0.3",
+    "jszip": "^3.10.1",
+    "three": "^0.171.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "vite": "^6.3.5"
+  }
+}

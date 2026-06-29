@@ -1,0 +1,20 @@
+{
+  "name": "@rhobear/editor-library-media",
+  "version": "0.0.0",
+  "description": "Headless media library — a curated catalog of free/open-license images + tasteful CSS gradients (referenced by URL only, no bundled binaries), plus a BYO Giphy/Tenor search client. Pure data + loaders, no UI, no secrets.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./_entry.js",
+  "exports": {
+    ".": "./index.js",
+    "./gif-provider": "./gif-provider.js",
+    "./gif-provider.js": "./gif-provider.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "gif-provider.js",
+    "catalog.json",
+    "README.md"
+  ]
+}
