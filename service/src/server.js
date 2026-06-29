@@ -47,8 +47,10 @@ const server = http.createServer(async (req, res) => {
   if (!isPublic && !isPublicPageRead) {
     const auth = checkAuth(req);
     if (!auth.ok) {
-      if (auth.reason === 'unconfigured') return fail(res, 503, 'unconfigured',
-        'RHOBEAR_SERVICE_TOKEN is not set on the server — the agent API is fail-closed and refuses all calls until a token is configured.');
+      if (auth.reason === 'unconfigured') {
+        return fail(res, 503, 'unconfigured',
+          'RHOBEAR_SERVICE_TOKEN is not set on the server — the agent API is fail-closed and refuses all calls until a token is configured.');
+      }
       return fail(res, 401, 'unauthorized',
         'Missing or invalid `Authorization: Bearer $RHOBEAR_SERVICE_TOKEN`');
     }
