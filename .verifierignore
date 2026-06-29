@@ -1,6 +1,7 @@
-# .verifierignore — vendored third-party code excluded from static analysis.
-# These are unmodified upstream dependencies that we vendor for build
-# reproducibility. We cannot fix upstream empty-catch blocks or route patterns.
-
-# GrapesJS vendored engine (including minified dist/ bundles)
-editor/src/vendor/grapesjs/
+# RHOBEAR Verifier ignore — exclude code that is not ours to gate on.
+# Vendored third-party libraries (e.g. GrapesJS dist) — upstream code, not RHOBEAR-authored.
+**/vendor/**
+editor/src/vendor/
+# Minified / bundled dist artifacts.
+**/*.min.js
+**/dist/**
