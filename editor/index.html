@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RHOBEAR Designs — Website Editor</title>
+
+    <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#e94560" />
+    <meta name="description" content="Free, MIT-licensed Canva-style website editor — Edit Live, Build, 3D Studio. 100% client-side, BYO-LLM AI assist." />
+    <link rel="icon" href="icons/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="RHOBEAR Designs" />
+    <script>
+      // Register the service worker (required for installability). Scope is the
+      // page directory, so this works at any base path (incl. Pages subpaths).
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function () {});
+        });
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
