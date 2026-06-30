@@ -1,0 +1,22 @@
+{
+  "id": "rhobear-designs",
+  "name": "RHOBEAR Designs",
+  "short_name": "Designs",
+  "description": "Free, MIT-licensed Canva-style website editor — Edit Live Site, Build from scratch, 3D Studio. 100% client-side, BYO-LLM AI assist.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "background_color": "#08080a",
+  "theme_color": "#e94560",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "graphics", "developer"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
