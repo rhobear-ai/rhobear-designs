@@ -58,7 +58,9 @@ export const EDITOR_TOOLS = Object.freeze([
     name: 'replace_selection',
     description:
       'Replace the currently selected element with new, COMPLETE, self-contained HTML ' +
-      '(inline styles only). Preserve the element\'s intent; make it tasteful.',
+      '(inline styles only). Preserve the element\'s intent; make it premium and showcase-grade — ' +
+      'hold the art-director bar (type scale, generous space, one confident accent, soft radii, a whisper ' +
+      'of depth, a light transition).',
     parameters: {
       type: 'object',
       properties: { html: { type: 'string', description: 'The full replacement HTML for the selected element.' } },
@@ -85,12 +87,18 @@ const TOOL_BY_NAME = new Map(EDITOR_TOOLS.map((t) => [t.name, t]));
 
 /** System prompt for tool mode — tells the model the loop exists and to use it. */
 export const TOOLS_SYSTEM_PROMPT =
-  'You are a web-design assistant wired DIRECTLY into a live visual website editor through a set of ' +
-  'tools. The user is editing a real web page. Prefer ACTING over describing: call get_page_outline to ' +
-  'see the page, get_selection_html to read the target, select_element to choose what to change, then ' +
-  'replace_selection or insert_html to make the change. Replacement/inserted HTML must be complete and ' +
-  'self-contained with inline styles. When the work is done, reply with one short sentence describing ' +
-  'what you changed. If the user only asks a question, just answer — no tool calls.';
+  'You are a SENIOR ART DIRECTOR wired DIRECTLY into a live visual website editor through a set of tools. ' +
+  'The user is editing a real web page. Prefer ACTING over describing: call get_page_outline to see the ' +
+  'page, get_selection_html to read the target, select_element to choose it, then replace_selection or ' +
+  'insert_html to make the change.\n' +
+  'THE PREMIUM BAR — every change must look award-winning / portfolio-grade: a real type scale and ' +
+  'hierarchy (body line-height 1.4–1.7), generous intentional whitespace, a restrained cohesive palette ' +
+  'with ONE confident accent (no default browser blue, no pure #000/#fff — considered near-blacks/off-' +
+  'whites), soft radii with a WHISPER of depth (subtle shadow or hairline, not heavy boxes), a light CSS ' +
+  'transition on interactive elements, and REAL specific copy in the user\'s voice (no lorem, no clip-art ' +
+  'emoji as icons, no rainbow gradients). Commit fully to any GENERATION STYLE named. ' +
+  'Replacement/inserted HTML must be complete and self-contained with inline styles. When done, reply with ' +
+  'one short sentence. If the user only asks a question, just answer — no tool calls.';
 
 /**
  * Emit the tools in OpenAI/MiniMax function-calling shape:

@@ -91,27 +91,53 @@ export function requirePro(featureLabel, onAllowed) {
 // ── the upgrade / buy modal (injected — no index.html surgery needed) ─────────
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function buildModal() {
+  if (!document.getElementById('rb-pro-modal-style')) {
+    const st = document.createElement('style'); st.id = 'rb-pro-modal-style';
+    st.textContent = `
+      #rb-pro-modal{border:none;background:transparent;padding:0;max-width:460px;width:calc(100% - 2rem);color:#e8eef2;font:inherit}
+      #rb-pro-modal::backdrop{background:rgba(6,9,13,.66);backdrop-filter:blur(3px)}
+      .rb-pro-card{position:relative;background:linear-gradient(180deg,#131a22,#0d131a);border:1px solid rgba(233,69,96,.28);border-radius:20px;padding:1.5rem 1.5rem 1.35rem;box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset,0 0 44px -18px rgba(233,69,96,.45)}
+      .rb-pro-card__head{display:flex;align-items:flex-start;justify-content:space-between}
+      .rb-pro-card__title{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
+      .rb-pro-card__title small{display:block;font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#e94560;margin-bottom:.2rem}
+      .rb-pro-card__x{background:transparent;border:0;color:#9db0bb;font-size:1.05rem;cursor:pointer;line-height:1;padding:.15rem .3rem;border-radius:8px}
+      .rb-pro-card__x:hover{color:#e8eef2;background:rgba(151,183,196,.1)}
+      .rb-pro-note{color:#e94560;font-weight:600;margin:.35rem 0 0;font-size:.9rem}
+      .rb-pro-feats{list-style:none;padding:0;margin:1rem 0 1.15rem;display:grid;gap:.7rem}
+      .rb-pro-feats li{display:grid;grid-template-columns:1rem 1fr;gap:.55rem;align-items:start}
+      .rb-pro-feats b.d{color:#e94560;font-size:.85rem;line-height:1.55}
+      .rb-pro-feats .t{font-weight:600}
+      .rb-pro-feats .s{opacity:.62;font-size:.87em;display:block;margin-top:.12rem;line-height:1.4}
+      .rb-pro-buy{display:block;text-align:center;text-decoration:none;font-weight:700;color:#fff;background:linear-gradient(135deg,#f0576f,#d5324c);border-radius:12px;padding:.85rem 1rem;letter-spacing:.01em;box-shadow:0 8px 24px -8px rgba(233,69,96,.6);transition:transform .12s ease,filter .12s ease}
+      .rb-pro-buy:hover{transform:translateY(-1px);filter:brightness(1.06)}
+      .rb-pro-redeem{margin-top:1.15rem;border-top:1px solid rgba(151,183,196,.12);padding-top:1rem}
+      .rb-pro-redeem label{font-size:.82rem;color:#9db0bb}
+      .rb-pro-redeem .row{display:flex;gap:.45rem;margin-top:.45rem}
+      .rb-pro-redeem input{flex:1;background:#0a0e13;border:1px solid rgba(151,183,196,.18);border-radius:9px;padding:.55rem .7rem;color:#e8eef2;font-size:.9rem}
+      .rb-pro-redeem input:focus{outline:none;border-color:#e94560}
+      .rb-pro-redeem button{background:transparent;border:1px solid rgba(151,183,196,.28);border-radius:9px;color:#e8eef2;padding:.55rem .95rem;cursor:pointer;transition:border-color .12s ease}
+      .rb-pro-redeem button:hover{border-color:#e94560}
+      .rb-pro-msg{min-height:1.1em;margin:.5rem 0 0;font-size:.88rem}
+    `;
+    document.head.appendChild(st);
+  }
   const d = document.createElement('dialog');
   d.id = 'rb-pro-modal';
-  d.className = 'rb-modal rb-pro-modal';
   d.innerHTML = `
-    <form method="dialog" class="rb-modal__card" style="max-width:440px">
-      <header class="rb-modal__head">
-        <strong>Unlock ${esc(PRO_CONFIG.productName)}</strong>
-        <button type="submit" class="rb-btn rb-btn--icon rb-btn--ghost" aria-label="Close">✕</button>
-      </header>
-      <p data-pro-feature style="color:#e94560;margin:.2rem 0 .6rem;font-weight:600"></p>
-      <ul class="rb-pro-feats" style="list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.55rem">
-        ${PRO_CONFIG.features.map(([t, s]) => `<li><strong style="color:#e94560">◆</strong> <strong>${esc(t)}</strong><br><span style="opacity:.7;font-size:.9em">${esc(s)}</span></li>`).join('')}
+    <form method="dialog" class="rb-pro-card">
+      <div class="rb-pro-card__head">
+        <div class="rb-pro-card__title"><small>${esc(PRO_CONFIG.productName).replace(/ Pro$/, '')}</small>Unlock Pro</div>
+        <button type="submit" class="rb-pro-card__x" aria-label="Close">✕</button>
+      </div>
+      <p data-pro-feature class="rb-pro-note"></p>
+      <ul class="rb-pro-feats">
+        ${PRO_CONFIG.features.map(([t, s]) => `<li><b class="d">◆</b><span><span class="t">${esc(t)}</span><span class="s">${esc(s)}</span></span></li>`).join('')}
       </ul>
-      <a data-pro-buy class="rb-btn rb-btn--primary" style="display:block;text-align:center;background:#e94560;border-color:#e94560" href="#" target="_blank" rel="noopener">Get Pro — ${esc(PRO_CONFIG.priceLabel)}</a>
-      <div style="margin-top:1rem">
-        <label class="rb-field__label" for="rb-pro-code">Already bought? Redeem your code / license</label>
-        <div style="display:flex;gap:.4rem;margin-top:.3rem">
-          <input id="rb-pro-code" class="rb-input" placeholder="paste code or license key" style="flex:1" />
-          <button type="button" data-pro-redeem class="rb-btn">Redeem</button>
-        </div>
-        <p data-pro-msg style="min-height:1.1em;margin:.4rem 0 0;font-size:.9em"></p>
+      <a data-pro-buy class="rb-pro-buy" href="#" target="_blank" rel="noopener">Get Pro — ${esc(PRO_CONFIG.priceLabel)}</a>
+      <div class="rb-pro-redeem">
+        <label for="rb-pro-code">Already bought? Redeem your code or license</label>
+        <div class="row"><input id="rb-pro-code" placeholder="paste code or license key" /><button type="button" data-pro-redeem>Redeem</button></div>
+        <p data-pro-msg class="rb-pro-msg"></p>
       </div>
     </form>`;
   // Buy → owner's checkout (or a clear notice if not configured yet)
