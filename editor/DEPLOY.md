@@ -85,7 +85,7 @@ that the host must permit:
 
 | Surface                  | Where the request goes                                        | Required for                                              |
 |--------------------------|---------------------------------------------------------------|-----------------------------------------------------------|
-| **Google Fonts CSS**     | `fonts.googleapis.com`, `fonts.gstatic.com`                   | The RHOBEAR app-shell typography (DM Sans / JetBrains Mono)|
+| **Google Fonts CSS**     | `fonts.googleapis.com`, `fonts.gstatic.com`                   | USER-content fonts (the 52-family picker) — the app chrome itself uses system font stacks, no webfont |
 | **FontAwesome CSS**      | `cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/...`       | GrapesJS built-in icon stylesheet                         |
 | **`three` (3D embed)**   | `https://esm.sh/three@0.161.0`                                | 3D Studio mode (the iframe-mounted embed)                 |
 | **Picsum / Unsplash**    | `https://picsum.photos/...`                                   | Media-bucket placeholder images                           |

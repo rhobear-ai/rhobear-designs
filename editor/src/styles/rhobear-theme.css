@@ -1,45 +1,91 @@
 /* ============================================================================
    RHOBEAR Designs — editor chrome
-   Palette: RED BEAR (#e94560 — the Designs product). Distinct from
-   reviews(orange) + plans(purple). Calm Canva-style surface; depth on demand.
-   Accent on interactive + focal elements; neutral elsewhere.
+   Palette: Starlight (family design system) — one teal accent extracted from
+   the canon constellation bear, graphite/navy floors, hairline separators,
+   no shadows, 8px radius. Matches Hub / Plans / Cloud Workbench.
+   Source of truth: rhobear-app `.claude/skills/rhobear-family-design/SKILL.md`.
    ============================================================================ */
 
 :root {
-  /* Aurora Teal brand */
-  --rb-brand: #e94560;
-  --rb-brand-soft: #f56b81;
-  --rb-brand-deep: #cf3a52;
-  --rb-brand-glow: rgba(233, 69, 96, 0.22);
-  --rb-brand-faint: rgba(233, 69, 96, 0.10);
+  /* Starlight — dark (canonical) */
+  --rb-bg: #0a0e13;
+  --rb-canvas-bd: #0f151c;
+  --rb-panel: #0f151c;
+  --rb-panel-2: #151d26;
+  --rb-panel-3: #1c2631;
+  --rb-border: rgba(151, 183, 196, 0.12);
+  --rb-border-soft: rgba(151, 183, 196, 0.12);
+  --rb-border-strong: rgba(151, 183, 196, 0.24);
 
-  /* Surfaces — near-black with a faint teal-cool cast */
-  --rb-bg: #08080a;
-  --rb-canvas-bd: #0d0f10;       /* backdrop behind the page canvas */
-  --rb-panel: #121315;
-  --rb-panel-2: #17191b;
-  --rb-panel-3: #1d2022;
-  --rb-border: rgba(233, 69, 96, 0.16);
-  --rb-border-soft: rgba(255, 255, 255, 0.06);
+  --rb-text: #e8eef2;
+  --rb-text-muted: #9db0bb;
+  --rb-text-faint: #5f7280;
+  --rb-danger: #e06552;
+  --rb-danger-soft: rgba(224, 101, 82, 0.13);
+  --rb-warn: #e8a33d;
+  --rb-warn-soft: rgba(232, 163, 61, 0.14);
+  --rb-success: #53c98b;
+  --rb-success-soft: rgba(83, 201, 139, 0.13);
 
-  --rb-text: #e9ecec;
-  --rb-text-muted: #8b9794;
-  --rb-text-faint: #5c6764;
-  --rb-danger: #f0556d;
-  --rb-success: #3dd68c;
+  /* The ONE accent — starlight teal, from the canon bear's constellation glow */
+  --rb-brand: #3bd6c3;
+  --rb-brand-press: #2fbfae;
+  --rb-brand-soft: rgba(59, 214, 195, 0.13);
+  --rb-brand-glow: rgba(59, 214, 195, 0.35);
+  --rb-brand-faint: rgba(59, 214, 195, 0.13);
+  --rb-brand-ink: #06251f;
 
-  --rb-radius: 10px;
-  --rb-radius-sm: 7px;
-  --rb-radius-lg: 16px;
-  --rb-font: 'DM Sans', system-ui, -apple-system, sans-serif;
-  --rb-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --rb-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
-  --rb-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+  /* Radius — 8px is the ONE value. Pills are full-round. Modals are the one
+     explicit exception (12-14px, largest floating objects only). */
+  --rb-radius: 8px;
+  --rb-radius-sm: 8px;
+  --rb-radius-lg: 14px;
+
+  --rb-font: -apple-system, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+  --rb-serif: "New York", "Iowan Old Style", Charter, Georgia, "Times New Roman", serif;
+  --rb-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+
+  /* No shadows in the family system — separation is a hairline + a step up
+     the bg scale. Kept as a variable (== none) so nothing breaks if referenced. */
+  --rb-shadow: none;
+  --rb-shadow-lg: none;
+
+  --rb-ease: cubic-bezier(0.2, 0, 0, 1);
+  --rb-t-hover: 120ms var(--rb-ease);
+  --rb-t-panel: 200ms var(--rb-ease);
 
   --rb-toolbar-h: 54px;
   --rb-status-h: 26px;
   --rb-rail-w: 260px;
   --rb-inspector-w: 300px;
+}
+
+[data-theme="light"] {
+  --rb-bg: #f4f7f8;
+  --rb-canvas-bd: #eef2f4;
+  --rb-panel: #eef2f4;
+  --rb-panel-2: #ffffff;
+  --rb-panel-3: #e5ebee;
+  --rb-border: rgba(24, 42, 52, 0.10);
+  --rb-border-soft: rgba(24, 42, 52, 0.10);
+  --rb-border-strong: rgba(24, 42, 52, 0.20);
+
+  --rb-text: #182530;
+  --rb-text-muted: #4e6472;
+  --rb-text-faint: #8da0ab;
+  --rb-danger: #c7422f;
+  --rb-danger-soft: rgba(199, 66, 47, 0.10);
+  --rb-warn: #b97514;
+  --rb-warn-soft: rgba(185, 117, 20, 0.12);
+  --rb-success: #1f9d5e;
+  --rb-success-soft: rgba(31, 157, 94, 0.11);
+
+  --rb-brand: #0e9e8e;
+  --rb-brand-press: #0b8578;
+  --rb-brand-soft: rgba(14, 158, 142, 0.10);
+  --rb-brand-glow: rgba(14, 158, 142, 0.28);
+  --rb-brand-faint: rgba(14, 158, 142, 0.10);
+  --rb-brand-ink: #ffffff;
 }
 
 * { box-sizing: border-box; }
@@ -55,7 +101,9 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-.rb-app { display: flex; flex-direction: column; height: 100vh; }
+/* 100dvh: iPad Safari / standalone PWA — the app fills the REAL viewport
+   (100vh alone leaves a dead strip behind Safari's collapsing toolbar). */
+.rb-app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
 /* ----------------------------------------------------------------- Toolbar */
 .rb-toolbar {
@@ -64,38 +112,40 @@ html, body {
   gap: 14px;
   height: var(--rb-toolbar-h);
   padding: 0 14px;
-  background: linear-gradient(180deg, #141618, var(--rb-panel));
+  /* Safe areas: notch/home-indicator insets on installed iPad/iPhone PWA. */
+  padding-top: env(safe-area-inset-top, 0);
+  padding-left: max(14px, env(safe-area-inset-left, 0));
+  padding-right: max(14px, env(safe-area-inset-right, 0));
+  box-sizing: content-box;
+  background: var(--rb-panel);
   border-bottom: 1px solid var(--rb-border);
   flex-shrink: 0;
   z-index: 30;
 }
 
-/* Red Bear brand mark — the canonical logo (assets/rhobear-logo.png) tinted
-   to red via CSS filter. hue-rotate(180deg) takes the source hue to red;
-   saturate(1.25) keeps the small brand mark crisp. */
+/* Canon bear — used verbatim, native teal/navy/amber. No hue tint: it IS the
+   family accent already (assets/rhobear-logo.png is the source of --accent). */
 .rb-logo-img {
   width: 100%; height: 100%; display: block;
-  object-fit: contain;            /* fix: top mark was stretching/sitting off-center */
-  filter: hue-rotate(180deg) saturate(1.25);
+  object-fit: contain;
   border-radius: inherit;
 }
-/* One canonical bear everywhere — same source + same treatment as the top mark
-   (was 3 different bears: hue-rotated PNG up top + 2 hand-drawn cartoon SVGs). */
-.rb-bear { width: 78%; height: 78%; display: block; object-fit: contain; filter: hue-rotate(180deg) saturate(1.25); }
+.rb-bear { width: 78%; height: 78%; display: block; object-fit: contain; }
 .rb-ai-fab .rb-bear { width: 64%; height: 64%; }
 
 .rb-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .rb-logo {
   width: 30px; height: 30px; flex-shrink: 0;
   display: grid; place-items: center;
-  border-radius: 9px;
-  color: #04110f;
-  background: radial-gradient(120% 120% at 30% 20%, var(--rb-brand-soft), var(--rb-brand-deep));
-  box-shadow: 0 0 0 1px var(--rb-brand-glow), 0 4px 14px rgba(233, 69, 96, 0.35);
-  font-size: 1rem; font-weight: 800;
+  border-radius: 8px;
+  color: var(--rb-brand-ink);
+  background: var(--rb-panel-3);
+  border: 1px solid var(--rb-border);
+  font-size: 1rem; font-weight: 500;
 }
 .rb-brand__text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
-.rb-brand__name { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.01em; }
+/* Wordmark: caps, tracked — the one place case rules bend. */
+.rb-brand__name { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
 .rb-brand__doc {
   font-size: 0.68rem; color: var(--rb-text-muted); font-family: var(--rb-mono);
   max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -103,52 +153,54 @@ html, body {
 
 .rb-toolbar__spacer { flex: 1; }
 .rb-group { display: flex; align-items: center; gap: 6px; }
-.rb-group + .rb-group { padding-left: 14px; border-left: 1px solid var(--rb-border-soft); }
+.rb-group + .rb-group { padding-left: 14px; border-left: 1px solid var(--rb-border); }
 
 /* Mode switch (Edit Live | Build) — the primary control */
 .rb-modeswitch {
   display: inline-flex; padding: 3px; gap: 2px;
   background: var(--rb-panel-3); border-radius: 999px;
-  border: 1px solid var(--rb-border-soft);
+  border: 1px solid var(--rb-border);
 }
 .rb-modeswitch__btn {
   appearance: none; border: 0; cursor: pointer;
   padding: 6px 16px; border-radius: 999px;
-  font-family: var(--rb-font); font-size: 0.78rem; font-weight: 600;
+  font-family: var(--rb-font); font-size: 0.78rem; font-weight: 500;
   color: var(--rb-text-muted); background: transparent;
-  transition: color .15s, background .2s;
+  transition: color var(--rb-t-hover), background var(--rb-t-hover);
 }
-.rb-modeswitch__btn:hover { color: var(--rb-text); }
+.rb-modeswitch__btn:hover { color: var(--rb-text); background: var(--rb-panel-2); }
 .rb-modeswitch__btn.is-active {
-  color: #04110f;
-  background: linear-gradient(180deg, var(--rb-brand-soft), var(--rb-brand));
-  box-shadow: 0 2px 10px rgba(233, 69, 96, 0.4);
+  color: var(--rb-brand-ink);
+  background: var(--rb-brand);
 }
 
 /* Buttons */
 .rb-btn {
   appearance: none; cursor: pointer; white-space: nowrap;
-  border: 1px solid var(--rb-border-soft);
+  border: 1px solid var(--rb-border);
   background: var(--rb-panel-2);
   color: var(--rb-text);
   font-family: var(--rb-font); font-size: 0.78rem; font-weight: 500;
   padding: 7px 12px; border-radius: var(--rb-radius-sm);
-  transition: background .15s, border-color .15s, color .15s, transform .05s;
+  transition: background var(--rb-t-hover), border-color var(--rb-t-hover), color var(--rb-t-hover);
 }
-.rb-btn:hover { background: var(--rb-panel-3); border-color: var(--rb-brand-glow); }
+.rb-btn:hover { background: var(--rb-panel-3); }
 .rb-btn:active { transform: translateY(1px); }
 .rb-btn--primary {
-  color: #04110f; border-color: transparent;
-  background: linear-gradient(180deg, var(--rb-brand-soft), var(--rb-brand));
-  font-weight: 600;
+  color: var(--rb-brand-ink); border-color: transparent;
+  background: var(--rb-brand);
+  font-weight: 500;
 }
-.rb-btn--primary:hover { background: linear-gradient(180deg, #f4879a, var(--rb-brand-soft)); }
+.rb-btn--primary:hover { background: var(--rb-brand-press); }
 .rb-btn--icon { min-width: 34px; padding: 7px 9px; font-size: 1rem; line-height: 1; display: grid; place-items: center; }
 .rb-btn--ghost { background: transparent; border-color: transparent; }
 .rb-btn--ghost:hover { background: var(--rb-panel-2); }
-.rb-btn.is-active { color: var(--rb-brand-soft); border-color: var(--rb-brand-glow); background: var(--rb-brand-faint); }
+.rb-btn.is-active { color: var(--rb-brand); border-color: var(--rb-brand-glow); background: var(--rb-brand-soft); }
 .rb-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.rb-btn:disabled:hover { background: var(--rb-panel-2); border-color: var(--rb-border-soft); }
+.rb-btn:disabled:hover { background: var(--rb-panel-2); border-color: var(--rb-border); }
+.rb-btn:focus-visible, .rb-modeswitch__btn:focus-visible, .rb-input:focus-visible, .rb-select:focus-visible {
+  outline: 2px solid var(--rb-brand); outline-offset: 1px;
+}
 
 /* ---------------------------------------------------------------- Workspace */
 .rb-workspace { display: flex; flex: 1; min-height: 0; position: relative; }
@@ -159,17 +211,19 @@ html, body {
   background: var(--rb-panel);
   border-right: 1px solid var(--rb-border);
   display: flex; flex-direction: column;
-  transition: margin-left .25s ease;
+  transition: margin-left var(--rb-t-panel);
 }
 .rb-rail.is-collapsed { margin-left: calc(-1 * var(--rb-rail-w)); }
 .rb-rail__tabs { display: flex; gap: 4px; padding: 10px 10px 6px; }
 .rb-rail__tab {
   flex: 1; appearance: none; border: 0; cursor: pointer;
   padding: 7px; border-radius: var(--rb-radius-sm);
-  font-family: var(--rb-font); font-size: 0.74rem; font-weight: 600;
+  font-family: var(--rb-font); font-size: 0.74rem; font-weight: 500;
   color: var(--rb-text-muted); background: transparent;
+  transition: color var(--rb-t-hover), background var(--rb-t-hover);
 }
-.rb-rail__tab.is-active { color: var(--rb-brand-soft); background: var(--rb-brand-faint); }
+.rb-rail__tab:hover { color: var(--rb-text); background: var(--rb-panel-2); }
+.rb-rail__tab.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); }
 .rb-rail__body { flex: 1; overflow-y: auto; padding: 6px 10px 12px; }
 .rb-rail__pane { display: none; }
 .rb-rail__pane.is-active { display: block; }
@@ -177,9 +231,7 @@ html, body {
 /* Canvas */
 .rb-canvas-wrap {
   flex: 1; min-width: 0; position: relative;
-  background:
-    radial-gradient(60% 60% at 50% 0%, rgba(233, 69, 96, 0.05), transparent 70%),
-    var(--rb-canvas-bd);
+  background: var(--rb-canvas-bd);
   display: flex; flex-direction: column;
 }
 .rb-canvas { flex: 1; min-height: 0; position: relative; }
@@ -198,31 +250,27 @@ html, body {
   position: absolute; pointer-events: none; box-sizing: border-box;
   border-radius: 3px;
 }
-.rb-overlay-hover { border: 1px dashed var(--rb-brand-soft); background: rgba(233, 69, 96, 0.06); }
-.rb-overlay-selection { border: 2px solid var(--rb-brand); box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.4), 0 0 18px rgba(233, 69, 96, 0.25); }
+.rb-overlay-hover { border: 1px dashed var(--rb-text-faint); background: rgba(151, 183, 196, 0.06); }
+.rb-overlay-selection { border: 2px solid var(--rb-brand); box-shadow: 0 0 0 1px var(--rb-brand-glow); }
 .rb-overlay-label {
   position: absolute; top: -20px; left: -2px;
-  font: 600 0.62rem/1 var(--rb-mono); color: #04110f;
+  font: 500 0.62rem/1 var(--rb-mono); color: var(--rb-brand-ink);
   background: var(--rb-brand); padding: 3px 6px; border-radius: 4px; white-space: nowrap;
 }
 
-/* Onboarding / empty state */
+/* Onboarding / empty state — the bear, one line, one hint, at most one action */
 .rb-empty {
   position: absolute; inset: 0; display: none;
   flex-direction: column; align-items: center; justify-content: center;
   gap: 18px; text-align: center; padding: 24px; z-index: 8;
-  background:
-    radial-gradient(70% 60% at 50% 38%, rgba(233, 69, 96, 0.07), transparent 70%),
-    var(--rb-canvas-bd);
+  background: var(--rb-canvas-bd);
 }
 .rb-empty.is-active { display: flex; }
 .rb-empty__mark {
-  width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center;
-  font-size: 1.8rem; color: #04110f;
-  background: radial-gradient(120% 120% at 30% 20%, var(--rb-brand-soft), var(--rb-brand-deep));
-  box-shadow: 0 0 0 1px var(--rb-brand-glow), 0 10px 30px rgba(233, 69, 96, 0.35);
+  width: 72px; height: 72px; border-radius: 18px; display: grid; place-items: center;
+  font-size: 1.8rem;
 }
-.rb-empty__title { font-size: 1.3rem; font-weight: 600; margin: 0; }
+.rb-empty__title { font-size: 1.3rem; font-weight: 500; margin: 0; font-family: var(--rb-serif); }
 .rb-empty__sub { color: var(--rb-text-muted); max-width: 440px; margin: 0; line-height: 1.55; font-size: 0.9rem; }
 .rb-empty__actions { display: flex; gap: 10px; margin-top: 4px; }
 
@@ -233,31 +281,31 @@ html, body {
   background: var(--rb-panel);
   border-left: 1px solid var(--rb-border);
   display: flex; flex-direction: column;
-  transition: margin-right .25s ease;
+  transition: margin-right var(--rb-t-panel);
   overflow: hidden;
 }
 .rb-inspector.is-hidden { margin-right: calc(-1 * var(--rb-inspector-w)); }
 .rb-inspector__head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; border-bottom: 1px solid var(--rb-border-soft);
+  padding: 12px 14px; border-bottom: 1px solid var(--rb-border);
 }
-.rb-inspector__title { font-size: 0.82rem; font-weight: 600; }
+.rb-inspector__title { font-size: 0.82rem; font-weight: 500; }
 .rb-inspector__tag {
-  font-family: var(--rb-mono); font-size: 0.64rem; color: var(--rb-brand-soft);
-  background: var(--rb-brand-faint); padding: 2px 7px; border-radius: 5px;
+  font-family: var(--rb-mono); font-size: 0.64rem; color: var(--rb-brand);
+  background: var(--rb-brand-soft); padding: 2px 7px; border-radius: 5px;
 }
 .rb-inspector__body { flex: 1; overflow-y: auto; }
 
 /* Intent groups (Fill / Text / Spacing / Layout / Effects) */
-.rb-sector { border-bottom: 1px solid var(--rb-border-soft); }
+.rb-sector { border-bottom: 1px solid var(--rb-border); }
 .rb-sector__head {
   width: 100%; appearance: none; border: 0; cursor: pointer; text-align: left;
   display: flex; align-items: center; gap: 8px;
   padding: 11px 14px; background: transparent; color: var(--rb-text);
-  font-family: var(--rb-font); font-size: 0.76rem; font-weight: 600; letter-spacing: 0.02em;
+  font-family: var(--rb-font); font-size: 0.76rem; font-weight: 500; letter-spacing: 0.02em;
 }
 .rb-sector__head:hover { background: var(--rb-panel-2); }
-.rb-sector__chev { margin-left: auto; color: var(--rb-text-faint); transition: transform .18s; }
+.rb-sector__chev { margin-left: auto; color: var(--rb-text-faint); transition: transform var(--rb-t-hover); }
 .rb-sector.is-open .rb-sector__chev { transform: rotate(90deg); }
 .rb-sector__body { display: none; padding: 4px 14px 14px; }
 .rb-sector.is-open .rb-sector__body { display: block; }
@@ -271,44 +319,43 @@ html, body {
 .rb-input, .rb-select {
   width: 100%; box-sizing: border-box;
   background: var(--rb-bg); color: var(--rb-text);
-  border: 1px solid var(--rb-border-soft); border-radius: var(--rb-radius-sm);
-  padding: 8px 10px; font-family: var(--rb-font); font-size: 0.8rem;
-  transition: border-color .15s, box-shadow .15s;
+  border: 1px solid var(--rb-border); border-radius: var(--rb-radius-sm);
+  padding: 9px 11px; font-family: var(--rb-font); font-size: 0.8rem;
+  transition: border-color var(--rb-t-hover);
 }
 .rb-input:focus, .rb-select:focus {
   outline: none; border-color: var(--rb-brand);
-  box-shadow: 0 0 0 3px var(--rb-brand-faint);
 }
 .rb-swatch {
   width: 34px; height: 34px; flex-shrink: 0; padding: 0;
-  border: 1px solid var(--rb-border-soft); border-radius: var(--rb-radius-sm);
+  border: 1px solid var(--rb-border); border-radius: var(--rb-radius-sm);
   background: none; cursor: pointer;
 }
 .rb-advanced-toggle {
   width: 100%; text-align: center; padding: 10px; margin-top: 4px;
   font-size: 0.72rem; color: var(--rb-text-muted);
-  background: transparent; border: 1px dashed var(--rb-border-soft);
+  background: transparent; border: 1px dashed var(--rb-border);
   border-radius: var(--rb-radius-sm); cursor: pointer;
 }
-.rb-advanced-toggle:hover { color: var(--rb-brand-soft); border-color: var(--rb-brand-glow); }
+.rb-advanced-toggle:hover { color: var(--rb-brand); border-color: var(--rb-brand-glow); }
 
-/* Gradient swatches */
+/* Gradient swatches (content color — user pages, not chrome; free channel) */
 .rb-swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.rb-grad { height: 28px; border: 1px solid var(--rb-border-soft); border-radius: 6px; cursor: pointer; padding: 0; background-size: cover; }
-.rb-grad:hover { border-color: var(--rb-brand); box-shadow: 0 0 0 2px var(--rb-brand-faint); }
+.rb-grad { height: 28px; border: 1px solid var(--rb-border); border-radius: 6px; cursor: pointer; padding: 0; background-size: cover; }
+.rb-grad:hover { border-color: var(--rb-brand); }
 
 /* Opacity slider */
 .rb-range { flex: 1; accent-color: var(--rb-brand); cursor: pointer; }
 .rb-range__val { font: 500 0.72rem var(--rb-mono); color: var(--rb-text-muted); min-width: 38px; text-align: right; }
 
-/* Shadow presets */
+/* Shadow presets (content authoring for the user's page — not chrome) */
 .rb-preset-row { display: flex; flex-wrap: wrap; gap: 5px; }
 .rb-preset {
-  appearance: none; cursor: pointer; border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2);
+  appearance: none; cursor: pointer; border: 1px solid var(--rb-border); background: var(--rb-panel-2);
   color: var(--rb-text-muted); font: 500 0.7rem var(--rb-font); padding: 5px 10px; border-radius: 999px;
 }
 .rb-preset:hover { color: var(--rb-text); border-color: var(--rb-brand-glow); }
-.rb-preset.is-active { color: var(--rb-brand-soft); background: var(--rb-brand-faint); border-color: var(--rb-brand); }
+.rb-preset.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); border-color: var(--rb-brand); }
 
 /* GrapesJS managers mount points (Build mode) live inside inspector body */
 #gjs-styles, #gjs-traits, #gjs-layers, #gjs-blocks { width: 100%; }
@@ -317,8 +364,10 @@ html, body {
 .rb-status {
   display: flex; align-items: center; gap: 16px;
   height: var(--rb-status-h); padding: 0 14px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-sizing: content-box;
   font-size: 0.7rem; font-family: var(--rb-mono); color: var(--rb-text-faint);
-  background: var(--rb-panel); border-top: 1px solid var(--rb-border-soft);
+  background: var(--rb-panel); border-top: 1px solid var(--rb-border);
   flex-shrink: 0;
 }
 .rb-status__sel { color: var(--rb-text-muted); }
@@ -330,190 +379,144 @@ html, body {
   position: absolute; z-index: 12; display: none;
   align-items: center; gap: 2px; padding: 4px;
   background: var(--rb-panel-3); border: 1px solid var(--rb-border);
-  border-radius: 999px; box-shadow: var(--rb-shadow);
+  border-radius: 999px;
 }
 .rb-floatbar.is-visible { display: flex; }
 .rb-floatbar .rb-btn--icon { background: transparent; border: 0; }
 
 /* ===========================================================================
-   AI CHAT — HUB SIGNATURE (uniform across all RHOBEAR products)
-   Mirrors the hub chat (rhobear-app ChatWebViewer.jsx): deep navy #0a0e18,
-   teal #7dffd5, light #e8edf7, hairline borders, 10px radius. This is the
-   cross-product "signature" component — it does NOT use the per-product red.
+   AI CHAT — family InputComposer-style panel, same tokens as the rest of the
+   app (one accent, no separate "signature" palette).
    =========================================================================== */
-:root {
-  --hub-navy: #0a0e18;
-  --hub-navy-2: #060912;
-  --hub-teal: #7dffd5;
-  --hub-teal-2: #4fd6ab;
-  --hub-text: #e8edf7;
-  --hub-muted: #8a97b2;
-  --hub-line: rgba(255, 255, 255, 0.08);
-  --hub-teal-faint: rgba(125, 255, 213, 0.12);
-  --hub-teal-glow: rgba(125, 255, 213, 0.28);
-}
 .rb-ai-fab {
   position: absolute; right: 22px; bottom: 22px; z-index: 20;
-  width: 54px; height: 54px; border-radius: 50%; cursor: pointer; border: 0;
+  width: 54px; height: 54px; border-radius: 50%; cursor: pointer; border: 1px solid var(--rb-border);
   display: grid; place-items: center; font-size: 1.4rem;
-  background: var(--hub-navy);
-  box-shadow: 0 0 0 1px var(--rb-brand-glow), 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: transform .12s, box-shadow .2s;
+  background: var(--rb-panel-2);
+  transition: transform var(--rb-t-hover);
 }
-.rb-ai-fab:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 0 1px var(--rb-brand), 0 14px 38px var(--rb-brand-glow); }
-/* Hub chat STRUCTURE (navy) with a DESIGNS-red tint — the chat is the hub
-   signature wearing this product's accent, not a teal takeover. Chat bears keep
-   the red mark like the rest of the app (one bear everywhere). */
+.rb-ai-fab:hover { transform: translateY(-2px); border-color: var(--rb-brand-glow); }
 
 .rb-ai-panel {
   position: absolute; right: 22px; bottom: 86px; z-index: 21;
   width: 340px; max-height: 60%; display: none; flex-direction: column;
-  background: var(--hub-navy); border: 1px solid var(--hub-line);
-  border-radius: var(--rb-radius-lg); box-shadow: var(--rb-shadow-lg); overflow: hidden;
-  color: var(--hub-text);
+  background: var(--rb-panel-2); border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-lg); overflow: hidden;
+  color: var(--rb-text);
 }
 .rb-ai-panel.is-open { display: flex; }
 .rb-ai-panel__head {
   display: flex; align-items: center; gap: 8px; padding: 13px 15px;
-  border-bottom: 1px solid var(--hub-line); font-weight: 600; font-size: 0.85rem;
-  color: var(--hub-text);
+  border-bottom: 1px solid var(--rb-border); font-weight: 500; font-size: 0.85rem;
+  color: var(--rb-text);
 }
-.rb-ai-panel__head .rb-logo { width: 24px; height: 24px; font-size: 0.8rem; background: transparent; box-shadow: none; }
-.rb-ai-panel__body { padding: 16px 15px; overflow-y: auto; color: var(--hub-muted); font-size: 0.85rem; line-height: 1.55; }
+.rb-ai-panel__head .rb-logo { width: 24px; height: 24px; font-size: 0.8rem; background: transparent; border: 0; }
+.rb-ai-panel__body { padding: 16px 15px; overflow-y: auto; color: var(--rb-text-muted); font-size: 0.85rem; line-height: 1.55; }
 .rb-ai-panel__cta { margin-top: 12px; }
-/* AI chat */
-.rb-ai-messages { flex: 1; min-height: 150px; max-height: 360px; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--hub-navy); }
+/* AI chat — assistant replies in serif, the family's "the crew is speaking" signal */
+.rb-ai-messages { flex: 1; min-height: 150px; max-height: 360px; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--rb-panel-2); }
 .rb-ai-msg { padding: 8px 11px; border-radius: 10px; font-size: 0.82rem; line-height: 1.45; max-width: 90%; white-space: pre-wrap; word-break: break-word; }
-.rb-ai-msg--user { align-self: flex-end; background: var(--rb-brand-faint); color: var(--rb-brand-soft); border: 1px solid var(--rb-brand-glow); }
-.rb-ai-msg--assistant { align-self: flex-start; background: var(--hub-navy-2); color: var(--hub-text); border: 1px solid var(--hub-line); }
-.rb-ai-msg--err { color: #ff8a9c; border-color: rgba(255, 138, 156, 0.5); background: rgba(255, 138, 156, 0.08); }
-.rb-ai-form { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--hub-line); background: var(--hub-navy); }
-.rb-ai-form .rb-input { flex: 1; background: var(--hub-navy-2); border: 1px solid var(--hub-line); color: var(--hub-text); }
-.rb-ai-form .rb-input::placeholder { color: var(--hub-muted); }
-.rb-ai-form .rb-btn--primary { background: var(--rb-brand); color: #04110f; border: 0; font-weight: 600; }
-.rb-ai-form .rb-btn--primary:hover { background: var(--rb-brand-deep); }
+.rb-ai-msg--user { align-self: flex-end; background: var(--rb-brand-soft); color: var(--rb-text); border: 1px solid var(--rb-brand-glow); font-family: var(--rb-font); }
+.rb-ai-msg--assistant { align-self: flex-start; background: var(--rb-panel-3); color: var(--rb-text); border: 1px solid var(--rb-border); font-family: var(--rb-serif); font-size: 0.86rem; }
+.rb-ai-msg--err { color: var(--rb-danger); border-color: var(--rb-danger-soft); background: var(--rb-danger-soft); font-family: var(--rb-font); }
+.rb-ai-form { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--rb-border); background: var(--rb-panel-2); }
+.rb-ai-form .rb-input { flex: 1; background: var(--rb-bg); border: 1px solid var(--rb-border); color: var(--rb-text); }
+.rb-ai-form .rb-input::placeholder { color: var(--rb-text-faint); }
+.rb-ai-form .rb-btn--primary { background: var(--rb-brand); color: var(--rb-brand-ink); border: 0; font-weight: 500; }
+.rb-ai-form .rb-btn--primary:hover { background: var(--rb-brand-press); }
 .rb-pill {
   display: inline-block; font-size: 0.62rem; font-family: var(--rb-mono);
-  color: var(--rb-brand-soft); background: var(--rb-brand-faint);
+  color: var(--rb-brand); background: var(--rb-brand-soft);
   padding: 2px 8px; border-radius: 999px; margin-left: auto;
 }
-.rb-pill[data-state="online"], #ai-status.is-online { color: var(--rb-brand-soft); }
+.rb-pill[data-state="online"], #ai-status.is-online { color: var(--rb-brand); }
+
+/* The constellation loader — the ONE loading animation, everywhere. */
+.rb-constellation { display: inline-flex; align-items: center; gap: 5px; }
+.rb-constellation__dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--rb-brand);
+  opacity: 0.25; animation: rb-pulse 1.6s ease-in-out infinite;
+}
+.rb-constellation__dot:nth-child(2) { animation-delay: 0.2s; }
+.rb-constellation__dot:nth-child(3) { animation-delay: 0.4s; }
+.rb-constellation__dot:nth-child(4) { animation-delay: 0.6s; }
+@keyframes rb-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .rb-constellation__dot { animation: none; opacity: 0.7; }
+}
 
 /* ------------------------------------------------------------------- Modals */
 .rb-modal {
   border: 1px solid var(--rb-border); border-radius: var(--rb-radius-lg); padding: 0;
-  background: var(--rb-panel); color: var(--rb-text);
-  max-width: 520px; width: 90vw; box-shadow: var(--rb-shadow-lg);
+  background: var(--rb-panel-2); color: var(--rb-text);
+  max-width: 520px; width: 90vw;
 }
 .rb-modal--wide { max-width: 92vw; width: 92vw; height: 86vh; }
-.rb-modal::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(3px); }
+.rb-modal::backdrop { background: rgba(10, 14, 19, 0.7); backdrop-filter: blur(14px); }
 .rb-modal__content { padding: 22px; display: flex; flex-direction: column; gap: 14px; height: 100%; }
-.rb-modal__content h2 { margin: 0; font-size: 1.15rem; }
+.rb-modal__content h2 { margin: 0; font-size: 1.15rem; font-family: var(--rb-serif); font-weight: 500; }
 .rb-modal__hint { margin: 0; font-size: 0.85rem; color: var(--rb-text-muted); }
 .rb-modal textarea, .rb-modal .rb-input {
   width: 100%; font-family: var(--rb-mono); font-size: 0.8rem;
   background: var(--rb-bg); color: var(--rb-text);
-  border: 1px solid var(--rb-border-soft); border-radius: var(--rb-radius-sm);
+  border: 1px solid var(--rb-border); border-radius: var(--rb-radius-sm);
   padding: 11px; resize: vertical;
 }
 .rb-modal__actions { display: flex; gap: 8px; justify-content: flex-end; }
 .rb-modal__actions--top { justify-content: space-between; align-items: center; }
 #preview-frame { flex: 1; width: 100%; border: 1px solid var(--rb-border); border-radius: var(--rb-radius-sm); background: #fff; }
 
-/* Settings (BYO-LLM) rows */
 .rb-setting { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.rb-setting__label { font-size: 0.78rem; font-weight: 600; }
+.rb-setting__label { font-size: 0.78rem; font-weight: 500; }
 .rb-setting__hint { font-size: 0.72rem; color: var(--rb-text-faint); }
 
-.rb-media-row { padding: 0 0 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border-soft); }
+.rb-media-row { padding: 0 0 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border); }
 
 /* Quick structural inserts */
-.rb-quick { padding-bottom: 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border-soft); }
-.rb-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 5px; }
+.rb-quick { padding-bottom: 12px; margin-bottom: 10px; border-bottom: 1px solid var(--rb-border); }
+.rb-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 5px; }
 .rb-quick-btn {
-  appearance: none; cursor: pointer; border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2);
-  color: var(--rb-text); font: 500 0.68rem var(--rb-font); padding: 7px 4px; border-radius: var(--rb-radius-sm);
+  appearance: none; cursor: pointer; border: 1px solid var(--rb-border); background: var(--rb-panel-2);
+  color: var(--rb-text); font: 500 0.68rem var(--rb-font); padding: 9px 5px; border-radius: var(--rb-radius-sm);
+  transition: border-color var(--rb-t-hover), background var(--rb-t-hover);
 }
-.rb-quick-btn:hover { border-color: var(--rb-brand); background: var(--rb-brand-faint); color: var(--rb-brand-soft); }
+.rb-quick-btn:hover { border-color: var(--rb-brand); background: var(--rb-brand-soft); color: var(--rb-brand); }
 
 /* Contextual text toolbar (while editing text) */
 .rb-textbar {
   position: fixed; z-index: 40; display: none; align-items: center; gap: 6px; padding: 6px;
-  background: var(--rb-panel-3); border: 1px solid var(--rb-border); border-radius: 999px; box-shadow: var(--rb-shadow);
+  background: var(--rb-panel-3); border: 1px solid var(--rb-border); border-radius: 999px;
 }
 .rb-textbar.is-open { display: flex; }
 .rb-textbar__font { width: 120px; }
 .rb-textbar__size { width: 56px; }
 .rb-textbar__btn {
   appearance: none; cursor: pointer; width: 30px; height: 30px; border-radius: 50%;
-  border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2); color: var(--rb-text); font-size: 0.85rem;
+  border: 1px solid var(--rb-border); background: var(--rb-panel-2); color: var(--rb-text); font-size: 0.85rem;
 }
-.rb-textbar__btn:hover { border-color: var(--rb-brand); color: var(--rb-brand-soft); }
+.rb-textbar__btn:hover { border-color: var(--rb-brand); color: var(--rb-brand); }
 
 /* Element library (the stash) */
-.rb-lib-cats { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.rb-lib-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .rb-lib-cat {
-  appearance: none; cursor: pointer; border: 1px solid var(--rb-border-soft);
+  appearance: none; cursor: pointer; border: 1px solid var(--rb-border);
   background: var(--rb-panel-2); color: var(--rb-text-muted);
-  font: 500 0.68rem var(--rb-font); padding: 4px 9px; border-radius: 999px; text-transform: capitalize;
-  transition: color .15s, border-color .15s, background .15s;
+  font: 500 0.68rem var(--rb-font); padding: 5px 11px; border-radius: 999px; text-transform: capitalize;
+  transition: color var(--rb-t-hover), border-color var(--rb-t-hover), background var(--rb-t-hover);
 }
 .rb-lib-cat:hover { color: var(--rb-text); border-color: var(--rb-brand-glow); }
-.rb-lib-cat.is-active { color: var(--rb-brand-soft); background: var(--rb-brand-faint); border-color: var(--rb-brand); }
+.rb-lib-cat.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); border-color: var(--rb-brand); }
 .rb-lib-hint { font-size: 0.68rem; color: var(--rb-text-faint); margin: 0 0 8px; line-height: 1.4; }
-.rb-lib-grid { display: flex; flex-direction: column; gap: 6px; }
+.rb-lib-grid { display: flex; flex-direction: column; gap: 7px; }
 .rb-lib-card {
   appearance: none; cursor: pointer; text-align: left;
-  border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2); color: var(--rb-text);
-  padding: 10px 11px; border-radius: var(--rb-radius-sm);
+  border: 1px solid var(--rb-border); background: var(--rb-panel-2); color: var(--rb-text);
+  padding: 11px 12px; border-radius: var(--rb-radius-sm);
   display: flex; align-items: center; gap: 8px;
-  transition: border-color .15s, background .15s, transform .05s;
+  transition: border-color var(--rb-t-hover), background var(--rb-t-hover);
 }
-.rb-lib-card:hover { border-color: var(--rb-brand); background: var(--rb-brand-faint); transform: translateY(-1px); }
-.rb-lib-card:active { transform: translateY(0); }
+.rb-lib-card:hover { border-color: var(--rb-brand); background: var(--rb-brand-soft); }
 .rb-lib-card__name { font-size: 0.76rem; font-weight: 500; text-transform: capitalize; }
-
-/* Right-click context menu (live mode) */
-.rb-ctx {
-  position: fixed; z-index: 60; display: none; min-width: 168px; padding: 5px;
-  background: var(--rb-panel-3); border: 1px solid var(--rb-border); border-radius: var(--rb-radius);
-  box-shadow: var(--rb-shadow-lg);
-}
-.rb-ctx.is-open { display: block; }
-.rb-ctx__item {
-  width: 100%; appearance: none; border: 0; cursor: pointer; text-align: left;
-  padding: 8px 10px; border-radius: var(--rb-radius-sm); background: transparent; color: var(--rb-text);
-  font: 500 0.78rem var(--rb-font);
-}
-.rb-ctx__item:hover { background: var(--rb-brand-faint); color: var(--rb-brand-soft); }
-
-/* Templates gallery */
-.rb-tpl-search { max-width: 280px; flex: 1; }
-.rb-tpl-grid {
-  flex: 1; overflow-y: auto; display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  grid-auto-rows: 272px; /* explicit row height — auto rows collapse with these children */
-  align-content: start; gap: 20px; padding: 6px 2px 10px;
-}
-.rb-tpl-card {
-  appearance: none; cursor: pointer; text-align: left; padding: 0; overflow: hidden;
-  border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2); color: var(--rb-text);
-  border-radius: var(--rb-radius); display: block;
-  transition: border-color .15s, transform .12s, box-shadow .2s;
-}
-.rb-tpl-card:hover { border-color: var(--rb-brand); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 0 0 1px var(--rb-brand-glow); }
-/* Block flow + explicit px height (aspect-ratio inside flex/grid collapses) — the
-   "roll": cover overflows a tall thumb, hover scrolls it top→bottom. */
-.rb-tpl-card__thumb {
-  display: block; width: 100%; height: 220px;
-  background-size: cover; background-position: top center; background-repeat: no-repeat;
-  background-color: var(--rb-panel-3); border-bottom: 1px solid var(--rb-border-soft);
-  transition: background-position 4s ease;
-}
-.rb-tpl-card:hover .rb-tpl-card__thumb { background-position: bottom center; }
-.rb-tpl-card__thumb--ph { display: grid; place-items: center; font: 700 2.2rem var(--rb-font); color: var(--rb-brand-soft); background: radial-gradient(120% 120% at 30% 20%, var(--rb-panel-3), var(--rb-bg)); }
-.rb-tpl-card__name { padding: 11px 13px 2px; font-size: 0.9rem; font-weight: 600; }
-.rb-tpl-card__meta { padding: 0 13px 13px; font-size: 0.72rem; color: var(--rb-text-faint); }
 
 /* Projects */
 .rb-proj-actions { display: flex; gap: 8px; }
@@ -523,11 +526,11 @@ html, body {
 .rb-proj-open {
   flex: 1; appearance: none; cursor: pointer; text-align: left;
   display: flex; align-items: center; justify-content: space-between;
-  border: 1px solid var(--rb-border-soft); background: var(--rb-panel-2); color: var(--rb-text);
+  border: 1px solid var(--rb-border); background: var(--rb-panel-2); color: var(--rb-text);
   padding: 10px 12px; border-radius: var(--rb-radius-sm); font: 500 0.82rem var(--rb-font);
 }
-.rb-proj-open:hover { border-color: var(--rb-brand); background: var(--rb-brand-faint); }
-.rb-proj-mode { font: 500 0.62rem var(--rb-mono); color: var(--rb-brand-soft); background: var(--rb-brand-faint); padding: 2px 7px; border-radius: 999px; }
+.rb-proj-open:hover { border-color: var(--rb-brand); background: var(--rb-brand-soft); }
+.rb-proj-mode { font: 500 0.62rem var(--rb-mono); color: var(--rb-brand); background: var(--rb-brand-soft); padding: 2px 7px; border-radius: 999px; }
 
 /* Live layers */
 .rb-layer {
@@ -535,7 +538,7 @@ html, body {
   display: flex; gap: 8px; align-items: baseline; border: 0; background: transparent; color: var(--rb-text-muted);
   padding: 5px 8px; border-radius: 6px; font: 500 0.72rem var(--rb-mono);
 }
-.rb-layer:hover { background: var(--rb-brand-faint); color: var(--rb-brand-soft); }
+.rb-layer:hover { background: var(--rb-brand-soft); color: var(--rb-brand); }
 .rb-layer__tag { color: var(--rb-text); }
 .rb-layer__txt { color: var(--rb-text-faint); font-family: var(--rb-font); font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -546,9 +549,9 @@ html, body {
 .rb-toast {
   position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
   z-index: 80; max-width: 80vw; padding: 11px 18px; border-radius: 999px;
-  background: linear-gradient(180deg, var(--rb-brand-soft), var(--rb-brand)); color: #04110f;
-  font: 600 0.82rem var(--rb-font); box-shadow: 0 12px 34px rgba(233, 69, 96, 0.45);
-  opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  background: var(--rb-brand); color: var(--rb-brand-ink);
+  font: 500 0.82rem var(--rb-font);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .rb-toast.is-show { opacity: 1; transform: translate(-50%, 0); }
 
@@ -557,75 +560,36 @@ html, body {
 .rb-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
 .rb-scroll::-webkit-scrollbar-thumb { background: var(--rb-panel-3); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-thumb { background: #24282a; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb { background: var(--rb-panel-3); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 *::-webkit-scrollbar-track { background: transparent; }
 
-/* ===================================================================
-   PREMIUM PASS — depth, rhythm, tactility.
-   A contained polish layer over the base theme above. Keeps Designs' red
-   identity (--rb-brand) and the navy chrome; only refines spacing, shadows,
-   typographic weight, and hover micro-motion so the editor feels expensive.
-   No structural/colour-canon changes (Designs stays red; hub owns teal).
-   =================================================================== */
+/* Brand wordmark spacing lives in .rb-brand__name above (caps + tracked). */
+.rb-btn { transition: background var(--rb-t-hover), border-color var(--rb-t-hover), color var(--rb-t-hover); }
 
-/* Depth: lift the toolbar and panels off the canvas so the chrome reads as
-   layered surfaces instead of flat blocks. */
-.rb-toolbar {
-  box-shadow: 0 1px 0 var(--rb-border-soft), 0 10px 28px rgba(0, 0, 0, 0.28);
-}
-.rb-rail { box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02); }
-.rb-inspector { box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.02); }
+/* Rail tabs: rest/hover/active rhythm. */
+.rb-rail__tab { transition: color var(--rb-t-hover), background var(--rb-t-hover); }
 
-/* Brand wordmark: tighter, more confident. */
-.rb-brand__name { font-size: 0.84rem; font-weight: 700; letter-spacing: -0.01em; }
-.rb-logo { border-radius: 10px; }
+/* Section + inspector headers. */
+.rb-inspector__title { font-weight: 500; }
+.rb-sector__head { font-weight: 500; }
 
-/* Buttons: a small upward lift on hover, settle on press — the tactile cue that
-   separates premium UIs from flat ones. */
-.rb-btn { transition: background .15s, border-color .15s, color .15s, transform .12s, box-shadow .2s; }
-.rb-btn:hover { transform: translateY(-1px); }
-.rb-btn:active { transform: translateY(0); }
-.rb-btn--primary:hover { box-shadow: 0 6px 18px var(--rb-brand-glow); }
-.rb-btn--icon { border-radius: 9px; }
-
-/* Mode switch: a touch more presence on the active segment. */
-.rb-modeswitch__btn.is-active { box-shadow: 0 2px 12px rgba(233, 69, 96, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
-
-/* Rail tabs: clearer rest/hover/active rhythm. */
-.rb-rail__tab { transition: color .15s, background .15s; }
-.rb-rail__tab:hover { color: var(--rb-text); background: var(--rb-panel-2); }
-
-/* Quick-add grid: more air, and the same hover lift as cards. */
-.rb-quick-grid { gap: 6px; }
-.rb-quick-btn {
-  padding: 9px 5px; font-weight: 600; letter-spacing: 0.01em;
-  transition: border-color .15s, background .15s, color .15s, transform .12s, box-shadow .2s;
-}
-.rb-quick-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px var(--rb-brand-faint); }
-
-/* Element-library: calmer chip cloud + a little more rhythm between rows so the
-   long category list stops reading as visual noise. */
-.rb-lib-cats { gap: 6px; margin-bottom: 12px; }
-.rb-lib-cat { padding: 5px 11px; }
-.rb-lib-grid { gap: 7px; }
-.rb-lib-card { padding: 11px 12px; }
-
-/* Section + inspector headers: slightly stronger hierarchy. */
-.rb-inspector__title { font-weight: 700; letter-spacing: -0.005em; }
-.rb-sector__head { font-weight: 700; }
-
-/* Empty state: bigger, tighter headline; mark gets a softer float. */
-.rb-empty { gap: 20px; }
-.rb-empty__title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.015em; }
-.rb-empty__sub { font-size: 0.92rem; }
-.rb-empty__mark { border-radius: 20px; box-shadow: 0 0 0 1px var(--rb-brand-glow), 0 16px 44px rgba(233, 69, 96, 0.4); }
-.rb-empty__actions { gap: 12px; margin-top: 8px; }
-
-/* Inputs: a hair more padding for a calmer, less cramped feel. */
-.rb-input, .rb-select { padding: 9px 11px; }
-
-/* Honour reduced-motion: drop the micro-lifts for users who ask. */
+/* Honour reduced-motion: drop hover transitions for users who ask. */
 @media (prefers-reduced-motion: reduce) {
-  .rb-btn, .rb-quick-btn { transition: background .15s, border-color .15s, color .15s; }
-  .rb-btn:hover, .rb-quick-btn:hover { transform: none; }
+  .rb-btn, .rb-quick-btn, * { transition: none !important; }
+}
+
+/* ------------------------------------------------------- Compact / tablet */
+/* iPad portrait & narrow windows: the toolbar wraps to two rows instead of
+   clipping buttons off-screen; rails tighten so the canvas stays usable. */
+@media (max-width: 900px) {
+  .rb-toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--rb-toolbar-h);
+    padding-top: max(6px, env(safe-area-inset-top, 0));
+    padding-bottom: 6px;
+    row-gap: 6px;
+  }
+  .rb-toolbar__spacer { flex: 0 0 0; }
+  :root { --rb-rail-w: 220px; --rb-inspector-w: 260px; }
 }
