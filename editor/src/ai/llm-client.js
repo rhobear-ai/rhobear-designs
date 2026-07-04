@@ -1,10 +1,46 @@
 /**
- * Bring-your-own-key LLM client. Talks directly from the browser to the user's
- * chosen provider (Anthropic / OpenAI / Google). Keys are the user's own,
- * stored locally — never sent to RHOBEAR. This is the AI seam: the editor works
- * without it; with a key, the assistant returns edits the editor applies.
- * MIT — RHOBEAR Designs (original)
+ * LLM client. Two coexisting modes:
+ *
+ *   1. Bring-your-own-key (BYOK) — the ORIGINAL seam. Talks directly from the
+ *      browser to the user's chosen provider (Anthropic / OpenAI / Google /
+ *      OpenAI-compatible). Keys are the user's own, stored locally, never sent
+ *      to RHOBEAR. The editor works fully without it.
+ *
+ *   2. Managed (Cloud Free + Pro) — the Designs Cloud lane. A signed-in user
+ *      routes through the RHOBEAR house gateway; the family backend does the
+ *      gating. NO client-side key. See `managed-client.js`. Select it with
+ *      `provider: 'managed'`. The family `cloud-gate` lane's 402/429/401
+ *      envelopes are lifted to typed errors (PaymentRequiredError, etc.)
+ *      re-exported below so the UI can branch without string-matching.
+ *
+ * MIT — RHOBEAR Designs.
  */
+
+import {
+  managedChat,
+  managedChatWithTools,
+  MANAGED_MODELS,
+  MANAGED_MODEL_LABELS,
+  DEFAULT_MANAGED_MODEL,
+  PaymentRequiredError,
+  ManagedRateLimitError,
+  ManagedAuthError,
+  ManagedUpstreamError,
+} from './managed-client.js';
+
+// Re-export the typed managed errors + model catalog so shell.js / pro.js can
+// import everything AI-related from this one module.
+export {
+  managedChat,
+  managedChatWithTools,
+  MANAGED_MODELS,
+  MANAGED_MODEL_LABELS,
+  DEFAULT_MANAGED_MODEL,
+  PaymentRequiredError,
+  ManagedRateLimitError,
+  ManagedAuthError,
+  ManagedUpstreamError,
+};
 
 // External provider endpoints — fully-qualified third-party URLs.
 // NOT internal RHOBEAR routes (so no backend route is expected for these).
@@ -22,6 +58,7 @@ export const PROVIDER_LABELS = {
   openai: 'OpenAI',
   google: 'Google (Gemini)',
   compatible: 'OpenAI-compatible (MiniMax, etc.)',
+  managed: 'RHOBEAR house models (managed — Cloud)',
 };
 
 /** Default base URLs for OpenAI-style providers (no trailing slash). */
@@ -31,10 +68,15 @@ export const PROVIDER_BASE_URLS = {
 };
 
 /**
- * @param {{provider:string, apiKey:string, model?:string, system:string, user:string, baseUrl?:string}} opts
+ * @param {{provider:string, apiKey?:string, model?:string, system:string, user:string, baseUrl?:string, deep?:boolean, signal?:AbortSignal}} opts
  * @returns {Promise<string>} assistant text
  */
-export async function chat({ provider, apiKey, model, system, user, baseUrl, deep }) {
+export async function chat({ provider, apiKey, model, system, user, baseUrl, deep, signal }) {
+  // Managed path: no client key — cookie auth via the house gateway. Routed
+  // first so a FREE user (who never has a key) can still use the assistant.
+  if (provider === 'managed') {
+    return managedChat({ system, user, model: model || DEFAULT_MANAGED_MODEL, baseUrl, deep, signal });
+  }
   if (!apiKey) throw new Error('No API key set — add one in settings.');
   const m = model || PROVIDER_MODELS[provider];
   if (provider === 'anthropic') return anthropic(apiKey, m, system, user, deep);
@@ -168,7 +210,12 @@ async function google(key, model, system, user) {
  * }} opts
  * @returns {Promise<{ text:string, calls:Array<{name:string, args:object, out:any}> }>}
  */
-export async function chatWithTools({ apiKey, model, baseUrl, system, user, tools, dispatch, maxRounds = 5, deep }) {
+export async function chatWithTools({ provider, apiKey, model, baseUrl, system, user, tools, dispatch, maxRounds = 5, deep, signal }) {
+  // Managed tool loop: cookie auth through the house gateway (see
+  // managed-client.js). Routed first — no client key required.
+  if (provider === 'managed') {
+    return managedChatWithTools({ system, user, model: model || DEFAULT_MANAGED_MODEL, baseUrl, tools, dispatch, maxRounds, deep, signal });
+  }
   if (!apiKey) throw new Error('No API key set — add one in settings.');
   const root = String(baseUrl || PROVIDER_BASE_URLS.compatible).replace(/\/+$/, '');
   const url = `${root}/chat/completions`;

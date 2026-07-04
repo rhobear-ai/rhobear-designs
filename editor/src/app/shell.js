@@ -14,10 +14,11 @@ import elementsManifest from '../library/elements/manifest.json';
 
 import { createTemplatesGallery } from './templates-gallery.js';
 import { listProjects, saveProject, deleteProject, getProject } from './projects.js';
-import { chat as aiChat, chatWithTools, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS } from '../ai/llm-client.js';
+import { chat as aiChat, chatWithTools, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS, PaymentRequiredError, ManagedAuthError, ManagedRateLimitError, MANAGED_MODELS, MANAGED_MODEL_LABELS, DEFAULT_MANAGED_MODEL } from '../ai/llm-client.js';
 import { openAiToolsParam, runTool, TOOLS_SYSTEM_PROMPT } from '../ai/tools.js';
 import { createThreeMode } from './three-mode.js';
-import { isPro, requirePro, showUpgrade } from './pro.js';
+import { isPro, requirePro, showUpgrade, setServerTier } from './pro.js';
+import { getGateState, freeGenMeter, loginUrl, logout as cloudLogout, whoami } from './cloud-session.js';
 import { STYLES, styleById, styleDirective } from '../ai/styles.js';
 import { voiceSupported, createVoice } from '../ai/voice.js';
 
@@ -345,16 +346,18 @@ export function bootShell() {
     'settings-close': () => refs.settingsModal.close(),
     'settings-save': () => {
       try {
+        const provider = $('ai-provider').value;
         localStorage.setItem('rb-ai', JSON.stringify({
-          provider: $('ai-provider').value,
-          key: $('ai-key').value,
+          provider,
+          // Managed mode has no client key — never persist one for it.
+          key: provider === 'managed' ? '' : $('ai-key').value,
           model: ($('ai-model') && $('ai-model').value.trim()) || '',
           baseUrl: ($('ai-base') && $('ai-base').value.trim()) || '',
         }));
       } catch (_e) { /* ignore */ }
       refs.settingsModal.close();
       aiRefresh();
-      setStatus('LLM key saved locally');
+      setStatus('LLM settings saved');
     },
   };
 
@@ -578,15 +581,81 @@ export function bootShell() {
     return el;
   }
   function aiRefresh() {
-    const c = aiConfig(); const ok = !!(c.key && c.provider);
+    const c = aiConfig();
+    const managed = c.provider === 'managed';
+    // Managed mode authenticates with the session cookie — no client key.
+    // BYOK providers still need a key, otherwise the panel shows offline.
+    const ok = managed ? true : !!(c.key && c.provider);
     if (refs.aiStatus) refs.aiStatus.textContent = ok ? (PROVIDER_LABELS[c.provider] || c.provider) : 'offline';
     if (refs.aiPrompt) refs.aiPrompt.disabled = !ok;
+    renderCloudMeter();
     if (refs.aiMessages && !refs.aiMessages.dataset.greeted) {
       refs.aiMessages.dataset.greeted = '1';
       addAiMsg('assistant', ok
-        ? 'Connected. Select an element on the page, then tell me what to change — e.g. "make this hero dark with a teal headline".'
-        : 'Add your API key below (Connect) — Anthropic, OpenAI, or Google. The editor works fully without me.');
+        ? (managed ? 'Connected to the RHOBEAR house models. Select an element, then tell me what to change.' : 'Connected. Select an element on the page, then tell me what to change — e.g. "make this hero dark with a teal headline".')
+        : 'Add your API key below (Connect) — Anthropic, OpenAI, or Google. Or pick the managed house models (Cloud). The editor works fully without me.');
     }
+  }
+  // ── Cloud (managed) session + free-gen meter ────────────────────────
+  // Probed once at boot (and after a denial / login / logout). Drives the
+  // server-confirmed tier (stronger than the client-side license) and the
+  // "N of M" free counter the gate's `generate` field exposes.
+  let cloudStateCache = null;
+  async function refreshCloudState() {
+    const state = await getGateState();
+    cloudStateCache = state;
+    setServerTier(state && state.tier);
+    renderCloudMeter();
+    const c = aiConfig();
+    if (c.provider === 'managed') aiRefresh();
+  }
+  function renderCloudMeter() {
+    let meter = document.getElementById('rb-cloud-meter');
+    const state = cloudStateCache;
+    const signedIn = !!(state && state.userId);
+    const m = freeGenMeter(state);
+    if (!meter) {
+      meter = document.createElement('div');
+      meter.id = 'rb-cloud-meter';
+      meter.className = 'rb-cloud-meter';
+      injectCloudMeterStyles();
+      const host = refs.aiPanel || (refs.aiMessages && refs.aiMessages.parentElement);
+      if (host) host.insertBefore(meter, host.firstChild);
+    }
+    if (!state) {
+      meter.innerHTML = '<span class="rb-cloud-meter__dot" data-off></span> Cloud offline — BYOK still works.';
+      return;
+    }
+    if (!signedIn) {
+      meter.innerHTML = `<a class="rb-cloud-meter__link" href="${loginUrl('google')}">Sign in for free house models</a>`;
+      return;
+    }
+    if (m.active) {
+      const pct = m.limit ? Math.min(100, Math.round((m.used / m.limit) * 100)) : 0;
+      meter.innerHTML = `<span class="rb-cloud-meter__dot"></span> Free: <strong>${m.used}/${m.limit}</strong> gens
+        <span class="rb-cloud-meter__bar"><span style="width:${pct}%"></span></span>
+        <a class="rb-cloud-meter__link" href="#" data-cloud-upgrade>Upgrade</a>`;
+      const up = meter.querySelector('[data-cloud-upgrade]');
+      if (up) up.addEventListener('click', (e) => { e.preventDefault(); showUpgrade('Unlimited house models'); });
+      return;
+    }
+    // Sub / credits / dev — generate is unlocked.
+    meter.innerHTML = `<span class="rb-cloud-meter__dot" data-on></span> ${state.tier ? state.tier.toUpperCase() : 'PRO'} — unlimited house models`;
+  }
+  function injectCloudMeterStyles() {
+    if (document.getElementById('rb-cloud-meter-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'rb-cloud-meter-styles';
+    s.textContent = `
+.rb-cloud-meter{display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;margin:.4rem 0;font-size:.82rem;border:1px solid rgba(233,69,96,.25);border-radius:10px;background:rgba(233,69,96,.05);flex-wrap:wrap}
+.rb-cloud-meter__dot{width:8px;height:8px;border-radius:50%;background:#e94560;flex:0 0 auto}
+.rb-cloud-meter__dot[data-off]{background:#888}
+.rb-cloud-meter__dot[data-on]{background:#2e9e6b}
+.rb-cloud-meter__bar{display:inline-block;width:80px;height:6px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden;vertical-align:middle}
+.rb-cloud-meter__bar>span{display:block;height:100%;background:#e94560}
+.rb-cloud-meter__link{color:#e94560;text-decoration:none;font-weight:600;margin-left:auto}
+.rb-cloud-meter__link:hover{text-decoration:underline}`;
+    document.head.appendChild(s);
   }
   // Editor tool surface for a paired LLM (the "MCP tools" — Designs' slice of the
   // family agent layer). Each method is the executor behind a tool spec in
@@ -614,19 +683,27 @@ export function bootShell() {
 
   async function sendAi(prompt) {
     const c = aiConfig();
-    if (!c.key || !c.provider) { addAiMsg('assistant', 'No key set — click "Connect / change LLM key" below.'); return; }
+    const managed = c.provider === 'managed';
+    if (managed) {
+      if (!(cloudStateCache && cloudStateCache.userId)) {
+        addAiMsg('assistant', 'Sign in to use the house models — tap the Cloud meter at the top of the panel.');
+        return;
+      }
+    } else if (!c.key || !c.provider) {
+      addAiMsg('assistant', 'No key set — click "Connect / change LLM key" below, or pick the managed house models.');
+      return;
+    }
     addAiMsg('user', prompt);
     const pending = addAiMsg('assistant', '…thinking');
-    // Tool-driven path: pair an OpenAI-compatible model (incl. a local endpoint)
-    // with the editor tools so it can inspect the page and act directly across
-    // rounds. Falls back to single-shot chat for other providers or if the model
-    // doesn't support tool calls.
-    const canUseTools = (c.provider === 'compatible' || c.provider === 'openai') && mode === 'live';
+    // Tool-driven path: pair an OpenAI-compatible model OR a managed house
+    // model with the editor tools so it can inspect the page and act directly
+    // across rounds. Falls back to single-shot chat otherwise.
+    const canUseTools = (managed || c.provider === 'compatible' || c.provider === 'openai') && mode === 'live';
     if (canUseTools) {
       try {
         const user = `${prompt}\n\nUse the editor tools to inspect the page and make the change.`;
         const { text, calls } = await chatWithTools({
-          apiKey: c.key, model: c.model, baseUrl: c.baseUrl,
+          provider: c.provider, apiKey: c.key, model: c.model, baseUrl: c.baseUrl,
           system: TOOLS_SYSTEM_PROMPT + styleDirective(aiStyle()), user, tools: openAiToolsParam(),
           dispatch: (name, args) => runTool(name, args, editorAdapter), deep: aiDeep(),
         });
@@ -634,6 +711,9 @@ export function bootShell() {
         pending.textContent = text || (acted.length ? `Done — ${acted.join(', ')}.` : 'Done.');
         return;
       } catch (err) {
+        if (err instanceof PaymentRequiredError) { handleManagedDenial(pending, err); return; }
+        if (err instanceof ManagedAuthError) { handleManagedAuth(pending, err); return; }
+        if (err instanceof ManagedRateLimitError) { pending.textContent = err.message; pending.classList.add('rb-ai-msg--err'); return; }
         // Tool calls unsupported (older/local model) or transport error — fall
         // through to plain chat rather than failing the request.
         if (!/tool|function/i.test(String(err && err.message))) {
@@ -652,9 +732,29 @@ export function bootShell() {
       if (html && mode === 'live') { if (live.applyAIEdit(html)) setStatus('AI applied a change'); }
       else if (html) { addAiMsg('assistant', '(Switch to Edit Live Site to apply page changes.)'); }
     } catch (err) {
+      if (err instanceof PaymentRequiredError) { handleManagedDenial(pending, err); return; }
+      if (err instanceof ManagedAuthError) { handleManagedAuth(pending, err); return; }
+      if (err instanceof ManagedRateLimitError) { pending.textContent = err.message; pending.classList.add('rb-ai-msg--err'); return; }
       pending.textContent = `Error: ${err.message}`;
       pending.classList.add('rb-ai-msg--err');
     }
+  }
+  // Translate a managed 402/401 into the right UX: upgrade modal (with the
+  // gate's CTA) or a sign-in prompt. Never surfaces the raw envelope.
+  function handleManagedDenial(pending, err) {
+    pending.remove();
+    // If the FREE cap was hit, the meter is now stale — refresh it.
+    refreshCloudState();
+    showUpgrade(err.requiredAction === 'subscribe' ? 'Pro house models' : 'More generations');
+  }
+  function handleManagedAuth(pending, _err) {
+    pending.textContent = 'Sign in to use the house models.';
+    pending.classList.add('rb-ai-msg--err');
+    const a = document.createElement('a');
+    a.textContent = 'Sign in with Google';
+    a.href = loginUrl('google');
+    a.style.cssText = 'display:inline-block;margin-left:.4rem;color:#e94560';
+    pending.appendChild(a);
   }
   refs.aiForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -693,6 +793,11 @@ export function bootShell() {
   //   2. `window.__RB_DESIGNS_API__` global (host page config)
   //   3. `localStorage.rb-designs-api` (user preference set via settings)
   //   4. `/v1` same-origin (when the editor is reverse-proxied behind the API)
+  //
+  // Cloud (managed) session probe — fetch the family gate state so the
+  // free-gen meter + server-confirmed tier are correct from first paint.
+  // Fire-and-forget; renderCloudMeter degrades to "Cloud offline" on failure.
+  refreshCloudState();
   (async function autoLoadFromApi() {
     try {
       const url = new URL(window.location.href);

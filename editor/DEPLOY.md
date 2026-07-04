@@ -153,3 +153,100 @@ python3 -m http.server 8080        # any static server works
 ```
 
 That's the whole deployment story.
+
+---
+
+## 6. Cloud deploy — `designs.rhobear.ai` (Free + Pro, managed AI)
+
+The **Cloud** lane adds a *managed* mode on top of the static editor: a
+signed-in user routes the AI through the RHOBEAR house gateway and the
+**family backend** does the gating. Designs itself still ships **zero
+server runtime** — "do not build new infra; reuse the family backend."
+
+### What the editor calls (all same-origin via reverse proxy)
+
+| Path (on designs.rhobear.ai)        | Proxied to               | Purpose                                          |
+|--------------------------------------|--------------------------|--------------------------------------------------|
+| `POST /v1/chat/completions`          | `gw.rhobear.ai/v1`       | Managed LLM (ARC free / URS_MINOR / URS Pro)     |
+| `GET  /cloud/auth/{google,github}/start` | family API (auth)    | Shared Google/GitHub OAuth → session cookie      |
+| `GET  /cloud/auth/me`                | family API (auth)        | Identity probe                                   |
+| `GET  /cloud/gate/state`             | family API (gate)        | Tier / credits / free-gen meter (`generate.used/limit`) |
+| `POST /cloud/billing/checkout`       | family API (billing)     | Stripe Checkout `{tier}` → `{url}` (Pro $19 / Team $49) |
+
+Because everything is same-origin, the session cookie set by the shared
+OAuth is first-party and `credentials: 'include'` just works — no
+SameSite/CORS dance. (For a split-origin deploy, set `VITE_MANAGED_BASE`
+and `VITE_CLOUD_API_BASE` in `.env` and scope the cookie to `.rhobear.ai`.)
+
+### Option A — rhobear-vps Caddy (recommended)
+
+```caddyfile
+# designs.rhobear.ai — static editor + reverse-proxied family services
+designs.rhobear.ai {
+  root * /opt/rhobear/designs-editor/dist   # the built editor/dist
+  encode zstd gzip
+
+  # SPA entry must not be cached aggressively (asset filenames are hashed)
+  @html path *.html /
+  header @html Cache-Control "no-cache"
+  header /assets/* Cache-Control "public, max-age=31536000, immutable"
+
+  # Managed LLM gateway (the house models, ARC/URS_MINOR/URS)
+  handle_path /v1/* {
+    reverse_proxy https://gw.rhobear.ai {
+      header_up Host gw.rhobear.ai
+    }
+  }
+
+  # Shared family auth + gate + billing (the rhobear-plans board-render API)
+  handle_path /cloud/* {
+    reverse_proxy https://api.rhobear.ai   # or the same-host family service
+  }
+
+  file_server
+}
+```
+
+Deploy the editor with:
+
+```bash
+cd editor && npm run build
+rsync -a dist/ rhobear-vps:/opt/rhobear/designs-editor/dist/
+# then `systemctl reload caddy` (owner — see AGENTS.md §4)
+```
+
+### Option B — Cloudflare Pages (static) + the family backend elsewhere
+
+- **Build command:** `cd editor && npm run build`
+- **Build output directory:** `editor/dist`
+- Set the env vars `VITE_MANAGED_BASE=https://gw.rhobear.ai` and
+  `VITE_CLOUD_API_BASE=https://api.rhobear.ai` in the Pages project.
+- The family backend must then serve the session cookie scoped to
+  `.rhobear.ai` (`SameSite=None; Secure`) so the cross-subdomain auth works.
+
+### Spend caps are MANDATORY and enforced at the gateway
+
+The lane makes per-user AND per-IP spend caps mandatory — the same
+discipline as the "Plans /v1 relay fix." Designs relies on the house
+gateway + family gate to enforce them; the client honors the responses:
+
+- `402 payment_required` → the free ARC cap (~1000 gen/mo) was hit, OR a
+  Pro-only model/feature was used without a sub/credits. The editor shows
+  the upgrade modal with the gate's `requiredAction` (`buy_credits` /
+  `subscribe`).
+- `429` → the per-user or per-IP spend cap tripped (the hard ceiling above
+  the credit/quota logic). The editor shows the message + a `Retry-After`.
+- `401` → no session. The editor prompts sign-in via the shared OAuth.
+
+The editor never echoes a raw server error body — only the envelope's
+intentional `message`, so no upstream/SQL detail leaks to the browser.
+
+### Owner-only: live Stripe / PayPal keys
+
+Designs ships with **test-mode** checkout wiring. Live keys are an
+owner-insert env on the **family backend** (`STRIPE_SECRET_KEY`, webhook
+`STRIPE_WEBHOOK_SECRET`, plus the `lookup_key`-indexed prices the
+`cloud-billing` lane provisions for `pro` / `team`). Nothing in this repo
+holds a secret. Until the live keys land, `POST /cloud/billing/checkout`
+returns a non-ok envelope and the upgrade modal falls back to the launch
+code / signed-license path in `pro.js`.
