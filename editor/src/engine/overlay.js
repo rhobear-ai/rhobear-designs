@@ -32,7 +32,7 @@
 
 /** Default box colors — Starlight: teal is the ONE accent (selection); hover
  *  gets a neutral, less prominent line so only the accent reads as "chosen". */
-const SELECTION_COLOR = '#3bd6c3'; // Starlight accent
+const SELECTION_COLOR = '#e94560'; // Starlight accent
 const HOVER_COLOR     = '#5f7280'; // Starlight text-3 (neutral)
 
 const Z_SELECTION = 2;

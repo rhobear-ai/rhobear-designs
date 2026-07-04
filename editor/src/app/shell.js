@@ -36,7 +36,7 @@ const QUICK = [
   { name: 'Footer', html: '<footer style="padding:40px 24px;text-align:center;color:#888">© 2026 Brand · <a href="#">Privacy</a> · <a href="#">Terms</a></footer>' },
   { name: 'Heading', html: '<h2 style="font-size:2rem;margin:0">Heading</h2>' },
   { name: 'Text', html: '<p style="line-height:1.6;color:#444">New paragraph — double-click to edit.</p>' },
-  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#3bd6c3;color:#06251f;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
+  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#e94560;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
   { name: 'Image', html: '' },
 ];
 
@@ -137,6 +137,46 @@ export function bootShell() {
       setTitle(live.load(html, meta && meta.name) || (meta && meta.name) || 'Template');
     },
   });
+
+  // ---- studio start screen (the empty state) — content first, Canva-style:
+  // template thumbnails + recent projects front and center, not buried behind
+  // a toolbar button.
+  function renderStartScreen() {
+    const tplHost = $('start-templates');
+    if (tplHost && !tplHost.dataset.built) {
+      tplHost.dataset.built = '1';
+      const list = gallery.entries().filter((e) => e.thumbUrl).slice(0, 8);
+      for (const e of list) {
+        const card = document.createElement('button');
+        card.type = 'button'; card.className = 'rb-tpl-card rb-tpl-card--start';
+        card.title = e.description || e.name;
+        card.innerHTML = `<span class="rb-tpl-card__thumb" style="background-image:url('${e.thumbUrl}')"></span>` +
+          `<span class="rb-tpl-card__name">${escapeHtml(e.name || e.id)}</span>`;
+        card.addEventListener('click', () => gallery.openEntry(e));
+        tplHost.appendChild(card);
+      }
+      const more = document.createElement('button');
+      more.type = 'button'; more.className = 'rb-tpl-card rb-tpl-card--start rb-tpl-card--more';
+      more.innerHTML = `<span class="rb-tpl-card__thumb rb-tpl-card__thumb--ph">→</span>` +
+        `<span class="rb-tpl-card__name">All ${gallery.count} templates</span>`;
+      more.addEventListener('click', () => gallery.open());
+      tplHost.appendChild(more);
+    }
+    const rHost = $('start-recents'); const rWrap = $('start-recents-wrap');
+    if (rHost && rWrap) {
+      const ps = listProjects().slice(0, 6);
+      rWrap.hidden = !ps.length;
+      rHost.innerHTML = '';
+      for (const p of ps) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'rb-start__recent';
+        b.innerHTML = `<span class="rb-start__recent-name">${escapeHtml(p.name)}</span>` +
+          `<span class="rb-proj-mode">${escapeHtml(p.mode)}</span>`;
+        b.addEventListener('click', () => openProject(p.id));
+        rHost.appendChild(b);
+      }
+    }
+  }
 
   // live layers outline → rail Layers pane
   live.setOutlineHandler((outline) => renderLiveLayers(outline));
@@ -270,7 +310,7 @@ export function bootShell() {
     'proj-save': () => {
       const name = (refs.projName.value || '').trim() || docTitleStr || 'Untitled';
       saveProject({ name, html: currentExport(), mode });
-      refs.projName.value = ''; renderProjects(); setStatus(`Saved project "${name}"`);
+      refs.projName.value = ''; renderProjects(); renderStartScreen(); setStatus(`Saved project "${name}"`);
     },
     'replace': () => live.beginReplace(),
     'select-parent': () => live.selectParent(),
@@ -397,7 +437,16 @@ export function bootShell() {
         const card = document.createElement('button');
         card.type = 'button'; card.className = 'rb-lib-card';
         card.title = `${el.name || el.id} · ${el.category} — click to add or drag onto the canvas`;
-        card.innerHTML = `<span class="rb-lib-card__name">${escapeHtml(el.name || el.id)}</span>`;
+        // Visual preview: render the element's own (scoped-class) HTML+CSS in a
+        // scaled stage — you pick what you SEE, not a text label. innerHTML
+        // never executes <script>, so saved 3D embeds stay static here.
+        card.innerHTML = `<span class="rb-lib-card__preview" aria-hidden="true"><span class="rb-lib-card__stage"></span></span>` +
+          `<span class="rb-lib-card__name">${escapeHtml(el.name || el.id)}</span>`;
+        try {
+          const stage = card.querySelector('.rb-lib-card__stage');
+          stage.innerHTML = (el.css ? `<style>${el.css}</style>` : '') + (el.html || '');
+          stage.querySelectorAll('img').forEach((im) => { im.loading = 'lazy'; });
+        } catch (_e) { /* preview is best-effort; the name still shows */ }
         card.draggable = true;
         card.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/plain', el.id); live.beginDragInsert(el); });
         card.addEventListener('click', () => live.insertElement(el));
@@ -551,6 +600,7 @@ export function bootShell() {
   // boot: live mode + onboarding
   setMode('live');
   try { renderElementLibrary(); } catch (_e) { /* library optional */ }
+  try { renderStartScreen(); } catch (_e) { console.error('renderStartScreen:', _e); }
   setStatus('Editor ready — open a page or build from scratch');
 
   // ---- auto-load from RHOBEAR Designs API ---------------------------------

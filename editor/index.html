@@ -7,7 +7,7 @@
 
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#3bd6c3" />
+    <meta name="theme-color" content="#e94560" />
     <meta name="description" content="Free, MIT-licensed Canva-style website editor — Edit Live, Build, 3D Studio. 100% client-side, BYO-LLM AI assist." />
     <link rel="icon" href="icons/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192" />
@@ -120,15 +120,27 @@
             <div class="rb-three-host" id="three-host" data-3d-only data-testid="three-host"></div>
           </div>
 
-          <!-- Onboarding / empty -->
-          <div class="rb-empty" id="empty-state" data-testid="empty-state">
-            <div class="rb-empty__mark"><img class="rb-bear" src="/src/assets/rhobear-logo.png" alt="" /></div>
-            <h1 class="rb-empty__title">Edit any website like it's a canvas</h1>
-            <p class="rb-empty__sub">Open a stood-up page and edit it live — it keeps its look and its functions. Or start a blank build from scratch. No AI required.</p>
-            <div class="rb-empty__actions">
-              <button type="button" class="rb-btn rb-btn--primary" data-action="open-templates" data-testid="empty-templates">Browse templates</button>
-              <button type="button" class="rb-btn" data-action="open-html" data-testid="empty-open">Open a page</button>
-              <button type="button" class="rb-btn" data-action="mode-build" data-testid="empty-build">Build from scratch</button>
+          <!-- Studio start (onboarding / empty state) -->
+          <div class="rb-empty rb-scroll" id="empty-state" data-testid="empty-state">
+            <div class="rb-empty__inner">
+              <div class="rb-empty__hero">
+                <div class="rb-empty__mark"><img class="rb-bear" src="/src/assets/rhobear-logo.png" alt="" /></div>
+                <h1 class="rb-empty__title">What will you design today?</h1>
+                <p class="rb-empty__sub">Open any page and edit it live — it keeps its look and its functions. Start from a template, a blank canvas, or HTML from anywhere (paste what a chatbot gave you and make it real).</p>
+                <div class="rb-empty__actions">
+                  <button type="button" class="rb-btn rb-btn--primary" data-action="open-templates" data-testid="empty-templates">Browse templates</button>
+                  <button type="button" class="rb-btn" data-action="open-html" data-testid="empty-open">Open a page</button>
+                  <button type="button" class="rb-btn" data-action="mode-build" data-testid="empty-build">Build from scratch</button>
+                </div>
+              </div>
+              <div class="rb-start__section" id="start-recents-wrap" hidden>
+                <h2 class="rb-start__label">Recent projects</h2>
+                <div class="rb-start__row" id="start-recents" data-testid="start-recents"></div>
+              </div>
+              <div class="rb-start__section">
+                <h2 class="rb-start__label">Start from a template</h2>
+                <div class="rb-start__grid" id="start-templates" data-testid="start-templates"></div>
+              </div>
             </div>
           </div>
 

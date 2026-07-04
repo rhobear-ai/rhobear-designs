@@ -350,7 +350,7 @@ export function createHandle(sceneCtx) {
     for (const m of mats) {
       if (!m || !m.emissive) continue;
       entry.__highlight = m.emissive.getHex();
-      m.emissive.set('#3bd6c3');
+      m.emissive.set('#e94560');
     }
   }
 

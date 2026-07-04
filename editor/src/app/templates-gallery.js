@@ -27,6 +27,26 @@ function thumbFor(entry) {
 export function createTemplatesGallery({ modal, grid, search, countEl, onOpen, onStatus }) {
   let built = false;
 
+  /** Load + open one catalog entry into the editor (shared by the modal grid
+   *  and the studio start screen). */
+  async function openEntry(e) {
+    const loader = htmlLoaderFor(e.sourcePath);
+    if (!loader) { if (onStatus) onStatus(`Template source missing: ${e.sourcePath}`); return; }
+    if (onStatus) onStatus(`Opening ${e.name}…`);
+    try {
+      const html = await loader();
+      if (modal && modal.open) modal.close();
+      onOpen(html, e);
+    } catch (err) {
+      if (onStatus) onStatus(`Failed to open template: ${err.message}`);
+    }
+  }
+
+  /** Catalog entries with resolved thumbnail URLs — for the start screen. */
+  function entries() {
+    return ENTRIES.map((e) => ({ ...e, thumbUrl: thumbFor(e) }));
+  }
+
   function build(filter) {
     grid.innerHTML = '';
     const q = (filter || '').toLowerCase().trim();
@@ -42,18 +62,7 @@ export function createTemplatesGallery({ modal, grid, search, countEl, onOpen, o
         : `<span class="rb-tpl-card__thumb rb-tpl-card__thumb--ph">${escapeHtml((e.name || '?').trim()[0] || '?')}</span>`;
       card.innerHTML = `${thumbHtml}<span class="rb-tpl-card__name">${escapeHtml(e.name || e.id)}</span>` +
         `<span class="rb-tpl-card__meta">${escapeHtml(e.description || e.collection || '')}</span>`;
-      card.addEventListener('click', async () => {
-        const loader = htmlLoaderFor(e.sourcePath);
-        if (!loader) { if (onStatus) onStatus(`Template source missing: ${e.sourcePath}`); return; }
-        if (onStatus) onStatus(`Opening ${e.name}…`);
-        try {
-          const html = await loader();
-          modal.close();
-          onOpen(html, e);
-        } catch (err) {
-          if (onStatus) onStatus(`Failed to open template: ${err.message}`);
-        }
-      });
+      card.addEventListener('click', () => openEntry(e));
       grid.appendChild(card);
     }
   }
@@ -64,7 +73,7 @@ export function createTemplatesGallery({ modal, grid, search, countEl, onOpen, o
   }
 
   if (search) search.addEventListener('input', () => build(search.value));
-  return { open, build, count: ENTRIES.length };
+  return { open, build, count: ENTRIES.length, entries, openEntry };
 }
 
 function escapeHtml(s) {
