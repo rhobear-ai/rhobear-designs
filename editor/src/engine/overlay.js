@@ -30,9 +30,10 @@
 
 /** @typedef {{x:number,y:number,width:number,height:number}} Rect */
 
-/** Default box colors. Plain, un-themed; restyled by the human owner. */
-const SELECTION_COLOR = '#7c5cff'; // RHOBEAR brand purple (neutral choice)
-const HOVER_COLOR     = '#3dd68c'; // success-green (neutral choice)
+/** Default box colors — Starlight: teal is the ONE accent (selection); hover
+ *  gets a neutral, less prominent line so only the accent reads as "chosen". */
+const SELECTION_COLOR = '#3bd6c3'; // Starlight accent
+const HOVER_COLOR     = '#5f7280'; // Starlight text-3 (neutral)
 
 const Z_SELECTION = 2;
 const Z_HOVER     = 1;

@@ -2,34 +2,37 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>RHOBEAR Designs — Website Editor</title>
 
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#e94560" />
+    <meta name="theme-color" content="#3bd6c3" />
     <meta name="description" content="Free, MIT-licensed Canva-style website editor — Edit Live, Build, 3D Studio. 100% client-side, BYO-LLM AI assist." />
     <link rel="icon" href="icons/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RHOBEAR Designs" />
     <script>
       // Register the service worker (required for installability). Scope is the
       // page directory, so this works at any base path (incl. Pages subpaths).
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js').catch(function () {});
+          navigator.serviceWorker.register('sw.js').then(function (reg) {
+            // Check for a fresh deploy on every launch — the installed app
+            // (iPad home-screen / Store MSIX) picks up updates next boot.
+            if (reg && reg.update) reg.update().catch(function () {});
+          }).catch(function () {});
         });
       }
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Chrome typography is system stacks (Starlight) — no webfont for the
+         app shell. Google Fonts still load per-family at runtime for USER
+         content via the font picker. -->
     <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
   </head>

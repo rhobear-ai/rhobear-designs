@@ -20,16 +20,19 @@ const EDIT_TRANSITIONS =
   'padding .25s ease,margin .25s ease,font-size .25s ease,opacity .25s ease,box-shadow .25s ease,' +
   'background-image .25s ease!important}';
 // In edit mode every element shows it's grabbable.
-const EDIT_CURSOR = 'body *{cursor:pointer!important}[contenteditable="true"]{cursor:text!important;outline:2px solid #e94560}';
+const EDIT_CURSOR = 'body *{cursor:pointer!important}[contenteditable="true"]{cursor:text!important;outline:2px solid #3bd6c3}';
 
+// Gradient/shadow PRESETS are content color for the user's own page (not editor
+// chrome) — the family system explicitly leaves this channel free. One entry
+// uses the house teal so the family accent is available as a page choice too.
 const GRADIENTS = [
-  'linear-gradient(135deg,#e94560,#f56b81)',
+  'linear-gradient(135deg,#3bd6c3,#2fbfae)',
   'linear-gradient(135deg,#667eea,#764ba2)',
   'linear-gradient(135deg,#f093fb,#f5576c)',
   'linear-gradient(135deg,#0f2027,#2c5364)',
   'linear-gradient(135deg,#ff9a9e,#fad0c4)',
   'linear-gradient(135deg,#30cfd0,#330867)',
-  'linear-gradient(135deg,#08080a,#1d2022)',
+  'linear-gradient(135deg,#0a0e13,#1c2631)',
   'linear-gradient(120deg,#84fab0,#8fd3f4)',
 ];
 const SHADOWS = [
@@ -37,7 +40,7 @@ const SHADOWS = [
   { label: 'Soft', value: '0 2px 8px rgba(0,0,0,.08)' },
   { label: 'Medium', value: '0 8px 24px rgba(0,0,0,.12)' },
   { label: 'Large', value: '0 20px 50px rgba(0,0,0,.2)' },
-  { label: 'Glow', value: '0 0 24px rgba(233,69,96,.5)' },
+  { label: 'Glow', value: '0 0 24px rgba(59,214,195,.5)' },
 ];
 
 export function createLiveMode(refs) {
@@ -79,7 +82,7 @@ export function createLiveMode(refs) {
     injectStyle('rb-edit-cursor', EDIT_CURSOR);
     injectStyle('rb-overrides', '');
     dropLine = doc.createElement('div'); dropLine.id = 'rb-drop-line';
-    dropLine.style.cssText = 'position:fixed;height:3px;background:#e94560;z-index:2147483647;pointer-events:none;box-shadow:0 0 8px #e94560;display:none';
+    dropLine.style.cssText = 'position:fixed;height:3px;background:#3bd6c3;z-index:2147483647;pointer-events:none;box-shadow:0 0 8px #3bd6c3;display:none';
     doc.body.appendChild(dropLine);
 
     if (overlay) overlay.destroy();
@@ -513,7 +516,7 @@ export function createLiveMode(refs) {
     sel.addEventListener('change', () => { if (sel.value) { linkEl.setAttribute('href', sel.value); input.value = sel.value; dirty = true; snap(); setStatus('Link jumps to ' + sel.value); } });
     jf.appendChild(sel); body.appendChild(jf);
     const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'rb-btn'; pick.style.width = '100%'; pick.textContent = '🎯 Pick a spot on the page';
-    pick.addEventListener('click', () => { pickTargetLink = linkEl; injectStyle('rb-pick', 'body *{outline:1px dashed rgba(233,69,96,.5)!important}'); setStatus('Now click the spot this link should jump to'); });
+    pick.addEventListener('click', () => { pickTargetLink = linkEl; injectStyle('rb-pick', 'body *{outline:1px dashed rgba(59,214,195,.5)!important}'); setStatus('Now click the spot this link should jump to'); });
     body.appendChild(pick);
     return renderSector({ name: 'Link', open: true, extra: body });
   }

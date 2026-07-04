@@ -36,6 +36,14 @@ See [`samples/README.md`](samples/README.md) for the full folder map and submiss
 
 ## Brand colors
 
-- Primary: `#1A1A2E` (Deep Navy)
-- Accent: `#E94560` (Rhobear Red)
-- Neutral: `#F5F5F5` (Off-White)
+Starlight — the RHOBEAR family design system (shared with Hub / Plans /
+Cloud Workbench):
+
+- Floor: `#0a0e13` (dark, canonical) / `#f4f7f8` (light twin)
+- Accent: `#3bd6c3` (starlight teal — the ONE accent, from the canon
+  constellation bear)
+- Text: `#e8eef2` on dark / `#182530` on light
+
+See `.claude/skills/rhobear-family-design/SKILL.md` on `rhobear-app` for
+the full token set and rules (one accent, no shadows, 8px radius, system
+font stacks).
