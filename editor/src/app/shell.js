@@ -17,6 +17,9 @@ import { listProjects, saveProject, deleteProject, getProject } from './projects
 import { chat as aiChat, chatWithTools, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS } from '../ai/llm-client.js';
 import { openAiToolsParam, runTool, TOOLS_SYSTEM_PROMPT } from '../ai/tools.js';
 import { createThreeMode } from './three-mode.js';
+import { isPro, requirePro, showUpgrade } from './pro.js';
+import { STYLES, styleById, styleDirective } from '../ai/styles.js';
+import { voiceSupported, createVoice } from '../ai/voice.js';
 
 const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
 const _ELEMENT_CATS = [...new Set(_ELEMENTS.map((e) => e.category))];
@@ -490,6 +493,73 @@ export function bootShell() {
 
   // ---- AI assist (bring-your-own key) ----
   function aiConfig() { try { return JSON.parse(localStorage.getItem('rb-ai') || '{}'); } catch (_e) { return {}; } }
+
+  // ---- Pro layer: generation style · deep thinking · voice (never crimps free) ----
+  function aiStyle() { try { return localStorage.getItem('rb-ai-style') || 'default'; } catch (_e) { return 'default'; } }
+  function setAiStyle(v) { try { localStorage.setItem('rb-ai-style', v); } catch (_e) { /* ignore */ } }
+  function aiDeep() { try { return localStorage.getItem('rb-ai-deep') === '1'; } catch (_e) { return false; } }
+  function setAiDeep(v) { try { localStorage.setItem('rb-ai-deep', v ? '1' : '0'); } catch (_e) { /* ignore */ } }
+
+  let voice = null; let voiceBtn = null;
+  function injectProToolbar() {
+    if (!refs.aiForm || document.getElementById('rb-ai-pro')) return;
+    if (!document.getElementById('rb-ai-pro-style')) {
+      const st = document.createElement('style'); st.id = 'rb-ai-pro-style';
+      st.textContent = `
+        .rb-ai-pro{display:flex;gap:.4rem;align-items:center;padding:.4rem .6rem;flex-wrap:wrap}
+        .rb-ai-pro__style{flex:1;min-width:120px;font-size:.85rem;padding:.3rem .4rem}
+        .rb-ai-pro__deep,.rb-ai-pro__mic{border:1px solid rgba(233,69,96,.4);background:transparent;color:inherit;border-radius:8px;padding:.3rem .55rem;font-size:.82rem;cursor:pointer;line-height:1}
+        .rb-ai-pro__deep:hover,.rb-ai-pro__mic:hover{border-color:#e94560}
+        .rb-ai-pro__deep.is-on{background:#e94560;border-color:#e94560;color:#fff}
+        .rb-ai-pro__mic.is-live{background:#e94560;border-color:#e94560;color:#fff;animation:rbPulse 1s infinite}
+        .rb-ai-pro__mic:disabled{opacity:.4;cursor:not-allowed}
+        @keyframes rbPulse{0%,100%{box-shadow:0 0 0 0 rgba(233,69,96,.5)}50%{box-shadow:0 0 0 5px rgba(233,69,96,0)}}
+      `;
+      document.head.appendChild(st);
+    }
+    const bar = document.createElement('div');
+    bar.id = 'rb-ai-pro'; bar.className = 'rb-ai-pro';
+
+    const style = document.createElement('select');
+    style.className = 'rb-input rb-ai-pro__style'; style.title = 'Generation style (Pro)';
+    for (const s of STYLES) { const o = document.createElement('option'); o.value = s.id; o.textContent = s.name + (s.pro ? ' ◆' : ''); style.appendChild(o); }
+    style.value = aiStyle();
+    style.addEventListener('change', () => {
+      const s = styleById(style.value);
+      if (s.pro && !isPro()) { style.value = 'default'; setAiStyle('default'); showUpgrade('Generation styles'); return; }
+      setAiStyle(style.value);
+    });
+
+    const deep = document.createElement('button');
+    deep.type = 'button'; deep.className = 'rb-ai-pro__deep' + (aiDeep() ? ' is-on' : '');
+    deep.textContent = '◆ Deep'; deep.title = 'Deep thinking — higher-reasoning pass (Pro)';
+    deep.setAttribute('aria-pressed', aiDeep() ? 'true' : 'false');
+    deep.addEventListener('click', () => {
+      if (!isPro()) { showUpgrade('Deep thinking'); return; }
+      const now = !aiDeep(); setAiDeep(now); deep.classList.toggle('is-on', now); deep.setAttribute('aria-pressed', now ? 'true' : 'false');
+    });
+
+    voiceBtn = document.createElement('button');
+    voiceBtn.type = 'button'; voiceBtn.className = 'rb-ai-pro__mic'; voiceBtn.textContent = '🎙';
+    voiceBtn.title = voiceSupported() ? 'Voice — tap to talk (Pro)' : 'Voice not supported in this browser';
+    voiceBtn.disabled = !voiceSupported();
+    voiceBtn.addEventListener('click', () => {
+      if (!isPro()) { showUpgrade('Voice control'); return; }
+      if (!voice) voice = createVoice({
+        onText: (t) => { if (refs.aiPrompt) refs.aiPrompt.value = t; sendAi(t); },
+        onState: (st, d) => {
+          voiceBtn.classList.toggle('is-live', st === 'listening');
+          if (st === 'partial' && refs.aiPrompt) refs.aiPrompt.value = d || '';
+          if (st === 'error') setStatus('Voice: ' + (d || 'error'));
+        },
+      });
+      if (!voice) { voiceBtn.disabled = true; return; }
+      if (voice.active()) voice.stop(); else voice.start();
+    });
+
+    bar.appendChild(style); bar.appendChild(deep); bar.appendChild(voiceBtn);
+    refs.aiForm.parentNode.insertBefore(bar, refs.aiForm);
+  }
   function addAiMsg(role, text) {
     const el = document.createElement('div');
     el.className = `rb-ai-msg rb-ai-msg--${role}`;
@@ -548,8 +618,8 @@ export function bootShell() {
         const user = `${prompt}\n\nUse the editor tools to inspect the page and make the change.`;
         const { text, calls } = await chatWithTools({
           apiKey: c.key, model: c.model, baseUrl: c.baseUrl,
-          system: TOOLS_SYSTEM_PROMPT, user, tools: openAiToolsParam(),
-          dispatch: (name, args) => runTool(name, args, editorAdapter),
+          system: TOOLS_SYSTEM_PROMPT + styleDirective(aiStyle()), user, tools: openAiToolsParam(),
+          dispatch: (name, args) => runTool(name, args, editorAdapter), deep: aiDeep(),
         });
         const acted = (calls || []).filter((k) => k.out && k.out.ok).map((k) => k.name);
         pending.textContent = text || (acted.length ? `Done — ${acted.join(', ')}.` : 'Done.');
@@ -567,7 +637,7 @@ export function bootShell() {
     const ctx = (mode === 'live') ? live.getSelectionHtml() : (build.getHtmlCss().html || '');
     const user = `${prompt}\n\nSelected element (return its complete replacement if you change it):\n\`\`\`html\n${ctx}\n\`\`\``;
     try {
-      const text = await aiChat({ provider: c.provider, apiKey: c.key, model: c.model, baseUrl: c.baseUrl, system: SYSTEM_PROMPT, user });
+      const text = await aiChat({ provider: c.provider, apiKey: c.key, model: c.model, baseUrl: c.baseUrl, system: SYSTEM_PROMPT + styleDirective(aiStyle()), user, deep: aiDeep() });
       const { html, reply } = parseEdit(text);
       pending.textContent = reply;
       if (html && mode === 'live') { if (live.applyAIEdit(html)) setStatus('AI applied a change'); }
@@ -601,6 +671,7 @@ export function bootShell() {
   setMode('live');
   try { renderElementLibrary(); } catch (_e) { /* library optional */ }
   try { renderStartScreen(); } catch (_e) { console.error('renderStartScreen:', _e); }
+  try { injectProToolbar(); } catch (_e) { console.error('injectProToolbar:', _e); }
   setStatus('Editor ready — open a page or build from scratch');
 
   // ---- auto-load from RHOBEAR Designs API ---------------------------------

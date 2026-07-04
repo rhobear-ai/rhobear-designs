@@ -34,12 +34,12 @@ export const PROVIDER_BASE_URLS = {
  * @param {{provider:string, apiKey:string, model?:string, system:string, user:string, baseUrl?:string}} opts
  * @returns {Promise<string>} assistant text
  */
-export async function chat({ provider, apiKey, model, system, user, baseUrl }) {
+export async function chat({ provider, apiKey, model, system, user, baseUrl, deep }) {
   if (!apiKey) throw new Error('No API key set — add one in settings.');
   const m = model || PROVIDER_MODELS[provider];
-  if (provider === 'anthropic') return anthropic(apiKey, m, system, user);
-  if (provider === 'openai') return openai(apiKey, m, system, user, baseUrl || PROVIDER_BASE_URLS.openai);
-  if (provider === 'compatible') return openai(apiKey, m, system, user, baseUrl || PROVIDER_BASE_URLS.compatible);
+  if (provider === 'anthropic') return anthropic(apiKey, m, system, user, deep);
+  if (provider === 'openai') return openai(apiKey, m, system, user, baseUrl || PROVIDER_BASE_URLS.openai, deep);
+  if (provider === 'compatible') return openai(apiKey, m, system, user, baseUrl || PROVIDER_BASE_URLS.compatible, deep);
   if (provider === 'google') return google(apiKey, m, system, user);
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -87,7 +87,7 @@ export async function testConnection({ provider, apiKey, model, baseUrl }) {
   }
 }
 
-async function anthropic(key, model, system, user) {
+async function anthropic(key, model, system, user, deep) {
   const res = await fetch(ANTHROPIC_MESSAGES_URL, {
     method: 'POST',
     headers: {
@@ -96,14 +96,17 @@ async function anthropic(key, model, system, user) {
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
-    body: JSON.stringify({ model, max_tokens: 2048, system, messages: [{ role: 'user', content: user }] }),
+    body: JSON.stringify({
+      model, max_tokens: deep ? 8192 : 2048, system, messages: [{ role: 'user', content: user }],
+      ...(deep ? { thinking: { type: 'enabled', budget_tokens: 4000 } } : {}),
+    }),
   });
   const d = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((d.error && d.error.message) || `Anthropic error ${res.status}`);
   return (d.content || []).map((c) => c.text || '').join('');
 }
 
-async function openai(key, model, system, user, baseUrl) {
+async function openai(key, model, system, user, baseUrl, deep) {
   const root = String(baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
   const url = `${root}/chat/completions`;
   let res;
@@ -111,7 +114,11 @@ async function openai(key, model, system, user, baseUrl) {
     res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+      body: JSON.stringify({
+        model, max_tokens: 2048,
+        messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+        ...(deep ? { reasoning_effort: 'high' } : {}),
+      }),
     });
   } catch (e) {
     // "Failed to fetch" = network/CORS, not an HTTP error — give an actionable message.
@@ -161,7 +168,7 @@ async function google(key, model, system, user) {
  * }} opts
  * @returns {Promise<{ text:string, calls:Array<{name:string, args:object, out:any}> }>}
  */
-export async function chatWithTools({ apiKey, model, baseUrl, system, user, tools, dispatch, maxRounds = 5 }) {
+export async function chatWithTools({ apiKey, model, baseUrl, system, user, tools, dispatch, maxRounds = 5, deep }) {
   if (!apiKey) throw new Error('No API key set — add one in settings.');
   const root = String(baseUrl || PROVIDER_BASE_URLS.compatible).replace(/\/+$/, '');
   const url = `${root}/chat/completions`;
@@ -175,7 +182,7 @@ export async function chatWithTools({ apiKey, model, baseUrl, system, user, tool
       res = await fetch(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: m, max_tokens: 2048, messages, tools, tool_choice: 'auto' }),
+        body: JSON.stringify({ model: m, max_tokens: 2048, messages, tools, tool_choice: 'auto', ...(deep ? { reasoning_effort: 'high' } : {}) }),
       });
     } catch (_e) {
       throw new Error(
