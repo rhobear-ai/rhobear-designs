@@ -513,6 +513,8 @@ export function bootShell() {
         .rb-ai-pro__deep.is-on{background:#e94560;border-color:#e94560;color:#fff}
         .rb-ai-pro__mic.is-live{background:#e94560;border-color:#e94560;color:#fff;animation:rbPulse 1s infinite}
         .rb-ai-pro__mic:disabled{opacity:.4;cursor:not-allowed}
+        .rb-ai-pro__cta{background:#e94560;border:1px solid #e94560;color:#fff;border-radius:999px;padding:.3rem .7rem;font-size:.8rem;font-weight:600;cursor:pointer}
+        .rb-ai-pro__cta:hover{filter:brightness(1.08)}
         @keyframes rbPulse{0%,100%{box-shadow:0 0 0 0 rgba(233,69,96,.5)}50%{box-shadow:0 0 0 5px rgba(233,69,96,0)}}
       `;
       document.head.appendChild(st);
@@ -557,8 +559,15 @@ export function bootShell() {
       if (voice.active()) voice.stop(); else voice.start();
     });
 
-    bar.appendChild(style); bar.appendChild(deep); bar.appendChild(voiceBtn);
+    const cta = document.createElement('button');
+    cta.type = 'button'; cta.className = 'rb-ai-pro__cta'; cta.textContent = '✦ Get Pro';
+    cta.title = 'Unlock voice, generation styles, and deep thinking';
+    cta.addEventListener('click', () => showUpgrade());
+    bar.appendChild(style); bar.appendChild(deep); bar.appendChild(voiceBtn); bar.appendChild(cta);
     refs.aiForm.parentNode.insertBefore(bar, refs.aiForm);
+    const refreshCta = () => { cta.style.display = isPro() ? 'none' : ''; };
+    refreshCta();
+    window.addEventListener('rb-pro-changed', refreshCta);
   }
   function addAiMsg(role, text) {
     const el = document.createElement('div');
