@@ -4,7 +4,7 @@
 
 Design a page on a canvas, edit any live site in place, drop in real 3D, and export clean HTML/CSS. MIT-licensed and self-hostable. The AI is optional and **bring-your-own-key** — RHOBEAR never sits between you and your model.
 
-**▶ Try it live:** https://deariencampbell1-sys.github.io/rhobear-designs/
+**▶ Try it live:** https://rhobear-ai.github.io/rhobear-designs/
 
 > Identity: red `#E94560` on deep navy. RHOBEAR Designs is one of the RHOBEAR family — each product shares one shell and wears its own accent + bear.
 
@@ -30,7 +30,7 @@ No sign-up. No tracking. No paywall on the editor.
 ## Quickstart (run it locally)
 
 ```bash
-git clone https://github.com/deariencampbell1-sys/rhobear-designs.git
+git clone https://github.com/rhobear-ai/rhobear-designs.git
 cd rhobear-designs/editor
 npm install
 npm run dev          # http://localhost:5180
