@@ -17,17 +17,28 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RHOBEAR Designs" />
     <script>
-      // Register the service worker (required for installability). Scope is the
-      // page directory, so this works at any base path (incl. Pages subpaths).
-      if ('serviceWorker' in navigator) {
+      // Service worker. In production it makes the app installable and lets a
+      // fresh deploy win (navigations are network-first). On a dev / localhost
+      // origin a SW only ever masks live edits behind a stale cache, so there we
+      // do the opposite: tear any existing SW + caches down and never register.
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+        var host = location.hostname;
+        var dev = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || !!location.port;
+        if (dev) {
+          navigator.serviceWorker.getRegistrations()
+            .then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
+          if (window.caches) caches.keys()
+            .then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }).catch(function () {});
+          return;
+        }
         window.addEventListener('load', function () {
           navigator.serviceWorker.register('sw.js').then(function (reg) {
-            // Check for a fresh deploy on every launch — the installed app
-            // (iPad home-screen / Store MSIX) picks up updates next boot.
+            // Installed app (iPad home-screen / Store MSIX) picks up updates next boot.
             if (reg && reg.update) reg.update().catch(function () {});
           }).catch(function () {});
         });
-      }
+      })();
     </script>
 
     <!-- Chrome typography is system stacks (Starlight) — no webfont for the

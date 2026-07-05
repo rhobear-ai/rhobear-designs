@@ -30,10 +30,10 @@
 
 /** @typedef {{x:number,y:number,width:number,height:number}} Rect */
 
-/** Default box colors — Starlight: teal is the ONE accent (selection); hover
+/** Default box colors — the Designs red accent marks the selection; hover
  *  gets a neutral, less prominent line so only the accent reads as "chosen". */
-const SELECTION_COLOR = '#e94560'; // Starlight accent
-const HOVER_COLOR     = '#5f7280'; // Starlight text-3 (neutral)
+const SELECTION_COLOR = '#e94560'; // Designs red accent
+const HOVER_COLOR     = '#5f7280'; // neutral text-3
 
 const Z_SELECTION = 2;
 const Z_HOVER     = 1;

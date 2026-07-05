@@ -23,8 +23,8 @@ const EDIT_TRANSITIONS =
 const EDIT_CURSOR = 'body *{cursor:pointer!important}[contenteditable="true"]{cursor:text!important;outline:2px solid #e94560}';
 
 // Gradient/shadow PRESETS are content color for the user's own page (not editor
-// chrome) — the family system explicitly leaves this channel free. One entry
-// uses the house teal so the family accent is available as a page choice too.
+// chrome) — the family system explicitly leaves this channel free: users build
+// in any color. The Designs red brand gradient leads the list.
 const GRADIENTS = [
   'linear-gradient(135deg,#e94560,#f56b81)',
   'linear-gradient(135deg,#667eea,#764ba2)',

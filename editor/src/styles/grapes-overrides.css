@@ -1,4 +1,4 @@
-/* GrapesJS (Build mode) skinned to RHOBEAR Designs — Aurora Teal */
+/* GrapesJS (Build mode) skinned to RHOBEAR Designs — red accent */
 
 .gjs-one-bg { background-color: var(--rb-panel) !important; }
 .gjs-two-color { color: var(--rb-text) !important; }
@@ -57,13 +57,13 @@
 .gjs-label { font-family: var(--rb-font) !important; }
 
 /* Buttons / primary */
-.gjs-btn-prim { background: var(--rb-brand) !important; border-color: var(--rb-brand) !important; color: #04110f !important; }
+.gjs-btn-prim { background: var(--rb-brand) !important; border-color: var(--rb-brand) !important; color: var(--rb-brand-ink) !important; }
 
-/* On-canvas chrome — teal */
+/* On-canvas chrome — red accent */
 .gjs-toolbar { background: var(--rb-brand) !important; border-radius: 6px !important; }
-.gjs-toolbar-item { color: #04110f !important; }
+.gjs-toolbar-item { color: var(--rb-brand-ink) !important; }
 .gjs-highlighter, .gjs-highlighter-sel { outline-color: var(--rb-brand) !important; }
-.gjs-badge { background: var(--rb-brand) !important; color: #04110f !important; }
+.gjs-badge { background: var(--rb-brand) !important; color: var(--rb-brand-ink) !important; }
 .gjs-resizer-h { border-color: var(--rb-brand) !important; background: var(--rb-brand-soft) !important; }
 .gjs-placeholder { border-color: var(--rb-brand) !important; }
 .gjs-placeholder-int { background: var(--rb-brand) !important; }

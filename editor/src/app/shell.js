@@ -584,7 +584,7 @@ export function bootShell() {
     if (refs.aiMessages && !refs.aiMessages.dataset.greeted) {
       refs.aiMessages.dataset.greeted = '1';
       addAiMsg('assistant', ok
-        ? 'Connected. Select an element on the page, then tell me what to change — e.g. "make this hero dark with a teal headline".'
+        ? 'Connected. Select an element on the page, then tell me what to change — e.g. "make this hero dark with a red headline".'
         : 'Add your API key below (Connect) — Anthropic, OpenAI, or Google. The editor works fully without me.');
     }
   }
