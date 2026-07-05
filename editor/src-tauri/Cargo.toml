@@ -1,0 +1,32 @@
+[package]
+name = "rhobear-designs"
+version = "1.0.0"
+description = "RHOBEAR Designs — offline visual website editor (desktop shell)"
+authors = ["RHOBEAR"]
+license = "MIT"
+homepage = "https://github.com/deariencampbell1-sys/rhobear-designs"
+edition = "2021"
+rust-version = "1.77.2"
+
+# See: https://tauri.app/start/signing/
+# Windows code-signing is intentionally left to the owner's release step.
+# To sign, set TAURI_SIGNING_PRIVATE_KEY / use bundle.windows.signCommand at release time.
+
+[lib]
+name = "rhobear_designs_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
