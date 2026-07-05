@@ -4,3 +4,7 @@ editor/test-results/
 editor/playwright-report/
 .DS_Store
 *.log
+
+# Tauri / Rust desktop shell build artifacts
+editor/src-tauri/target/
+editor/src-tauri/gen/schemas/
