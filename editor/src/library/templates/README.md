@@ -106,7 +106,7 @@ so adding a template means **git, not magic**.
 ### 1. Fork the repo
 
 ```bash
-# on github.com/deariencampbell1-sys/rhobear-designs click "Fork"
+# on github.com/rhobear-ai/rhobear-designs click "Fork"
 git clone https://github.com/<you>/rhobear-designs.git
 cd rhobear-designs
 git checkout -b feat/add-my-studio-template
@@ -166,7 +166,7 @@ git add samples/ editor/src/library/templates/manifest.json \
         editor/src/library/templates/thumbs/   # if rendered
 git commit -m "feat(samples): add <your-template> recreation"
 git push -u origin feat/add-my-studio-template
-gh pr create --repo deariencampbell1-sys/rhobear-designs \
+gh pr create --repo rhobear-ai/rhobear-designs \
   --base build/editor-v1 \
   --title "Template: <your-template>" \
   --body  "Adds a recreation of <original-url> to the template bank. Self-contained, MIT, no new deps."

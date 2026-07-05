@@ -4,15 +4,15 @@
   "description": "Free, MIT-licensed Canva-style website editor — Edit Live Site, Build from scratch, 3D Studio. Three modes, owned Three.js engine, BYO-LLM AI assist, 62 templates, 351-element stash, 52 open-license fonts. 100% client-side, no backend.",
   "license": "MIT",
   "type": "module",
-  "author": "RHOBEAR Designs (https://github.com/deariencampbell1-sys/rhobear-designs)",
-  "homepage": "https://github.com/deariencampbell1-sys/rhobear-designs#readme",
+  "author": "RHOBEAR Designs (https://github.com/rhobear-ai/rhobear-designs)",
+  "homepage": "https://github.com/rhobear-ai/rhobear-designs#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deariencampbell1-sys/rhobear-designs.git",
+    "url": "git+https://github.com/rhobear-ai/rhobear-designs.git",
     "directory": "editor"
   },
   "bugs": {
-    "url": "https://github.com/deariencampbell1-sys/rhobear-designs/issues"
+    "url": "https://github.com/rhobear-ai/rhobear-designs/issues"
   },
   "keywords": [
     "website-editor",

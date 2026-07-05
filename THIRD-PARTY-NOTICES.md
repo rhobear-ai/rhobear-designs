@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-This repository (`deariencampbell1-sys/rhobear-designs`) and the
+This repository (`rhobear-ai/rhobear-designs`) and the
 **RHOBEAR Designs Website Editor** (the application under `editor/`) are
 licensed under the **MIT License**. Every runtime dependency, vendored
 asset, embedded font, and CDN library the editor loads is **permissively
