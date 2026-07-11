@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>RHOBEAR Designs — Website Editor</title>
+    <title>RHOBEAR Designs — Tablet Studio</title>
 
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
@@ -17,18 +17,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RHOBEAR Designs" />
     <script>
-      // Device-explicit surfaces (never one smushed PWA): a touch phone gets the
-      // purpose-built mobile studio, a touch tablet gets the tablet studio, and
-      // a mouse/trackpad browser stays here. `?surface=desktop` is the escape
-      // hatch (the other shells link back with it).
+      // Wrong-surface guard: this is the touch-tablet studio. Phones go to the
+      // mobile studio; mouse/trackpad visitors go to the desktop studio.
       (function () {
         try {
-          if (new URLSearchParams(location.search).get('surface') === 'desktop') return;
-          if (!matchMedia('(pointer: coarse)').matches) return;
+          if (new URLSearchParams(location.search).get('surface') === 'tablet') return;
+          var coarse = matchMedia('(pointer: coarse)').matches;
           var short = Math.min(screen.width, screen.height);
-          var page = short < 600 ? 'm.html' : 't.html';
-          location.replace(page + location.search + location.hash);
-        } catch (_e) { /* stay on desktop */ }
+          if (coarse && short >= 600) return;
+          location.replace(coarse ? 'm.html' : 'index.html?surface=desktop');
+        } catch (_e) { /* stay */ }
       })();
     </script>
     <script>
@@ -62,6 +60,7 @@
     <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
     <link rel="stylesheet" href="/src/styles/adobe-surfaces.css" />
+    <link rel="stylesheet" href="/src/styles/tablet.css" />
   </head>
   <body>
     <!-- Premium line-icon sprite (ecosystem chat-surface icon language) -->
@@ -357,6 +356,13 @@
     </dialog>
 
     <script type="module" src="/src/main.js"></script>
+    <script type="module">
+      // In overlay-rail widths the rail starts closed so the canvas breathes;
+      // the toolbar's rail button (engine state) brings it back.
+      if (window.innerWidth <= 1100) {
+        document.querySelector('[data-testid="btn-toggle-rail"]')?.click();
+      }
+    </script>
 
     <!-- Rho — the RHOBEAR companion, riding along in Designs' red. Lives in the
          bottom-LEFT corner (the design assistant owns bottom-right: Rho is the

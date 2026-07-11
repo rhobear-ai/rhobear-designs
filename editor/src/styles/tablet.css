@@ -1,0 +1,63 @@
+/*
+ * RHOBEAR Designs — TABLET studio (t.html only).
+ *
+ * The full desktop engine with touch-first ergonomics: bigger targets,
+ * overlay rails that don't eat canvas, a reachable floatbar. Loaded after
+ * rhobear-theme.css + adobe-surfaces.css.
+ */
+
+:root {
+  --rb-toolbar-h: 60px;
+  --rb-rail-w: 300px;
+  --rb-inspector-w: 320px;
+}
+
+/* touch targets */
+.rb-btn { min-height: 42px; }
+.rb-btn--icon { min-width: 42px; }
+.rb-modeswitch__btn { min-height: 38px; padding: 8px 14px; white-space: nowrap; }
+.rb-rail__tab { min-height: 42px; }
+.rb-icn { width: 19px; height: 19px; }
+
+/* compact toolbar — icons carry the file actions, nothing gets cut off */
+.rb-toolbar { gap: 8px; padding: 0 10px; }
+.rb-brand__text { display: none; }
+.rb-toolbar .rb-group { gap: 4px; }
+.rb-toolbar .rb-group + .rb-group { padding-left: 8px; }
+.rb-toolbar .rb-btn span { display: none; }
+.rb-toolbar .rb-btn .rb-icn + span { margin-left: 0; }
+.rb-modeswitch__btn { padding: 8px 12px; font-size: 0.74rem; }
+
+/* Rho clears the toolbar */
+#rho-launch { top: 70px !important; }
+#rho-panel { top: 122px !important; }
+
+/* rails overlay the canvas instead of shrinking it (portrait especially) */
+@media (max-width: 1100px) {
+  .rb-workspace { position: relative; }
+  .rb-rail {
+    position: absolute; left: 0; top: 0; bottom: 0; z-index: 35;
+    background: var(--rb-glass);
+    backdrop-filter: blur(24px) saturate(1.35);
+    -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    box-shadow: 18px 0 50px -30px rgba(0, 0, 0, 0.65);
+  }
+  .rb-inspector {
+    position: absolute; right: 0; top: 0; bottom: 0; z-index: 35;
+    background: var(--rb-glass);
+    backdrop-filter: blur(24px) saturate(1.35);
+    -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    box-shadow: -18px 0 50px -30px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* floatbar: larger + kept clear of the thumb edge */
+.rb-floatbar .rb-btn--icon { min-width: 46px; min-height: 46px; }
+
+/* AI panel: wider, anchored clear of the home-indicator */
+.rb-ai-panel { width: 440px; bottom: calc(96px + env(safe-area-inset-bottom)); }
+.rb-ai-fab { width: 58px; height: 58px; bottom: calc(20px + env(safe-area-inset-bottom)); }
+
+/* template + element grids breathe on touch */
+.rb-tpl-grid { grid-template-columns: repeat(3, 1fr); }
+.rb-lib-grid { grid-template-columns: repeat(2, 1fr); }

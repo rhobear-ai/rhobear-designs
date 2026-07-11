@@ -76,6 +76,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      // Device-explicit shells — one engine, three purpose-built surfaces.
+      input: {
+        main: 'index.html',
+        mobile: 'm.html',
+        tablet: 't.html',
+      },
+    },
     commonjsOptions: {
       // Vite's default is just /node_modules/ — we must keep that to
       // preserve CJS interop for file-saver and jszip, and add our
