@@ -7,3 +7,5 @@ editor/playwright-report/
 # Runtime data (API generates these)
 service/data/
 .code-graph/
+
+.claude/
