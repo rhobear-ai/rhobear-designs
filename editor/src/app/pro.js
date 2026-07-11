@@ -24,8 +24,8 @@
 export const PRO_CONFIG = {
   productName: 'RHOBEAR Designs Pro',
   priceLabel: '$19 / mo',            // display only — real price is set at checkout
-  checkoutUrl: '',                   // <-- OWNER: your PayPal/Stripe payment link
-  pubKeyB64: '',                     // <-- OWNER: license Ed25519 public key (raw 32B, base64)
+  checkoutUrl: 'https://buy.stripe.com/cNi00c94He31gHN718g7e02',  // LIVE Stripe Payment Link (Designs Pro $19/mo)
+  pubKeyB64: '2NG4IJx5yLCk9IrDXDU6h0WHOtMLeZafiOGC0HDDFBs=',  // founder license pubkey (public)
   codes: [],                         // <-- OWNER (optional): ['LAUNCH-2026', ...]
   features: [
     ['Voice control', 'Hold to talk — say what to change and watch the page update.'],
