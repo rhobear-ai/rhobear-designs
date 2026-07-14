@@ -87,6 +87,8 @@ export function bootShell() {
     aiForm: $('ai-form'),
     aiPrompt: $('ai-prompt'),
     aiStatus: $('ai-status'),
+    aiAsk: $('ai-ask'),
+    aiCtx: $('ai-ctx'),
   };
 
   let mode = 'live';
@@ -109,6 +111,11 @@ export function bootShell() {
     } else {
       refs.inspector.classList.add('is-hidden');
       if (refs.statusSel) refs.statusSel.textContent = 'No selection';
+    }
+    // Chat composer context chip — the assistant works on what you select.
+    if (refs.aiCtx) {
+      if (sel) { refs.aiCtx.textContent = `editing <${sel.tag}>`; refs.aiCtx.classList.add('is-on'); }
+      else { refs.aiCtx.classList.remove('is-on'); }
     }
     refreshUndo();
   };
@@ -616,6 +623,10 @@ export function bootShell() {
     const c = aiConfig();
     if (!c.key || !c.provider) { addAiMsg('assistant', 'No key set — click "Connect / change LLM key" below.'); return; }
     addAiMsg('user', prompt);
+    if (refs.aiAsk) refs.aiAsk.classList.add('is-busy');
+    try { await sendAiInner(prompt, c); } finally { if (refs.aiAsk) refs.aiAsk.classList.remove('is-busy'); }
+  }
+  async function sendAiInner(prompt, c) {
     const pending = addAiMsg('assistant', '…thinking');
     // Tool-driven path: pair an OpenAI-compatible model (incl. a local endpoint)
     // with the editor tools so it can inspect the page and act directly across

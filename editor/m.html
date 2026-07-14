@@ -2,80 +2,52 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>RHOBEAR Designs — Website Editor</title>
-
-    <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+    <title>RHOBEAR Designs — Mobile Studio</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#e94560" />
-    <meta name="description" content="Free, MIT-licensed Canva-style website editor — Edit Live, Build, 3D Studio. 100% client-side, BYO-LLM AI assist." />
+    <meta name="description" content="RHOBEAR Designs on your phone — a purpose-built mobile studio, not a squeezed desktop." />
     <link rel="icon" href="icons/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="RHOBEAR Designs" />
     <script>
-      // Device-explicit surfaces (never one smushed PWA): a touch phone gets the
-      // purpose-built mobile studio, a touch tablet gets the tablet studio, and
-      // a mouse/trackpad browser stays here. `?surface=desktop` is the escape
-      // hatch (the other shells link back with it).
+      // Wrong-surface guard: a fine-pointer (mouse) visitor belongs on the
+      // desktop studio unless they explicitly asked for this shell.
       (function () {
         try {
-          if (new URLSearchParams(location.search).get('surface') === 'desktop') return;
-          if (!matchMedia('(pointer: coarse)').matches) return;
-          var short = Math.min(screen.width, screen.height);
-          var page = short < 600 ? 'm.html' : 't.html';
-          location.replace(page + location.search + location.hash);
-        } catch (_e) { /* stay on desktop */ }
+          if (new URLSearchParams(location.search).get('surface') === 'mobile') return;
+          if (matchMedia('(pointer: coarse)').matches) return;
+          location.replace('index.html?surface=desktop');
+        } catch (_e) { /* stay */ }
       })();
     </script>
     <script>
-      // Service worker. In production it makes the app installable and lets a
-      // fresh deploy win (navigations are network-first). On a dev / localhost
-      // origin a SW only ever masks live edits behind a stale cache, so there we
-      // do the opposite: tear any existing SW + caches down and never register.
       (function () {
         if (!('serviceWorker' in navigator)) return;
-        var host = location.hostname;
-        var dev = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || !!location.port;
+        var dev = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '[::1]' || !!location.port;
         if (dev) {
-          navigator.serviceWorker.getRegistrations()
-            .then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
-          if (window.caches) caches.keys()
-            .then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }).catch(function () {});
+          navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
+          if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }).catch(function () {});
           return;
         }
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js').then(function (reg) {
-            // Installed app (iPad home-screen / Store MSIX) picks up updates next boot.
-            if (reg && reg.update) reg.update().catch(function () {});
-          }).catch(function () {});
+          navigator.serviceWorker.register('sw.js').then(function (reg) { if (reg && reg.update) reg.update().catch(function () {}); }).catch(function () {});
         });
       })();
     </script>
-
-    <!-- Chrome typography is system stacks (Starlight) — no webfont for the
-         app shell. Google Fonts still load per-family at runtime for USER
-         content via the font picker. -->
     <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
     <link rel="stylesheet" href="/src/styles/adobe-surfaces.css" />
+    <link rel="stylesheet" href="/src/styles/mobile.css" />
   </head>
   <body>
-    <!-- Premium line-icon sprite (ecosystem chat-surface icon language) -->
+    <!-- Premium line-icon sprite -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
       <symbol id="i-rail" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><line x1="9.5" y1="4" x2="9.5" y2="20"/></symbol>
       <symbol id="i-undo" viewBox="0 0 24 24"><path d="M8.5 6 4.5 10l4 4"/><path d="M4.5 10H15a4.5 4.5 0 0 1 0 9h-3"/></symbol>
       <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15.5 6l4 4-4 4"/><path d="M19.5 10H9a4.5 4.5 0 0 0 0 9h3"/></symbol>
-      <symbol id="i-desktop" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12.5" rx="2.5"/><line x1="9" y1="20.5" x2="15" y2="20.5"/><line x1="12" y1="17" x2="12" y2="20.5"/></symbol>
-      <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="2.5"/><line x1="10.5" y1="18" x2="13.5" y2="18"/></symbol>
-      <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.8" width="10" height="18.4" rx="2.5"/><line x1="10.8" y1="18.2" x2="13.2" y2="18.2"/></symbol>
       <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></symbol>
-      <symbol id="i-file-plus" viewBox="0 0 24 24"><path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5L13.5 3Z"/><path d="M13.5 3v5.5H19"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></symbol>
-      <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="M3.5 7V5.8A1.8 1.8 0 0 1 5.3 4h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8V10"/><path d="M3.2 10.5h17.6a1 1 0 0 1 1 1.2l-1.4 6.6a1.8 1.8 0 0 1-1.8 1.4H5.4a1.8 1.8 0 0 1-1.8-1.4L2.2 11.7a1 1 0 0 1 1-1.2Z"/></symbol>
-      <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 15V3.5"/><path d="m7.5 8 4.5-4.5L16.5 8"/><path d="M4.5 13v5A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5v-5"/></symbol>
       <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3.5V15"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4.5 16v2A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5v-2"/></symbol>
       <symbol id="i-parent" viewBox="0 0 24 24"><path d="M9 20V8a3 3 0 0 1 3-3h8"/><path d="m16 1.5 4 3.5-4 3.5"/></symbol>
       <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 5.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8.5a2 2 0 0 0 2 2h.5"/></symbol>
@@ -85,60 +57,51 @@
       <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
       <symbol id="i-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19.5" x2="12" y2="5"/><path d="m6 10.5 6-6 6 6"/></symbol>
       <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12a7.3 7.3 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7.3 7.3 0 0 0-2.1-1.2L14.4 3h-4l-.4 2.7a7.3 7.3 0 0 0-2.1 1.2l-2.3-1-2 3.4 2 1.5a7.3 7.3 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7.3 7.3 0 0 0 2.1 1.2l.4 2.7h4l.4-2.7a7.3 7.3 0 0 0 2.1-1.2l2.3 1 2-3.4-2-1.5c.07-.4.1-.8.1-1.2Z"/></symbol>
-      <symbol id="i-x" viewBox="0 0 24 24"><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/><line x1="18.5" y1="5.5" x2="5.5" y2="18.5"/></symbol>
-      <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.5c.7 3.9 2.6 5.8 6.5 6.5-3.9.7-5.8 2.6-6.5 6.5-.7-3.9-2.6-5.8-6.5-6.5 3.9-.7 5.8-2.6 6.5-6.5Z"/><path d="M18.5 15.5c.35 1.9 1.3 2.85 3.2 3.2-1.9.35-2.85 1.3-3.2 3.2-.35-1.9-1.3-2.85-3.2-3.2 1.9-.35 2.85-1.3 3.2-3.2Z"/></symbol>
       <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8"/></symbol>
       <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3.8 12.5 8.2 4.6 8.2-4.6"/><path d="m3.8 16.5 8.2 4.6 8.2-4.6"/></symbol>
-      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 17.5 5-5 3.5 3.5 3-3 3.5 3.5"/></symbol>
+      <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="M3.5 7V5.8A1.8 1.8 0 0 1 5.3 4h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8V10"/><path d="M3.2 10.5h17.6a1 1 0 0 1 1 1.2l-1.4 6.6a1.8 1.8 0 0 1-1.8 1.4H5.4a1.8 1.8 0 0 1-1.8-1.4L2.2 11.7a1 1 0 0 1 1-1.2Z"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="5" y1="4" x2="5" y2="11"/><line x1="5" y1="15" x2="5" y2="20"/><circle cx="5" cy="13" r="2"/><line x1="12" y1="4" x2="12" y2="7"/><line x1="12" y1="11" x2="12" y2="20"/><circle cx="12" cy="9" r="2"/><line x1="19" y1="4" x2="19" y2="14"/><line x1="19" y1="18" x2="19" y2="20"/><circle cx="19" cy="16" r="2"/></symbol>
     </svg>
+
     <div id="app" class="rb-app">
-      <!-- ───────────── Toolbar ───────────── -->
+      <!-- ── top bar ── -->
       <header class="rb-toolbar" data-testid="toolbar">
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">RHOBEAR Designs</span>
+            <span class="rb-brand__name">Designs</span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
-
-        <div class="rb-group">
-          <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" data-action="toggle-rail" data-testid="btn-toggle-rail" title="Toggle panel" aria-label="Toggle panel"><svg class="rb-icn"><use href="#i-rail"/></svg></button>
-          <div class="rb-modeswitch" role="tablist" aria-label="Edit mode">
-            <button type="button" class="rb-modeswitch__btn is-active" data-action="mode-live" data-testid="btn-mode-live" role="tab">Edit Live Site</button>
-            <button type="button" class="rb-modeswitch__btn" data-action="mode-build" data-testid="btn-mode-build" role="tab">Build from scratch</button>
-            <button type="button" class="rb-modeswitch__btn" data-action="mode-3d" data-testid="btn-mode-3d" role="tab">3D Studio</button>
-          </div>
-          <button type="button" class="rb-btn" data-action="open-templates" data-testid="btn-templates" title="Browse templates">Templates</button>
-          <button type="button" class="rb-btn rb-btn--ghost" data-action="open-projects" data-testid="btn-projects" title="Projects &amp; folders">Projects</button>
-        </div>
-
         <div class="rb-toolbar__spacer"></div>
-
         <div class="rb-group" role="group" aria-label="Edit">
-          <button type="button" class="rb-btn rb-btn--icon" data-action="undo" data-testid="btn-undo" title="Undo" aria-label="Undo"><svg class="rb-icn"><use href="#i-undo"/></svg></button>
-          <button type="button" class="rb-btn rb-btn--icon" data-action="redo" data-testid="btn-redo" title="Redo" aria-label="Redo"><svg class="rb-icn"><use href="#i-redo"/></svg></button>
+          <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" data-action="undo" data-testid="btn-undo" title="Undo" aria-label="Undo"><svg class="rb-icn"><use href="#i-undo"/></svg></button>
+          <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" data-action="redo" data-testid="btn-redo" title="Redo" aria-label="Redo"><svg class="rb-icn"><use href="#i-redo"/></svg></button>
+          <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" data-action="preview" data-testid="btn-preview" title="Preview" aria-label="Preview"><svg class="rb-icn"><use href="#i-eye"/></svg></button>
+          <button type="button" class="rb-btn rb-btn--primary rb-btn--icon" data-action="save-html" data-testid="btn-save-html" title="Save" aria-label="Save"><svg class="rb-icn"><use href="#i-save"/></svg></button>
         </div>
-
-        <div class="rb-group" role="group" aria-label="Device">
-          <button type="button" class="rb-btn rb-btn--icon is-active" data-action="device-desktop" data-testid="btn-device-desktop" title="Desktop" aria-label="Desktop"><svg class="rb-icn"><use href="#i-desktop"/></svg></button>
-          <button type="button" class="rb-btn rb-btn--icon" data-action="device-tablet" data-testid="btn-device-tablet" title="Tablet" aria-label="Tablet"><svg class="rb-icn"><use href="#i-tablet"/></svg></button>
-          <button type="button" class="rb-btn rb-btn--icon" data-action="device-mobile" data-testid="btn-device-mobile" title="Mobile" aria-label="Mobile"><svg class="rb-icn"><use href="#i-phone"/></svg></button>
-          <button type="button" class="rb-btn" data-action="preview" data-testid="btn-preview"><svg class="rb-icn"><use href="#i-eye"/></svg><span>Preview</span></button>
-        </div>
-
-        <div class="rb-group" role="group" aria-label="File">
-          <button type="button" class="rb-btn" data-action="new" data-testid="btn-new" title="New blank page"><svg class="rb-icn"><use href="#i-file-plus"/></svg><span>New</span></button>
-          <button type="button" class="rb-btn" data-action="open-html" data-testid="btn-open-html" title="Open an HTML file"><svg class="rb-icn"><use href="#i-folder-open"/></svg><span>Open</span></button>
-          <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="open-folder" data-testid="btn-open-folder" title="Open a folder of assets" aria-label="Open folder"><svg class="rb-icn"><use href="#i-folder-open"/></svg></button>
-          <button type="button" class="rb-btn" data-action="export-zip" data-testid="btn-export-zip" title="Export HTML + CSS as ZIP"><svg class="rb-icn"><use href="#i-export"/></svg><span>Export</span></button>
-          <button type="button" class="rb-btn rb-btn--primary" data-action="save-html" data-testid="btn-save-html" title="Download HTML"><svg class="rb-icn"><use href="#i-save"/></svg><span>Save</span></button>
+        <!-- engine-required desktop controls, parked off-screen -->
+        <div class="rbm-gone" aria-hidden="true">
+          <button type="button" data-action="toggle-rail" data-testid="btn-toggle-rail" tabindex="-1">rail</button>
+          <div class="rb-modeswitch" role="tablist">
+            <button type="button" class="rb-modeswitch__btn is-active" data-action="mode-live" data-testid="btn-mode-live" role="tab" tabindex="-1">Live</button>
+            <button type="button" class="rb-modeswitch__btn" data-action="mode-build" data-testid="btn-mode-build" role="tab" tabindex="-1">Build</button>
+            <button type="button" class="rb-modeswitch__btn" data-action="mode-3d" data-testid="btn-mode-3d" role="tab" tabindex="-1">3D</button>
+          </div>
+          <button type="button" data-action="device-desktop" data-testid="btn-device-desktop" tabindex="-1">d</button>
+          <button type="button" data-action="device-tablet" data-testid="btn-device-tablet" tabindex="-1">t</button>
+          <button type="button" data-action="device-mobile" data-testid="btn-device-mobile" class="is-active" tabindex="-1">m</button>
+          <button type="button" data-action="new" data-testid="btn-new" tabindex="-1">new</button>
+          <button type="button" data-action="open-html" data-testid="btn-open-html" tabindex="-1">open</button>
+          <button type="button" data-action="open-folder" data-testid="btn-open-folder" tabindex="-1">folder</button>
+          <button type="button" data-action="export-zip" data-testid="btn-export-zip" tabindex="-1">export</button>
+          <a href="index.html?surface=desktop" tabindex="-1">Desktop studio</a>
         </div>
       </header>
 
-      <!-- ───────────── Workspace ───────────── -->
+      <!-- ── workspace ── -->
       <div class="rb-workspace">
-        <!-- Left rail -->
+        <!-- Add / Layers sheet (the rail) -->
         <aside class="rb-rail" id="rail" data-testid="rail">
           <div class="rb-rail__tabs">
             <button type="button" class="rb-rail__tab is-active" data-rail-tab="add" data-testid="rail-tab-add">Add</button>
@@ -146,11 +109,8 @@
           </div>
           <div class="rb-rail__body rb-scroll">
             <div class="rb-rail__pane is-active" data-rail-pane="add" data-testid="rail-pane-add">
-              <!-- Build mode: GrapesJS blocks -->
               <div id="gjs-blocks" data-build-only></div>
-              <!-- Live mode: element library (the stash) -->
               <div data-live-only class="is-gone" id="element-library" data-testid="element-library"></div>
-              <!-- 3D Studio: insert + objects -->
               <div data-3d-only class="is-gone" id="three-rail" data-testid="three-rail"></div>
             </div>
             <div class="rb-rail__pane" data-rail-pane="layers" data-testid="rail-pane-layers">
@@ -160,27 +120,22 @@
           </div>
         </aside>
 
-        <!-- Canvas -->
         <main class="rb-canvas-wrap" data-testid="canvas-wrap">
           <div class="rb-canvas">
-            <!-- Build mode canvas -->
             <div id="gjs" data-build-only></div>
-            <!-- Live mode host -->
             <div class="rb-live-host" id="live-host" data-live-only data-testid="live-host">
               <iframe class="rb-live-frame" id="live-frame" title="Live site" data-testid="live-frame"></iframe>
               <div class="rb-live-overlay" id="live-overlay"></div>
             </div>
-            <!-- 3D Studio host -->
             <div class="rb-three-host" id="three-host" data-3d-only data-testid="three-host"></div>
           </div>
 
-          <!-- Studio start (onboarding / empty state) -->
           <div class="rb-empty rb-scroll" id="empty-state" data-testid="empty-state">
             <div class="rb-empty__inner">
               <div class="rb-empty__hero">
                 <div class="rb-empty__mark"><img class="rb-bear" src="/src/assets/rhobear-logo.png" alt="" /></div>
                 <h1 class="rb-empty__title">What will you design today?</h1>
-                <p class="rb-empty__sub">Open any page and edit it live — it keeps its look and its functions. Start from a template, a blank canvas, or HTML from anywhere (paste what a chatbot gave you and make it real).</p>
+                <p class="rb-empty__sub">Open any page and edit it live — start from a template or paste HTML from anywhere.</p>
                 <div class="rb-empty__actions">
                   <button type="button" class="rb-btn rb-btn--primary" data-action="open-templates" data-testid="empty-templates">Browse templates</button>
                   <button type="button" class="rb-btn" data-action="open-html" data-testid="empty-open">Open a page</button>
@@ -198,20 +153,20 @@
             </div>
           </div>
 
-          <!-- Floating select bar (live mode) -->
           <div class="rb-floatbar" id="floatbar" data-testid="floatbar">
             <button type="button" class="rb-btn rb-btn--icon" data-action="select-parent" data-testid="float-parent" title="Select parent group"><svg class="rb-icn"><use href="#i-parent"/></svg></button>
             <button type="button" class="rb-btn rb-btn--icon" data-action="duplicate" data-testid="float-duplicate" title="Duplicate"><svg class="rb-icn"><use href="#i-copy"/></svg></button>
             <button type="button" class="rb-btn rb-btn--icon" data-action="replace" data-testid="float-replace" title="Replace from stash"><svg class="rb-icn"><use href="#i-swap"/></svg></button>
+            <button type="button" class="rb-btn rb-btn--icon" id="rbm-inspect" title="Style &amp; spacing"><svg class="rb-icn"><use href="#i-sliders"/></svg></button>
             <button type="button" class="rb-btn rb-btn--icon" data-action="delete" data-testid="float-delete" title="Delete"><svg class="rb-icn"><use href="#i-trash"/></svg></button>
           </div>
 
-          <!-- AI chat surface — the ecosystem glass "Ask anything…" bar -->
+          <!-- AI chat sheet -->
           <button type="button" class="rb-ai-fab" data-action="ai-toggle" data-testid="ai-fab" title="Design with AI" aria-label="Design with AI"><img class="rb-bear" src="/src/assets/rhobear-logo.png" alt="" /></button>
           <section class="rb-ai-panel" id="ai-panel" data-testid="ai-panel">
             <div class="rb-ai-panel__head">
               <span class="rb-logo"><img class="rb-bear" src="/src/assets/rhobear-logo.png" alt="" /></span>
-              <span>Design assistant<span class="rb-ai-panel__sub">works on what you select — your model, your key</span></span>
+              <span>Design assistant<span class="rb-ai-panel__sub">works on what you select</span></span>
               <span class="rb-toolbar__spacer"></span>
               <span class="rb-pill" id="ai-status" data-testid="ai-status">offline</span>
             </div>
@@ -221,7 +176,7 @@
                 <span class="rb-ask__ctx" id="ai-ctx" data-testid="ai-ctx"></span>
                 <input type="text" class="rb-input" id="ai-prompt" data-testid="ai-prompt" placeholder="Ask anything…" autocomplete="off" />
                 <div class="rb-ask__row">
-                  <button type="button" class="rb-ask__tool" data-action="add-image" title="Add an image to the page" aria-label="Add image"><svg class="rb-icn"><use href="#i-plus"/></svg></button>
+                  <button type="button" class="rb-ask__tool" data-action="add-image" title="Add an image" aria-label="Add image"><svg class="rb-icn"><use href="#i-plus"/></svg></button>
                   <span class="rb-ask__spacer"></span>
                   <span class="rb-ask__wave" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i></span>
                   <button type="submit" class="rb-ask__send" id="ai-send" data-testid="ai-send" title="Send" aria-label="Send"><svg class="rb-icn"><use href="#i-arrow-up"/></svg></button>
@@ -232,33 +187,40 @@
           </section>
         </main>
 
-        <!-- Inspector (hidden until selection) -->
+        <!-- Inspector sheet -->
         <aside class="rb-inspector is-hidden" id="inspector" data-testid="inspector">
           <div class="rb-inspector__head">
             <span class="rb-inspector__title">Inspector</span>
             <span class="rb-inspector__tag" id="inspector-tag" data-testid="inspector-tag">—</span>
           </div>
           <div class="rb-inspector__body rb-scroll">
-            <!-- Build mode: GrapesJS style + traits -->
             <div id="inspector-build" data-build-only>
               <div id="gjs-styles"></div>
               <div id="gjs-traits"></div>
             </div>
-            <!-- Live mode: intent inspector -->
             <div id="inspector-live" data-live-only class="is-gone" data-testid="inspector-live"></div>
-            <!-- 3D Studio: object controls -->
             <div id="inspector-3d" data-3d-only class="is-gone" data-testid="inspector-3d"></div>
           </div>
         </aside>
       </div>
 
-      <!-- Status -->
+      <!-- status (hidden on phones; engine writes into it) -->
       <footer class="rb-status" data-testid="status-bar">
         <span class="rb-status__dot">●</span>
         <span id="status-message" data-testid="status-message">Ready</span>
         <span class="rb-status__spacer"></span>
         <span class="rb-status__sel" id="status-selection" data-testid="status-selection">No selection</span>
       </footer>
+
+      <!-- ── the dock ── -->
+      <div class="rbm-scrim" id="rbm-scrim"></div>
+      <nav class="rbm-dock" aria-label="Studio">
+        <button type="button" class="rbm-dock__btn" data-action="open-templates"><svg class="rb-icn"><use href="#i-grid"/></svg>Templates</button>
+        <button type="button" class="rbm-dock__btn" id="rbm-dock-add"><svg class="rb-icn"><use href="#i-plus"/></svg>Add</button>
+        <button type="button" class="rbm-dock__btn rbm-dock__btn--ai" data-action="ai-toggle"><span class="rbm-dock__orb"><img src="/src/assets/rhobear-logo.png" alt="" /></span>AI</button>
+        <button type="button" class="rbm-dock__btn" id="rbm-dock-layers"><svg class="rb-icn"><use href="#i-layers"/></svg>Layers</button>
+        <button type="button" class="rbm-dock__btn" data-action="open-projects"><svg class="rb-icn"><use href="#i-folder-open"/></svg>Projects</button>
+      </nav>
     </div>
 
     <!-- Hidden file inputs -->
@@ -280,12 +242,12 @@
       </form>
     </dialog>
 
-    <!-- Settings modal (BYO-LLM — UI shell; AI logic is next phase) -->
+    <!-- Settings modal (BYO-LLM) -->
     <dialog id="settings-modal" class="rb-modal" data-testid="settings-modal">
       <div class="rb-modal__content">
         <div class="rb-modal__actions--top rb-modal__actions">
           <strong>Connect an LLM</strong>
-          <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="settings-close" data-testid="btn-settings-close" aria-label="Close">✕</button>
+          <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="settings-close" data-testid="btn-settings-close" aria-label="Close"><svg class="rb-icn"><use href="#i-x"/></svg></button>
         </div>
         <p class="rb-modal__hint">RHOBEAR Designs never supplies the AI — you bring your own. Keys are stored locally in your browser, never sent to us.</p>
         <div class="rb-setting">
@@ -300,7 +262,6 @@
         <div class="rb-setting">
           <span class="rb-setting__label">API key</span>
           <input type="password" class="rb-input" id="ai-key" placeholder="sk-…" data-testid="ai-key" />
-          <span class="rb-setting__hint">Or use OAuth where the provider supports it (coming with the AI release).</span>
         </div>
         <div class="rb-setting">
           <span class="rb-setting__label">Model <span class="rb-setting__opt">(optional)</span></span>
@@ -309,7 +270,6 @@
         <div class="rb-setting">
           <span class="rb-setting__label">Base URL <span class="rb-setting__opt">(local / compatible only)</span></span>
           <input type="text" class="rb-input" id="ai-base" placeholder="http://localhost:11434/v1" data-testid="ai-base" />
-          <span class="rb-setting__hint">For OpenAI-compatible endpoints, the model can call the editor tools to act on the page directly.</span>
         </div>
         <div class="rb-modal__actions">
           <button type="button" class="rb-btn" data-action="settings-close">Cancel</button>
@@ -357,10 +317,54 @@
     </dialog>
 
     <script type="module" src="/src/main.js"></script>
+    <script type="module">
+      // Mobile dock ↔ sheet choreography. The engine (shell.js) is untouched:
+      // the dock drives it through the same controls the desktop shell exposes.
+      const $ = (id) => document.getElementById(id);
+      const rail = $('rail'); const inspector = $('inspector');
+      const aiPanel = $('ai-panel'); const scrim = $('rbm-scrim');
+      const dockAdd = $('rbm-dock-add'); const dockLayers = $('rbm-dock-layers');
+      const dockBtns = Array.from(document.querySelectorAll('.rbm-dock__btn'));
 
-    <!-- Rho — the RHOBEAR companion, riding along in Designs' red. Lives in the
-         bottom-LEFT corner (the design assistant owns bottom-right: Rho is the
-         product guide, the assistant is the work tool). -->
+      function closeSheets() {
+        rail.classList.remove('is-sheet-open');
+        inspector.classList.remove('is-sheet-open');
+        aiPanel.classList.remove('is-open');
+        scrim.classList.remove('is-on');
+        dockBtns.forEach((b) => b.classList.remove('is-active'));
+      }
+      function openRail(tab, btn) {
+        const already = rail.classList.contains('is-sheet-open') && btn.classList.contains('is-active');
+        closeSheets();
+        if (already) return;
+        document.querySelector(`[data-rail-tab="${tab}"]`)?.click();
+        rail.classList.add('is-sheet-open'); scrim.classList.add('is-on');
+        btn.classList.add('is-active');
+      }
+      dockAdd.addEventListener('click', () => openRail('add', dockAdd));
+      dockLayers.addEventListener('click', () => openRail('layers', dockLayers));
+      scrim.addEventListener('click', closeSheets);
+
+      // AI dock button: shell's own ai-toggle handles panel state; we sync scrim.
+      document.querySelector('.rbm-dock__btn--ai').addEventListener('click', () => {
+        rail.classList.remove('is-sheet-open'); inspector.classList.remove('is-sheet-open');
+        setTimeout(() => scrim.classList.toggle('is-on', aiPanel.classList.contains('is-open')), 0);
+      });
+
+      // Floatbar "tune" button pulls the inspector sheet up for the selection.
+      $('rbm-inspect').addEventListener('click', () => {
+        const open = inspector.classList.contains('is-sheet-open');
+        closeSheets();
+        if (!open) { inspector.classList.add('is-sheet-open'); scrim.classList.add('is-on'); }
+      });
+
+      // Templates / Projects dock buttons open modals — close sheets first.
+      dockBtns.filter((b) => b.dataset.action).forEach((b) => b.addEventListener('click', () => {
+        rail.classList.remove('is-sheet-open'); inspector.classList.remove('is-sheet-open'); scrim.classList.remove('is-on');
+      }));
+    </script>
+
+    <!-- Rho — companion, phone corner -->
     <script>
       window.RHOBEAR_COMPANION = {
         endpoint: 'https://workbench.rhobear.ai/companion',
@@ -369,11 +373,5 @@
       };
     </script>
     <script defer src="companion-embed.js"></script>
-    <style>
-      /* Rho rides in the chrome — top-right beside the toolbar; the design
-         assistant keeps the canvas corner. */
-      #rho-launch { top: 64px; bottom: auto !important; right: 16px !important; width: 40px; height: 40px; }
-      #rho-panel { top: 118px; bottom: auto !important; right: 16px !important; max-height: min(72vh, 640px); }
-    </style>
   </body>
 </html>

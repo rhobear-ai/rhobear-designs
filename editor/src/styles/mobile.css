@@ -1,0 +1,147 @@
+/*
+ * RHOBEAR Designs — MOBILE studio (m.html only).
+ *
+ * A purpose-built phone shell, not a squeezed desktop: top bar, full-bleed
+ * canvas, and a bottom dock that pulls each work surface up as a sheet.
+ * Loaded after rhobear-theme.css + adobe-surfaces.css; everything here is
+ * phone-first layout — the engine underneath is the same editor.
+ */
+
+:root {
+  --rbm-dock-h: 62px;
+  --rbm-top-h: 52px;
+}
+
+html, body { overscroll-behavior: none; }
+body { -webkit-tap-highlight-color: transparent; }
+
+.rb-app { display: flex; flex-direction: column; height: 100dvh; }
+
+/* ── top bar ─────────────────────────────────────────────── */
+.rb-toolbar {
+  height: var(--rbm-top-h);
+  padding: 0 10px 0 12px;
+  padding-top: env(safe-area-inset-top);
+  height: calc(var(--rbm-top-h) + env(safe-area-inset-top));
+  gap: 8px;
+}
+.rb-brand__name { font-size: 0.78rem; }
+.rb-brand__doc { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rb-toolbar .rb-btn { min-height: 40px; min-width: 40px; }
+.rb-toolbar .rb-group + .rb-group { padding-left: 8px; }
+
+/* hidden-but-present desktop controls (engine expects them) */
+.rbm-gone { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; overflow: hidden; }
+
+/* ── canvas ──────────────────────────────────────────────── */
+.rb-workspace { flex: 1; position: relative; overflow: hidden; display: block; }
+.rb-canvas-wrap { position: absolute; inset: 0; padding-bottom: calc(var(--rbm-dock-h) + env(safe-area-inset-bottom)); }
+.rb-canvas { height: 100%; }
+
+/* start screen tuned for a phone */
+.rb-empty__inner { padding: 26px 18px calc(var(--rbm-dock-h) + 40px); }
+.rb-empty__title { font-size: 1.5rem; }
+.rb-empty__sub { font-size: 0.86rem; }
+.rb-empty__actions { flex-wrap: wrap; }
+.rb-empty__actions .rb-btn { min-height: 44px; flex: 1 1 100%; justify-content: center; }
+.rb-start__grid { grid-template-columns: repeat(2, 1fr); }
+
+/* ── rail + inspector become bottom sheets ───────────────── */
+.rb-rail, .rb-inspector {
+  position: fixed; left: 0; right: 0; top: auto;
+  bottom: calc(var(--rbm-dock-h) + env(safe-area-inset-bottom));
+  width: 100%; max-width: none; height: 46dvh;
+  margin: 0; border-right: none; border-left: none;
+  border-top: 1px solid var(--rb-glass-bd);
+  border-radius: 20px 20px 0 0;
+  background: var(--rb-glass);
+  backdrop-filter: blur(24px) saturate(1.35);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+  box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.65);
+  z-index: 40;
+  transform: translateY(110%);
+  transition: transform 240ms var(--rb-ease);
+  display: flex; flex-direction: column;
+}
+.rb-rail.is-sheet-open, .rb-inspector.is-sheet-open { transform: translateY(0); }
+.rb-rail.is-collapsed { margin-left: 0; }              /* desktop collapse n/a */
+.rb-inspector.is-hidden { display: flex; }              /* sheet governs visibility */
+.rb-rail::before, .rb-inspector::before {
+  content: ""; align-self: center; flex-shrink: 0;
+  width: 42px; height: 4px; border-radius: 999px;
+  margin: 8px 0 2px; background: var(--rb-text-faint); opacity: 0.5;
+}
+.rb-rail__tabs { padding: 6px 10px 0; }
+.rb-rail__tab { min-height: 40px; }
+.rb-lib-grid { grid-template-columns: repeat(2, 1fr); }
+
+/* ── floatbar: bottom-center, above dock, big targets ────── */
+.rb-floatbar {
+  position: fixed; left: 50% !important; top: auto !important;
+  bottom: calc(var(--rbm-dock-h) + 14px + env(safe-area-inset-bottom)) !important;
+  transform: translateX(-50%);
+  z-index: 45;
+}
+.rb-floatbar .rb-btn--icon { min-width: 44px; min-height: 44px; }
+.rb-floatbar .rb-icn { width: 19px; height: 19px; }
+
+/* ── AI panel: full-width sheet ──────────────────────────── */
+.rb-ai-fab { display: none; }                            /* dock owns entry */
+.rb-ai-panel {
+  position: fixed; left: 0; right: 0; top: auto;
+  bottom: calc(var(--rbm-dock-h) + env(safe-area-inset-bottom));
+  width: 100%; max-width: none; max-height: 62dvh;
+  border-radius: 20px 20px 0 0;
+  z-index: 46;
+}
+.rb-ai-messages { max-height: none; }
+
+/* ── the dock ────────────────────────────────────────────── */
+.rbm-dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  height: calc(var(--rbm-dock-h) + env(safe-area-inset-bottom));
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+  background: linear-gradient(180deg, var(--rb-panel-2), var(--rb-panel));
+  border-top: 1px solid var(--rb-border);
+  box-shadow: 0 -8px 30px -18px rgba(0, 0, 0, 0.7);
+}
+.rbm-dock__btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  background: transparent; border: none; border-radius: 12px; cursor: pointer;
+  color: var(--rb-text-muted); font-family: var(--rb-font); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: color var(--rb-t-hover), background var(--rb-t-hover);
+}
+.rbm-dock__btn .rb-icn { width: 20px; height: 20px; }
+.rbm-dock__btn.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); }
+.rbm-dock__btn--ai .rbm-dock__orb {
+  width: 30px; height: 30px; border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.4), transparent 45%),
+    conic-gradient(from 210deg, var(--rb-brand), var(--rb-accent2), #d16ba5, var(--rb-brand));
+  box-shadow: 0 4px 14px -4px var(--rb-brand-glow);
+  display: grid; place-items: center;
+}
+.rbm-dock__btn--ai .rbm-dock__orb img { width: 66%; height: 66%; }
+.rbm-dock__btn--ai { font-weight: 700; }
+
+/* scrim behind any open sheet */
+.rbm-scrim {
+  position: fixed; inset: 0; z-index: 38;
+  background: rgba(4, 7, 10, 0.5); backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none; transition: opacity 200ms var(--rb-ease);
+}
+.rbm-scrim.is-on { opacity: 1; pointer-events: auto; }
+
+/* modals go full screen */
+.rb-modal { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+.rb-modal .rb-modal__content { height: 100%; border-radius: 0; }
+.rb-tpl-grid { grid-template-columns: repeat(2, 1fr); }
+
+/* status bar hides on phones (dock replaces it) */
+.rb-status { display: none; }
+
+/* Rho floats just under the top bar on phones (clear of Save) */
+#rho-launch { top: calc(env(safe-area-inset-top) + 60px) !important; right: 10px !important; bottom: auto !important; width: 40px !important; height: 40px !important; }
+#rho-panel { top: calc(env(safe-area-inset-top) + 108px) !important; bottom: auto !important; }

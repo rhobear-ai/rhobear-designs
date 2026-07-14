@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "RHOBEAR Designs",
+  "version": "1.0.0",
+  "identifier": "com.rhobear.designs",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "RHOBEAR Designs",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "publisher": "RHOBEAR",
+    "category": "Productivity",
+    "shortDescription": "Offline visual website editor",
+    "longDescription": "RHOBEAR Designs — a MIT-licensed visual website editor (GrapesJS core with RHOBEAR chrome) packaged as a desktop app that runs fully offline.",
+    "copyright": "© RHOBEAR. MIT License.",
+    "license": "MIT",
+    "homepage": "https://github.com/deariencampbell1-sys/rhobear-designs",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico"
+      }
+    }
+  }
+}
