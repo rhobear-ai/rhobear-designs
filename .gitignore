@@ -9,3 +9,5 @@ service/data/
 .code-graph/
 
 .claude/
+editor/src-tauri/target/
+editor/src-tauri/gen/

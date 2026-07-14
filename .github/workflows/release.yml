@@ -1,0 +1,62 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v1.0.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: editor/src-tauri
+
+      - name: Install Azure Trusted Signing CLI (used by tauri signCommand)
+        shell: pwsh
+        run: |
+          $dest = "$env:USERPROFILE\bin"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/Levminer/artifact-signing-cli/releases/download/0.11.0/artifact-signing-cli.exe" -OutFile "$dest\artifact-signing-cli.exe"
+          Add-Content -Path $env:GITHUB_PATH -Value $dest
+
+      - name: Install frontend deps
+        working-directory: editor
+        run: npm install
+
+      - name: Build, sign & release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Azure Trusted Signing (consumed by the signCommand in tauri.conf.json)
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          # Tauri updater signing (produces latest.json + .sig for self-update)
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: editor
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: "RHOBEAR Designs __VERSION__"
+          releaseBody: "One-click, signed Windows installer. Runs fully offline. Auto-updates."
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          args: --bundles nsis,msi

@@ -16,6 +16,7 @@ const WINDOW_LABEL: &str = "main";
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             // Tray menu: re-open the editor, or quit.
             let show_item =

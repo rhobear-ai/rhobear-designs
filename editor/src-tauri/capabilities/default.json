@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Default capabilities for the RHOBEAR Designs main window. The desktop shell is a pure offline wrapper around the editor and exposes no custom IPC commands, so the core default permission set is all that is required.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "updater:default"]
 }

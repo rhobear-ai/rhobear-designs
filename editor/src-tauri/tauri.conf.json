@@ -1,13 +1,21 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "RHOBEAR Designs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "com.rhobear.designs",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": ""
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/rhobear-ai/rhobear-designs/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU5QTczQTVCNTU2RUE0ClJXU2tibFZiT3FmcEFGTm5tK0hiOFpiaGQvb3ozTm5ZaTVpY0pST2wwYUxRUFpCQnI5UWNqWCt1Cg=="
+    }
   },
   "app": {
     "withGlobalTauri": false,
@@ -30,14 +38,18 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": [
+      "nsis",
+      "msi"
+    ],
     "publisher": "RHOBEAR",
     "category": "Productivity",
     "shortDescription": "Offline visual website editor",
-    "longDescription": "RHOBEAR Designs — a MIT-licensed visual website editor (GrapesJS core with RHOBEAR chrome) packaged as a desktop app that runs fully offline.",
-    "copyright": "© RHOBEAR. MIT License.",
+    "longDescription": "RHOBEAR Designs \u00e2\u20ac\u201d a MIT-licensed visual website editor (GrapesJS core with RHOBEAR chrome) packaged as a desktop app that runs fully offline.",
+    "copyright": "\u00c2\u00a9 RHOBEAR. MIT License.",
     "license": "MIT",
-    "homepage": "https://github.com/deariencampbell1-sys/rhobear-designs",
+    "homepage": "https://rhobear.ai/designs",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -46,6 +58,7 @@
       "icons/icon.ico"
     ],
     "windows": {
+      "signCommand": "artifact-signing-cli -e https://eus.codesigning.azure.net/ -a rhobear-signing -c rhobear-public %1",
       "webviewInstallMode": {
         "type": "downloadBootstrapper",
         "silent": true
