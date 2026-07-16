@@ -8,6 +8,7 @@
  *   inspector     → live style via inline props (recorded to an override store for export)
  * MIT — RHOBEAR Designs (original)
  */
+import { svgIcon } from './icons.js';
 import { buildLiveDocument } from '../engine/live-render.js';
 import { importHtml, exportHtml } from '../engine/io.js';
 import { createOverlay } from '../engine/overlay.js';
@@ -401,11 +402,13 @@ export function createLiveMode(refs) {
       ['↑  Move up', () => moveSelected(-1)],
       ['↓  Move down', () => moveSelected(1)],
       ['✎  Edit text', () => { selectedEl.setAttribute('contenteditable', 'true'); selectedEl.draggable = false; selectedEl.focus(); showTextbar(selectedEl); }],
-      ['🗑  Delete', deleteSelected],
+      ['Delete', deleteSelected, 'trash'],
     ];
     m.innerHTML = '';
-    for (const [label, fn] of items) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'rb-ctx__item'; b.textContent = label;
+    for (const [label, fn, icon] of items) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rb-ctx__item';
+      if (icon) { b.innerHTML = svgIcon(icon, 15) + '  ' + label; b.style.display = 'flex'; b.style.alignItems = 'center'; b.style.gap = '6px'; }
+      else { b.textContent = label; }
       b.addEventListener('click', (ev) => { ev.stopPropagation(); hideCtx(); fn(); });
       m.appendChild(b);
     }
@@ -515,7 +518,7 @@ export function createLiveMode(refs) {
     for (const a of pageAnchors()) { const o = document.createElement('option'); o.value = '#' + a.id; o.textContent = '#' + a.id; sel.appendChild(o); }
     sel.addEventListener('change', () => { if (sel.value) { linkEl.setAttribute('href', sel.value); input.value = sel.value; dirty = true; snap(); setStatus('Link jumps to ' + sel.value); } });
     jf.appendChild(sel); body.appendChild(jf);
-    const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'rb-btn'; pick.style.width = '100%'; pick.textContent = '🎯 Pick a spot on the page';
+    const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'rb-btn'; pick.style.width = '100%'; pick.innerHTML = svgIcon('target', 15) + ' Pick a spot on the page'; pick.style.display = 'flex'; pick.style.alignItems = 'center'; pick.style.justifyContent = 'center'; pick.style.gap = '6px';
     pick.addEventListener('click', () => { pickTargetLink = linkEl; injectStyle('rb-pick', 'body *{outline:1px dashed rgba(233,69,96,.5)!important}'); setStatus('Now click the spot this link should jump to'); });
     body.appendChild(pick);
     return renderSector({ name: 'Link', open: true, extra: body });

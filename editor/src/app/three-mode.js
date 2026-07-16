@@ -6,6 +6,7 @@
  * MIT — RHOBEAR Designs (original)
  */
 import { create3DScene } from '../3d/index.js';
+import { svgIcon } from './icons.js';
 
 const PRIMS = ['box', 'sphere', 'cylinder', 'cone', 'torus', 'plane'];
 
@@ -114,8 +115,8 @@ export function createThreeMode(refs) {
     inspectorEl.appendChild(modes);
 
     const actions = document.createElement('div'); actions.style.cssText = 'display:flex;gap:8px;padding:0 14px 14px';
-    const done = document.createElement('button'); done.type = 'button'; done.className = 'rb-btn'; done.style.flex = '1'; done.textContent = '✓ Set it down'; done.addEventListener('click', deselect);
-    const del = document.createElement('button'); del.type = 'button'; del.className = 'rb-btn'; del.style.flex = '1'; del.textContent = '🗑 Delete'; del.addEventListener('click', removeSelected);
+    const done = document.createElement('button'); done.type = 'button'; done.className = 'rb-btn'; done.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:6px'; done.innerHTML = svgIcon('check', 15) + ' Set it down'; done.addEventListener('click', deselect);
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'rb-btn'; del.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:6px'; del.innerHTML = svgIcon('trash', 15) + ' Delete'; del.addEventListener('click', removeSelected);
     actions.appendChild(done); actions.appendChild(del); inspectorEl.appendChild(actions);
   }
 
