@@ -375,5 +375,123 @@
       #rho-launch { top: 64px; bottom: auto !important; right: 16px !important; width: 40px; height: 40px; }
       #rho-panel { top: 118px; bottom: auto !important; right: 16px !important; max-height: min(72vh, 640px); }
     </style>
-  </body>
+  <!-- first-run onboarding (once per browser; no auth — BYO-LLM editor) -->
+<style>
+  #dsOnb{position:fixed;inset:0;z-index:99000;display:none;flex-direction:column;background:#080810;overflow:hidden;font-family:var(--rb-font,system-ui,sans-serif)}
+  #dsOnb.on{display:flex}
+  #dsOnb::before{content:"";position:absolute;bottom:-10%;right:-5%;width:52%;height:52%;
+    background:radial-gradient(ellipse,rgba(255,58,42,.09),transparent 70%);pointer-events:none}
+  .dsob-brand{display:flex;align-items:center;gap:10px;padding:24px 32px;position:relative;z-index:1}
+  .dsob-brand img{width:28px;height:28px;filter:drop-shadow(0 0 8px rgba(255,58,42,.4))}
+  .dsob-name{font-size:15px;font-weight:700;color:#fff}
+  .dsob-name span{color:#ff3a2a}
+  .dsob-dots{display:flex;gap:6px;margin-left:auto}
+  .dsob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .2s}
+  .dsob-dot.active{background:#fff}.dsob-dot.done{background:#ff3a2a}
+  .dsob-skip{margin-left:14px;background:none;border:none;color:#6b6b8a;font-size:13px;cursor:pointer}
+  .dsob-skip:hover{color:#fff}
+  .dsob-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 72px 48px;max-width:780px;position:relative;z-index:1}
+  .dsob-step{display:none;animation:dsob-rise .4s cubic-bezier(.21,1.02,.55,1)}
+  .dsob-step.on{display:block}
+  @keyframes dsob-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .dsob-eyebrow{font-size:11px;font-weight:700;color:#ff3a2a;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px}
+  .dsob-h{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:#fff;line-height:1.1;margin-bottom:20px;letter-spacing:-.02em}
+  .dsob-h em{font-style:normal;color:#ff3a2a}
+  .dsob-body{font-size:17px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:28px;max-width:560px}
+  .dsob-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+  .dsob-pill{height:34px;padding:0 14px;border-radius:17px;font-size:14px;color:rgba(255,255,255,.7);
+    background:transparent;border:1px solid rgba(255,255,255,.2);display:inline-flex;align-items:center}
+  .dsob-pill.active{background:#ff3a2a;color:#fff;border-color:#ff3a2a;font-weight:600}
+  .dsob-cta{height:52px;padding:0 28px;background:#ff3a2a;border:none;border-radius:12px;color:#fff;
+    font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(255,58,42,.3);
+    transition:background .12s,box-shadow .12s;display:inline-flex;align-items:center}
+  .dsob-cta:hover{background:#cc2e20;box-shadow:0 4px 36px rgba(255,58,42,.5)}
+  .dsob-tpls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;max-width:620px}
+  .dsob-tpl{aspect-ratio:4/3;border-radius:10px;border:1.5px solid #1e1e2a;background:#111118;
+    display:grid;place-items:center;color:#8888aa;font-size:12px;font-weight:600;cursor:pointer;
+    background-image:radial-gradient(circle at 1px 1px,#1a1a24 1px,transparent 0);background-size:14px 14px}
+  .dsob-tpl.sel{border-color:#4a9eff;box-shadow:0 0 0 1px rgba(74,158,255,.4),0 0 18px rgba(74,158,255,.25);color:#fff}
+  .dsob-handles{position:relative;width:220px;height:120px;border:2px solid #4a9eff;border-radius:6px;margin-bottom:28px;
+    background:rgba(74,158,255,.05)}
+  .dsob-handle{position:absolute;width:10px;height:10px;background:#fff;border:2px solid #4a9eff;border-radius:50%}
+  .dsob-handle.tl{top:-6px;left:-6px}.dsob-handle.tr{top:-6px;right:-6px}
+  .dsob-handle.bl{bottom:-6px;left:-6px}.dsob-handle.br{bottom:-6px;right:-6px}
+  .dsob-orb{width:72px;height:72px;border-radius:50%;margin-bottom:20px;display:grid;place-items:center;
+    background:linear-gradient(168deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),rgba(9,10,12,.45);
+    backdrop-filter:blur(22px);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 32px rgba(255,58,42,.35),0 0 64px rgba(74,158,255,.15);
+    animation:dsob-breathe 5s ease-in-out infinite}
+  .dsob-orb img{width:64%;height:64%}
+  @keyframes dsob-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  @media(max-width:640px){.dsob-content{padding:0 24px 32px}.dsob-tpls{grid-template-columns:1fr 1fr}}
+</style>
+<div id="dsOnb" role="dialog" aria-modal="true" aria-label="Welcome to RHOBEAR Designs">
+  <div class="dsob-brand">
+    <img src="/src/assets/rhobear-logo.png" alt="">
+    <span class="dsob-name">RHOBEAR <span>Designs</span></span>
+    <div class="dsob-dots" id="dsobDots"></div>
+    <button class="dsob-skip" id="dsobSkip" type="button">Skip</button>
+  </div>
+  <div class="dsob-content">
+    <div class="dsob-step" data-step="0">
+      <div class="dsob-eyebrow">Visual editor</div>
+      <h1 class="dsob-h">Design anything, <em>no code</em>.</h1>
+      <p class="dsob-body">Build a real website by dragging blocks onto the canvas. Open any page and edit it live &mdash; it keeps its look and its functions.</p>
+      <div class="dsob-pills">
+        <span class="dsob-pill active">Drag &amp; drop</span>
+        <span class="dsob-pill">Edit live</span>
+        <span class="dsob-pill">Bring your own AI</span>
+      </div>
+      <button class="dsob-cta" type="button" data-next>Get started &rarr;</button>
+    </div>
+    <div class="dsob-step" data-step="1">
+      <div class="dsob-eyebrow">Start</div>
+      <h1 class="dsob-h">Start from a <em>template</em>.</h1>
+      <p class="dsob-body">Pick a starting point &mdash; a portfolio, a landing page, a studio site &mdash; or start from a blank canvas. Everything is editable.</p>
+      <div class="dsob-tpls">
+        <div class="dsob-tpl sel">Portfolio</div><div class="dsob-tpl">Landing</div>
+        <div class="dsob-tpl">Studio</div><div class="dsob-tpl">Blank</div>
+      </div>
+      <button class="dsob-cta" type="button" data-next>Next &rarr;</button>
+    </div>
+    <div class="dsob-step" data-step="2">
+      <div class="dsob-eyebrow">The canvas</div>
+      <h1 class="dsob-h">Drag, drop, <em>edit live</em>.</h1>
+      <p class="dsob-body">Click any element to select it &mdash; blue handles let you resize and move. Style it in the panel on the right. What you see is what ships.</p>
+      <div class="dsob-handles"><span class="dsob-handle tl"></span><span class="dsob-handle tr"></span><span class="dsob-handle bl"></span><span class="dsob-handle br"></span></div>
+      <button class="dsob-cta" type="button" data-next>Next &rarr;</button>
+    </div>
+    <div class="dsob-step" data-step="3">
+      <div class="dsob-eyebrow">Meet Rho</div>
+      <div class="dsob-orb"><img src="/src/assets/rhobear-logo.png" alt=""></div>
+      <h1 class="dsob-h">Your AI <em>design partner</em>.</h1>
+      <p class="dsob-body">Connect your own AI key and Rho helps you build &mdash; generate a section, restyle a block, or draft copy. Your key, your models.</p>
+      <button class="dsob-cta" id="dsobDone" type="button">Start designing &rarr;</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY='designs_onboarded_v1', steps=4, cur=0;
+  function dots(){var d=document.getElementById('dsobDots');if(!d)return;d.innerHTML='';
+    for(var i=0;i<steps;i++){var s=document.createElement('span');
+      s.className='dsob-dot'+(i===cur?' active':(i<cur?' done':''));d.appendChild(s);}}
+  function show(i){cur=Math.max(0,Math.min(steps-1,i));
+    document.querySelectorAll('#dsOnb .dsob-step').forEach(function(el){
+      el.classList.toggle('on',+el.getAttribute('data-step')===cur);});dots();}
+  function close(){try{localStorage.setItem(KEY,'1');}catch(e){}
+    var o=document.getElementById('dsOnb');if(o)o.classList.remove('on');}
+  function start(){try{if(localStorage.getItem(KEY))return;}catch(e){return;}
+    var o=document.getElementById('dsOnb');if(o){o.classList.add('on');show(0);}}
+  document.addEventListener('click',function(e){
+    if(e.target.closest('#dsOnb [data-next]')){show(cur+1);}
+    else if(e.target.closest('#dsobDone')||e.target.closest('#dsobSkip')){close();}
+    else if(e.target.closest('#dsOnb .dsob-tpl')){
+      document.querySelectorAll('#dsOnb .dsob-tpl').forEach(function(m){m.classList.remove('sel');});
+      e.target.closest('.dsob-tpl').classList.add('sel');}
+  });
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+</body>
 </html>
