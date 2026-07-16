@@ -7,6 +7,7 @@
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { createLiveMode } from './live-mode.js';
+import { svgIcon } from './icons.js';
 import { createBuildMode } from './build-mode.js';
 // Import the element manifest JSON directly — the library's index.js loader is
 // node:fs-based (browser-incompatible); Vite bundles JSON natively.
@@ -216,7 +217,7 @@ export function bootShell() {
       open.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="rb-proj-mode">${escapeHtml(p.mode)}</span>`;
       open.addEventListener('click', () => openProject(p.id));
       const del = document.createElement('button');
-      del.type = 'button'; del.className = 'rb-btn rb-btn--icon rb-btn--ghost'; del.textContent = '🗑'; del.title = 'Delete';
+      del.type = 'button'; del.className = 'rb-btn rb-btn--icon rb-btn--ghost'; del.innerHTML = svgIcon('trash'); del.title = 'Delete';
       del.addEventListener('click', () => { deleteProject(p.id); renderProjects(); });
       row.appendChild(open); row.appendChild(del); host.appendChild(row);
     }
@@ -549,7 +550,7 @@ export function bootShell() {
     });
 
     voiceBtn = document.createElement('button');
-    voiceBtn.type = 'button'; voiceBtn.className = 'rb-ai-pro__mic'; voiceBtn.textContent = '🎙';
+    voiceBtn.type = 'button'; voiceBtn.className = 'rb-ai-pro__mic'; voiceBtn.innerHTML = svgIcon('mic', 18);
     voiceBtn.title = voiceSupported() ? 'Voice — tap to talk (Pro)' : 'Voice not supported in this browser';
     voiceBtn.disabled = !voiceSupported();
     voiceBtn.addEventListener('click', () => {
