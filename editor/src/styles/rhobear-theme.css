@@ -29,13 +29,23 @@
   --rb-success-soft: rgba(83, 201, 139, 0.13);
 
   /* The ONE accent — RED BEAR, the Designs product color (distinct from
-     Hub teal / Plans purple / Reviews orange; family = shared shell + own face) */
-  --rb-brand: #e94560;
-  --rb-brand-press: #cf3a52;
-  --rb-brand-soft: rgba(233, 69, 96, 0.13);
-  --rb-brand-glow: rgba(233, 69, 96, 0.35);
-  --rb-brand-faint: rgba(233, 69, 96, 0.13);
+     Hub teal #00E5CC / Plans purple #6B4EFF / Reviews gold #FFB800; family =
+     shared shell + own face). LOCKED to #FF3A2A by the premium pass. */
+  --rb-brand: #ff3a2a;
+  --rb-brand-press: #cc2e20;
+  --rb-brand-soft: rgba(255, 58, 42, 0.12);
+  --rb-brand-glow: rgba(255, 58, 42, 0.35);
+  --rb-brand-faint: rgba(255, 58, 42, 0.12);
   --rb-brand-ink: #ffffff;
+
+  /* The star — BLUE (LOCKED). Selection handles, live/preview indicators,
+     device-active. The one color that is never the accent. */
+  --rb-star: #4a9eff;
+  --rb-selection: #4a9eff;
+  --rb-selection-glow: rgba(74, 158, 255, 0.4);
+
+  /* Canvas floor + dot grid (24px cell, 1px dot). */
+  --rb-canvas-dot: #1a1a24;
 
   /* Radius — 8px is the ONE value. Pills are full-round. Modals are the one
      explicit exception (12-14px, largest floating objects only). */

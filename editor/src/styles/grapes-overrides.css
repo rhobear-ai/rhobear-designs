@@ -59,14 +59,26 @@
 /* Buttons / primary */
 .gjs-btn-prim { background: var(--rb-brand) !important; border-color: var(--rb-brand) !important; color: var(--rb-brand-ink) !important; }
 
-/* On-canvas chrome — red accent */
-.gjs-toolbar { background: var(--rb-brand) !important; border-radius: 6px !important; }
-.gjs-toolbar-item { color: var(--rb-brand-ink) !important; }
-.gjs-highlighter, .gjs-highlighter-sel { outline-color: var(--rb-brand) !important; }
-.gjs-badge { background: var(--rb-brand) !important; color: var(--rb-brand-ink) !important; }
-.gjs-resizer-h { border-color: var(--rb-brand) !important; background: var(--rb-brand-soft) !important; }
-.gjs-placeholder { border-color: var(--rb-brand) !important; }
-.gjs-placeholder-int { background: var(--rb-brand) !important; }
+/* On-canvas SELECTION chrome — the BLUE star, never the accent.
+   Selection is a different kind of information than brand: red is what the
+   product IS, blue is what YOU picked. They must never be the same colour —
+   red handles on a red-accented editor are invisible against the app's own
+   UI, and the spec locks selection to #4A9EFF for exactly that reason. */
+.gjs-toolbar { background: var(--rb-star) !important; border-radius: 6px !important; }
+.gjs-toolbar-item { color: #ffffff !important; }
+.gjs-highlighter, .gjs-highlighter-sel { outline-color: var(--rb-star) !important; }
+.gjs-badge { background: var(--rb-star) !important; color: #ffffff !important; }
+/* 2px blue frame + 8px white dots — the handle language from the spec */
+.gjs-resizer-h {
+  border-color: var(--rb-star) !important;
+  border-width: 2px !important;
+  background: #ffffff !important;
+  width: 8px !important; height: 8px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 0 10px var(--rb-selection-glow) !important;
+}
+.gjs-placeholder { border-color: var(--rb-star) !important; }
+.gjs-placeholder-int { background: var(--rb-star) !important; }
 
 /* Modals (GrapesJS import etc.) */
 .gjs-mdl-dialog {

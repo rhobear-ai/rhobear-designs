@@ -350,7 +350,9 @@ export function createHandle(sceneCtx) {
     for (const m of mats) {
       if (!m || !m.emissive) continue;
       entry.__highlight = m.emissive.getHex();
-      m.emissive.set('#e94560');
+      // Selection is the blue star, never the red accent — same rule as the
+      // 2D canvas handles, so picking reads identically in both editors.
+      m.emissive.set('#4a9eff');
     }
   }
 
