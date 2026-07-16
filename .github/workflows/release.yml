@@ -60,3 +60,13 @@ jobs:
           prerelease: false
           includeUpdaterJson: true
           args: --bundles nsis,msi
+
+      - name: Publish fixed-name alias (marketing download link target)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.event.inputs.tag || github.ref_name }}"
+          $exe = Get-ChildItem -Path "editor/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" | Select-Object -First 1
+          Copy-Item $exe.FullName "RHOBEAR-Designs-Setup.exe"
+          gh release upload $tag "RHOBEAR-Designs-Setup.exe" --repo "${{ github.repository }}" --clobber
