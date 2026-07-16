@@ -1,22 +1,61 @@
 /*
- * RHOBEAR Designs — Adobe-finish surface layer.
+ * RHOBEAR Designs — Adobe-finish surface layer (LIQUID GLASS).
  *
- * Loaded AFTER rhobear-theme.css. This is the premium pass: depth, glass,
- * and the ecosystem chat surface (the licensed Adobe "Ask anything…" glass
- * bar language + premium line icons, cut as inline SVG so they tint with
- * the product accent). Red is Designs' hue; the second gradient hue is the
- * accent shifted warm (+42°) — same derivation the Rho embed uses, so the
- * whole family reads as one system.
+ * Loaded AFTER rhobear-theme.css. This is the premium pass: the liquid-glass
+ * MATERIAL from specs/_LIQUID-GLASS-MATERIAL-SPEC.md — a surface is a pane of
+ * glass with light in it, never a flat fill. Three parts, all required:
+ *   BODY  frosted translucent pane you see depth through
+ *   RIM   specular inset where light catches the top edge + faint bottom bounce
+ *   EDGE  the plasma stroke, as a MASKED CONIC RING (a border can't run a
+ *         gradient around a radius; this can)
+ *
+ * THE RULE: the plasma trio (cyan/violet/magenta) is FIXED in every app — it
+ * IS Rho, and it's what makes the suite read as one family. Designs' red lives
+ * ONLY in the bloom, the aura, and the focus glow. Never in the stroke. The old
+ * "accent shifted warm +42°" derivation is deliberately gone: binding plasma to
+ * the accent muddies the edge and destroys Rho's cross-app identity.
  */
 
 :root {
-  --rb-accent2: #e9a145;                    /* brand hue-shifted warm */
-  --rb-glass: rgba(21, 29, 38, 0.72);
+  /* plasma — FIXED, identical in every RHOBEAR app. Do not bind to --rb-brand. */
+  --glass-c1: #00dfff;   /* cyan    — stroke start */
+  --glass-c2: #7c5cff;   /* violet  — stroke mid   */
+  --glass-c3: #d83fff;   /* magenta — stroke end   */
+
+  --glass-body: linear-gradient(168deg, rgba(255,255,255,.058), rgba(255,255,255,.022) 52%, rgba(255,255,255,.04));
+  --glass-blur: blur(22px) saturate(1.4);
+  --glass-rim:  inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(255,255,255,.04);
+  --glass-lift: 0 10px 34px rgba(0,0,0,.42);
+  --glass-edge-w: 1.1px;
+  --glass-ease: cubic-bezier(.4,0,.2,1);
+
+  --rb-glass: rgba(9, 10, 12, 0.45);
   --rb-glass-bd: rgba(255, 255, 255, 0.10);
   --rb-glass-hi: rgba(255, 255, 255, 0.16);
   --rb-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 14px -6px rgba(0, 0, 0, 0.35);
-  --rb-shadow-lg: 0 24px 60px -18px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --rb-shadow-lg: var(--glass-lift), 0 2px 8px rgba(0, 0, 0, 0.3);
   --rb-aura: 0 0 44px -12px var(--rb-brand-glow);
+}
+
+/* The plasma travels the edge on focus. Gradients can't tween, so the angle is
+   a REGISTERED custom property — that's the whole trick. Degrades to a static
+   edge where @property is unsupported. */
+@property --edge-angle { syntax: '<angle>'; initial-value: 200deg; inherits: false; }
+@keyframes edgeflow { to { --edge-angle: 560deg; } }
+
+/* the masked plasma ring — shared by the composer, the send disc, the FAB */
+.rb-ask::after,
+.rb-ask__send::after,
+.rb-ai-fab::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; padding: var(--glass-edge-w);
+  background: conic-gradient(from var(--edge-angle, 200deg) at 50% 50%,
+    var(--glass-c1), var(--glass-c2) 28%, var(--glass-c3) 52%, var(--glass-c2) 76%, var(--glass-c1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: .45; transition: opacity .28s var(--glass-ease);
 }
 :root[data-theme="light"] {
   --rb-glass: rgba(255, 255, 255, 0.78);
@@ -34,6 +73,31 @@
 }
 .rb-btn--icon .rb-icn { margin: 0 auto; }
 .rb-btn .rb-icn + span { margin-left: 6px; }
+
+/* ───────── the canvas — a dot grid, so the artboard reads as a surface
+   you're working ON rather than a void. 24px cell, 1px dot. ───────── */
+.rb-canvas-wrap {
+  background-color: var(--rb-canvas-bd);
+  background-image: radial-gradient(circle at 1px 1px, var(--rb-canvas-dot) 1px, transparent 0);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+:root[data-theme="light"] .rb-canvas-wrap {
+  background-image: radial-gradient(circle at 1px 1px, rgba(24, 42, 52, 0.10) 1px, transparent 0);
+}
+/* The empty state covers the canvas, so it needs the grid painted ON it — it
+   must KEEP an opaque floor. It is stacked over the GrapesJS editor iframe,
+   which is white: make this transparent and that white sheet shows through,
+   putting near-white hero text on white. Opaque floor + its own dots. */
+.rb-empty {
+  background-color: var(--rb-canvas-bd);
+  background-image: radial-gradient(circle at 1px 1px, var(--rb-canvas-dot) 1px, transparent 0);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+:root[data-theme="light"] .rb-empty {
+  background-image: radial-gradient(circle at 1px 1px, rgba(24, 42, 52, 0.10) 1px, transparent 0);
+}
 
 /* ───────── chrome depth ───────── */
 .rb-toolbar {
@@ -56,24 +120,40 @@
   padding: 4px;
 }
 
-/* ───────── Rho-family living-orb FAB ───────── */
+/* ───────── design-assistant FAB — a glass disc, NOT a second orb ─────────
+   This is the design AI tool, not Rho. It used to be a hand-rolled conic orb
+   in the accent, which both faked Rho's identity and broke the plasma rule.
+   It is now what it should be: a raised pane of glass the red bear sits in,
+   ringed in the fixed plasma, blooming Designs red on hover. Rho himself is
+   the real orb in the chrome (companion-embed). One orb per app. */
 .rb-ai-fab {
+  /* NOTE: position stays ABSOLUTE (rhobear-theme.css pins it right:22 bottom:22
+     inside .rb-canvas-wrap). This layer loads last, so declaring `relative` here
+     silently kills that anchoring and drops the FAB into flow at the canvas's
+     top-left. Absolute is already a positioning context for the ring/sheen. */
+  position: absolute;
   width: 54px; height: 54px; border-radius: 50%;
   border: none;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.35), transparent 42%),
-    conic-gradient(from 210deg, var(--rb-brand), var(--rb-accent2), #d16ba5, var(--rb-brand));
-  box-shadow: var(--rb-shadow-lg), var(--rb-aura);
-  transition: transform 160ms var(--rb-ease), box-shadow 160ms var(--rb-ease);
+  background: var(--glass-body), var(--rb-glass);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-rim), var(--glass-lift), var(--rb-aura);
+  transition: transform 160ms var(--glass-ease), box-shadow 160ms var(--glass-ease);
 }
 .rb-ai-fab::after {
-  /* glass core the bear sits in */
-  content: ""; position: absolute; inset: 3px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.22), rgba(10, 14, 19, 0.55) 60%);
-  backdrop-filter: blur(2px);
+  /* the sheen — light on the top curve */
+  content: ""; position: absolute; top: 3px; left: 22%; right: 22%; height: 1px;
+  pointer-events: none; border-radius: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.66), transparent);
 }
 .rb-ai-fab .rb-bear { position: relative; z-index: 1; filter: drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
-.rb-ai-fab:hover { transform: translateY(-3px) scale(1.04); }
+.rb-ai-fab:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: var(--glass-rim), var(--glass-lift), 0 0 34px -6px var(--rb-brand-glow);
+}
+/* hover/focus IGNITES — the edge burns brighter and starts travelling.
+   Nothing recolours; light just arrives. */
+.rb-ai-fab:hover::before,
+.rb-ai-fab:focus-visible::before { opacity: 1; animation: edgeflow 7s linear infinite; }
 
 /* ───────── AI panel → premium glass chat surface ───────── */
 .rb-ai-panel {
@@ -95,7 +175,8 @@
 }
 .rb-ai-panel__head .rb-logo {
   width: 28px; height: 28px; border-radius: 50%;
-  background: conic-gradient(from 210deg, var(--rb-brand), var(--rb-accent2), #d16ba5, var(--rb-brand));
+  background: var(--glass-body), rgba(255, 255, 255, 0.06);
+  box-shadow: var(--glass-rim), 0 0 16px -6px var(--rb-brand-glow);
   display: grid; place-items: center; padding: 2px;
 }
 .rb-ai-panel__head .rb-logo .rb-bear { width: 100%; height: 100%; border-radius: 50%; background: rgba(10,14,19,.6); }
@@ -113,7 +194,7 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 .rb-ai-msg--user {
-  background: linear-gradient(135deg, var(--rb-brand), var(--rb-accent2));
+  background: linear-gradient(135deg, var(--rb-brand), var(--rb-brand-press));
   border: none; color: #fff;
   border-bottom-right-radius: 6px;
 }
@@ -148,7 +229,7 @@
 .rb-ai-pro .rb-ai-pro__cta {
   margin-left: auto;
   color: #fff; border: none;
-  background: linear-gradient(135deg, var(--rb-brand), var(--rb-accent2));
+  background: linear-gradient(135deg, var(--rb-brand), var(--rb-brand-press));
   box-shadow: 0 4px 14px -6px var(--rb-brand-glow);
   font-weight: 600;
 }
@@ -167,18 +248,25 @@
 .rb-ask {
   position: relative;
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
-  border: 1px solid var(--rb-glass-bd);
-  box-shadow:
-    inset 0 1px 0 var(--rb-glass-hi),
-    0 8px 24px -12px rgba(0, 0, 0, 0.45);
+  background: var(--glass-body), var(--rb-glass);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
+  box-shadow: var(--glass-rim), var(--glass-lift);
   padding: 11px 12px 9px;
-  transition: border-color 140ms var(--rb-ease), box-shadow 140ms var(--rb-ease);
+  transition: box-shadow .28s var(--glass-ease);
 }
+/* the sheen — light on the top curve */
+.rb-ask::before {
+  content: ""; position: absolute; top: 0; left: 9%; right: 9%; height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.66), transparent);
+}
+/* focus doesn't recolour — it IGNITES: the edge burns .45 → 1 and starts
+   travelling, the pane blooms in Designs red. */
 .rb-ask:focus-within {
-  border-color: var(--rb-brand-glow);
-  box-shadow: inset 0 1px 0 var(--rb-glass-hi), 0 8px 28px -10px var(--rb-brand-glow);
+  box-shadow: var(--glass-rim), var(--glass-lift), 0 0 30px -8px var(--rb-brand-glow);
 }
+.rb-ask:focus-within::after { opacity: 1; animation: edgeflow 7s linear infinite; }
 .rb-ask .rb-input {
   width: 100%; background: transparent; border: none; padding: 0 2px 8px;
   color: var(--rb-text); font-size: 0.88rem;
@@ -207,15 +295,21 @@
 .rb-ask.is-busy .rb-ask__wave { color: var(--rb-brand); }
 .rb-ask.is-busy .rb-ask__wave i { animation: rb-wave 0.9s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 90ms); }
 @keyframes rb-wave { 50% { transform: scaleY(1.9); } }
+/* raised glass disc, plasma ring, clean arrow — never a solid accent blob */
 .rb-ask__send {
+  position: relative;
   width: 30px; height: 30px; border-radius: 50%;
   display: grid; place-items: center; border: none; cursor: pointer;
   color: #fff;
-  background: linear-gradient(135deg, var(--rb-brand), var(--rb-accent2));
-  box-shadow: 0 4px 12px -4px var(--rb-brand-glow);
-  transition: transform 120ms var(--rb-ease), filter 120ms var(--rb-ease);
+  background: var(--glass-body), rgba(255, 255, 255, 0.06);
+  box-shadow: var(--glass-rim), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  transition: transform 120ms var(--glass-ease), box-shadow 120ms var(--glass-ease);
 }
-.rb-ask__send:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.rb-ask__send:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glass-rim), 0 6px 18px -4px var(--rb-brand-glow);
+}
+.rb-ask__send:hover::after { opacity: 1; }
 .rb-ask__send:disabled { opacity: 0.4; }
 .rb-ask__send .rb-icn { width: 15px; height: 15px; stroke-width: 2; }
 

@@ -115,13 +115,27 @@ body { -webkit-tap-highlight-color: transparent; }
 }
 .rbm-dock__btn .rb-icn { width: 20px; height: 20px; }
 .rbm-dock__btn.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); }
+/* the dock's AI button — a glass disc the red bear sits in, ringed in the
+   FIXED plasma. Same law as the desktop FAB: it is the design tool, not Rho,
+   so it never fakes an accent-coloured orb. */
 .rbm-dock__btn--ai .rbm-dock__orb {
+  position: relative;
   width: 30px; height: 30px; border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.4), transparent 45%),
-    conic-gradient(from 210deg, var(--rb-brand), var(--rb-accent2), #d16ba5, var(--rb-brand));
-  box-shadow: 0 4px 14px -4px var(--rb-brand-glow);
+  background: var(--glass-body), var(--rb-glass);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-rim), 0 4px 14px -4px var(--rb-brand-glow);
   display: grid; place-items: center;
+}
+.rbm-dock__btn--ai .rbm-dock__orb::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; padding: var(--glass-edge-w);
+  background: conic-gradient(from var(--edge-angle, 200deg) at 50% 50%,
+    var(--glass-c1), var(--glass-c2) 28%, var(--glass-c3) 52%, var(--glass-c2) 76%, var(--glass-c1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: .45;
 }
 .rbm-dock__btn--ai .rbm-dock__orb img { width: 66%; height: 66%; }
 .rbm-dock__btn--ai { font-weight: 700; }
