@@ -174,14 +174,26 @@
   .rho-orbimg[data-state="speaking"] { background-image: var(--orb-speaking); box-shadow: 0 8px 26px rgba(0,0,0,.45), 0 0 46px rgba(74,158,255,.72); animation: rho-orb-speak .5s ease-in-out infinite; }
   .rho-orbimg[data-state="error"]    { background-image: var(--orb-error);    box-shadow: 0 8px 26px rgba(0,0,0,.45), 0 0 26px rgba(255,58,58,.62); animation: rho-orb-shake .5s ease-out 1; }
   .rho-orbimg[data-state="loading"]  { background-image: var(--orb-loading);  animation: rho-orb-load 1.7s ease-in-out infinite; }
-  @keyframes rho-orb-idle  { 0%,100% { transform: scale(1); }   50% { transform: scale(1.045); } }
+  @keyframes rho-orb-idle  { 0%,100% { transform: scale(1); }   50% { transform: scale(1.06); } }
+  /* gentle breath used under reduced-motion — scale only, no positional travel */
+  @keyframes rho-orb-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
   @keyframes rho-orb-think { 0%,100% { transform: scale(.975); } 50% { transform: scale(1.035); } }
   @keyframes rho-orb-speak { 0%,100% { transform: scale(1); }   50% { transform: scale(1.075); } }
   @keyframes rho-orb-shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
   @keyframes rho-orb-load  { 0%,100% { opacity: .6; } 50% { opacity: .92; } }
-  @keyframes rho-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+  @keyframes rho-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
   @media (prefers-reduced-motion: reduce) {
-    #rho-launch, .rho-orbimg { animation: none !important; }
+    /* Reduce motion — but the orb is the brand's living identity, so it never
+       goes fully dead. Drop the positional float + the shake/rapid pulses (the
+       vestibular-trigger motions); keep a slow, gentle breath (scale only, no
+       travel) so it still reads as alive on every surface. */
+    #rho-launch { animation: none !important; }
+    .rho-orbimg,
+    .rho-orbimg[data-state="idle"],
+    .rho-orbimg[data-state="thinking"],
+    .rho-orbimg[data-state="speaking"],
+    .rho-orbimg[data-state="loading"] { animation: rho-orb-breathe 5s ease-in-out infinite !important; }
+    .rho-orbimg[data-state="error"] { animation: none !important; }
   }
 
   /* ---- panel: glass with a living accent aura ---- */
@@ -1380,7 +1392,7 @@
     // Host-page bridge: surfaces (Workbench composer, Plans chrome, the Hub)
     // can open the chat or jump straight into the live call.
     window.RhoEmbed = {
-      version: '2.4',
+      version: '2.5',
       open: open,
       close: close,
       call: callOpen,
