@@ -32,7 +32,7 @@
 
 /** Default box colors — the Designs red accent marks the selection; hover
  *  gets a neutral, less prominent line so only the accent reads as "chosen". */
-const SELECTION_COLOR = '#e94560'; // Designs red accent
+const SELECTION_COLOR = '#4a9eff'; // the BLUE star — selection is spec-locked to #4A9EFF, never the accent
 const HOVER_COLOR     = '#5f7280'; // neutral text-3
 
 const Z_SELECTION = 2;

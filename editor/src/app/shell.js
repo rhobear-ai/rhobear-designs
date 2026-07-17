@@ -516,14 +516,14 @@ export function bootShell() {
       st.textContent = `
         .rb-ai-pro{display:flex;gap:.4rem;align-items:center;padding:.4rem .6rem;flex-wrap:wrap}
         .rb-ai-pro__style{flex:1;min-width:120px;font-size:.85rem;padding:.3rem .4rem}
-        .rb-ai-pro__deep,.rb-ai-pro__mic{border:1px solid rgba(233,69,96,.4);background:transparent;color:inherit;border-radius:8px;padding:.3rem .55rem;font-size:.82rem;cursor:pointer;line-height:1}
-        .rb-ai-pro__deep:hover,.rb-ai-pro__mic:hover{border-color:#e94560}
-        .rb-ai-pro__deep.is-on{background:#e94560;border-color:#e94560;color:#fff}
-        .rb-ai-pro__mic.is-live{background:#e94560;border-color:#e94560;color:#fff;animation:rbPulse 1s infinite}
+        .rb-ai-pro__deep,.rb-ai-pro__mic{border:1px solid var(--rb-brand-glow);background:transparent;color:inherit;border-radius:8px;padding:.3rem .55rem;font-size:.82rem;cursor:pointer;line-height:1}
+        .rb-ai-pro__deep:hover,.rb-ai-pro__mic:hover{border-color:var(--rb-brand)}
+        .rb-ai-pro__deep.is-on{background:var(--rb-brand);border-color:var(--rb-brand);color:#fff}
+        .rb-ai-pro__mic.is-live{background:var(--rb-brand);border-color:var(--rb-brand);color:#fff;animation:rbPulse 1s infinite}
         .rb-ai-pro__mic:disabled{opacity:.4;cursor:not-allowed}
-        .rb-ai-pro__cta{background:#e94560;border:1px solid #e94560;color:#fff;border-radius:999px;padding:.3rem .7rem;font-size:.8rem;font-weight:600;cursor:pointer}
+        .rb-ai-pro__cta{background:linear-gradient(135deg,var(--rb-brand),var(--rb-brand-press));border:1px solid transparent;color:#fff;border-radius:999px;padding:.3rem .7rem;font-size:.8rem;font-weight:600;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 14px -6px var(--rb-brand-glow)}
         .rb-ai-pro__cta:hover{filter:brightness(1.08)}
-        @keyframes rbPulse{0%,100%{box-shadow:0 0 0 0 rgba(233,69,96,.5)}50%{box-shadow:0 0 0 5px rgba(233,69,96,0)}}
+        @keyframes rbPulse{0%,100%{box-shadow:0 0 0 0 var(--rb-brand-glow)}50%{box-shadow:0 0 0 5px transparent}}
       `;
       document.head.appendChild(st);
     }
