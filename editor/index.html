@@ -62,6 +62,7 @@
     <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
     <link rel="stylesheet" href="/src/styles/adobe-surfaces.css" />
+    <link rel="stylesheet" href="/src/styles/premium-glass.css" />
     <!-- NACELLE company font overlay (PREMIUM-UI-LAW). Served from web root /nacelle/. -->
     <link rel="stylesheet" href="/nacelle/nacelle.css?v=1784300000" />
   </head>
@@ -374,8 +375,10 @@
     <style>
       /* Rho rides in the chrome — top-right beside the toolbar; the design
          assistant keeps the canvas corner. */
-      #rho-launch { top: 64px; bottom: auto !important; right: 16px !important; width: 40px; height: 40px; }
-      #rho-panel { top: 118px; bottom: auto !important; right: 16px !important; max-height: min(72vh, 640px); }
+      /* 36px seated orb (spec embedded_min) — shared embed still defaults 60;
+         the size is pinned here per-app until the foundation lane lands 36. */
+      #rho-launch { top: 64px; bottom: auto !important; right: 16px !important; width: 36px !important; height: 36px !important; }
+      #rho-panel { top: 112px; bottom: auto !important; right: 16px !important; max-height: min(72vh, 640px); }
     </style>
   <!-- first-run onboarding (once per browser; no auth — BYO-LLM editor) -->
 <style>
@@ -383,6 +386,8 @@
   #dsOnb.on{display:flex}
   #dsOnb::before{content:"";position:absolute;bottom:-10%;right:-5%;width:52%;height:52%;
     background:radial-gradient(ellipse,rgba(255,58,42,.09),transparent 70%);pointer-events:none}
+  #dsOnb::after{content:"";position:absolute;top:-12%;left:-6%;width:46%;height:46%;
+    background:radial-gradient(ellipse,rgba(74,158,255,.07),transparent 70%);pointer-events:none}
   .dsob-brand{display:flex;align-items:center;gap:10px;padding:24px 32px;position:relative;z-index:1}
   .dsob-brand img{width:28px;height:28px;filter:drop-shadow(0 0 8px rgba(255,58,42,.4))}
   .dsob-name{font-size:15px;font-weight:700;color:#fff}
@@ -402,16 +407,26 @@
   .dsob-body{font-size:17px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:28px;max-width:560px}
   .dsob-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
   .dsob-pill{height:34px;padding:0 14px;border-radius:17px;font-size:14px;color:rgba(255,255,255,.7);
-    background:transparent;border:1px solid rgba(255,255,255,.2);display:inline-flex;align-items:center}
-  .dsob-pill.active{background:#ff3a2a;color:#fff;border-color:#ff3a2a;font-weight:600}
-  .dsob-cta{height:52px;padding:0 28px;background:#ff3a2a;border:none;border-radius:12px;color:#fff;
-    font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(255,58,42,.3);
-    transition:background .12s,box-shadow .12s;display:inline-flex;align-items:center}
-  .dsob-cta:hover{background:#cc2e20;box-shadow:0 4px 36px rgba(255,58,42,.5)}
+    background:linear-gradient(168deg,rgba(255,255,255,.058),rgba(255,255,255,.022) 52%,rgba(255,255,255,.04)),rgba(9,10,12,.45);
+    backdrop-filter:blur(14px) saturate(1.35);-webkit-backdrop-filter:blur(14px) saturate(1.35);
+    border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+    display:inline-flex;align-items:center}
+  .dsob-pill.active{background:#ff3a2a;color:#fff;border-color:transparent;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 16px -6px rgba(255,58,42,.35)}
+  .dsob-cta{height:52px;padding:0 28px;background:linear-gradient(135deg,#ff3a2a,#cc2e20);border:none;border-radius:12px;color:#fff;
+    font-size:18px;font-weight:700;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 24px rgba(255,58,42,.3);
+    transition:filter .12s,box-shadow .12s;display:inline-flex;align-items:center}
+  .dsob-cta:hover{filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 36px rgba(255,58,42,.5)}
   .dsob-tpls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;max-width:620px}
-  .dsob-tpl{aspect-ratio:4/3;border-radius:10px;border:1.5px solid #1e1e2a;background:#111118;
-    display:grid;place-items:center;color:#8888aa;font-size:12px;font-weight:600;cursor:pointer;
-    background-image:radial-gradient(circle at 1px 1px,#1a1a24 1px,transparent 0);background-size:14px 14px}
+  .dsob-tpl{aspect-ratio:4/3;border-radius:10px;border:1px solid rgba(255,255,255,.10);
+    background-color:rgba(9,10,12,.45);
+    background-image:radial-gradient(circle at 1px 1px,#1a1a24 1px,transparent 0),
+      linear-gradient(168deg,rgba(255,255,255,.058),rgba(255,255,255,.022) 52%,rgba(255,255,255,.04));
+    background-size:14px 14px,100% 100%;
+    backdrop-filter:blur(18px) saturate(1.35);-webkit-backdrop-filter:blur(18px) saturate(1.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 26px -14px rgba(0,0,0,.5);
+    display:grid;place-items:center;color:#8888aa;font-size:12px;font-weight:600;cursor:pointer}
   .dsob-tpl.sel{border-color:#4a9eff;box-shadow:0 0 0 1px rgba(74,158,255,.4),0 0 18px rgba(74,158,255,.25);color:#fff}
   .dsob-handles{position:relative;width:220px;height:120px;border:2px solid #4a9eff;border-radius:6px;margin-bottom:28px;
     background:rgba(74,158,255,.05)}

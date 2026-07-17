@@ -152,7 +152,7 @@
   /* ---- launcher: the living orb (no glyph \u2014 the orb IS the brand) ---- */
   #rho-launch {
     position: fixed; right: 20px; bottom: 20px; z-index: 2147483000;
-    width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
+    width: var(--rho-orb-size, 36px); height: var(--rho-orb-size, 36px); border-radius: 50%; border: none; cursor: pointer;
     padding: 0; background: transparent;
     transition: transform .18s cubic-bezier(.34,1.56,.64,1);
     animation: rho-float 4.6s ease-in-out infinite;

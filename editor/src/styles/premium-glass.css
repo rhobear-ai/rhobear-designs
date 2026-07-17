@@ -1,0 +1,253 @@
+/*
+ * RHOBEAR Designs — PREMIUM GLASS PASS (loaded LAST, after adobe-surfaces.css).
+ *
+ * Round one left the chrome flat: toolbar, rails, mode pills, chips, cards,
+ * modals were opaque fills. This layer promotes EVERY user-facing surface to
+ * the liquid-glass material (spec: _LIQUID-GLASS-MATERIAL-SPEC.md):
+ *   BODY  frosted translucent pane with REAL backdrop-filter blur
+ *   RIM   specular inset top highlight + faint bottom bounce
+ *   EDGE  the FIXED plasma stroke (cyan→violet→magenta) on primary surfaces
+ * The plasma trio never recolours; Designs red lives ONLY in bloom/glow.
+ * Focus IGNITES (edge .45→1 + travel), it never swaps border colours.
+ */
+
+/* ───────── ambient light — glass needs something behind it to blur.
+   Two faint auras on the app floor: Designs red low-right, star blue
+   up-left. Subtle: they exist to give the panes depth, not to shout. */
+.rb-app {
+  background:
+    radial-gradient(900px 620px at 88% 96%, rgba(255, 58, 42, 0.075), transparent 62%),
+    radial-gradient(760px 520px at 6% -4%, rgba(74, 158, 255, 0.055), transparent 60%),
+    radial-gradient(640px 480px at 55% 118%, rgba(124, 92, 255, 0.045), transparent 65%),
+    var(--rb-bg);
+}
+:root[data-theme="light"] .rb-app {
+  background:
+    radial-gradient(900px 620px at 88% 96%, rgba(209, 56, 83, 0.05), transparent 62%),
+    radial-gradient(760px 520px at 6% -4%, rgba(74, 158, 255, 0.05), transparent 60%),
+    var(--rb-bg);
+}
+
+/* ───────── chrome panes → true glass ───────── */
+.rb-toolbar {
+  background: var(--glass-body), rgba(10, 14, 19, 0.58);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--rb-glass-bd);
+  box-shadow: var(--glass-rim), 0 10px 30px -18px rgba(0, 0, 0, 0.55);
+}
+.rb-rail {
+  background: var(--glass-body), rgba(10, 14, 19, 0.52);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-right: 1px solid var(--rb-glass-bd);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 14px 0 40px -30px rgba(0, 0, 0, 0.6);
+}
+.rb-inspector {
+  background: var(--glass-body), rgba(10, 14, 19, 0.52);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-left: 1px solid var(--rb-glass-bd);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), -14px 0 40px -30px rgba(0, 0, 0, 0.6);
+}
+.rb-status {
+  background: var(--glass-body), rgba(10, 14, 19, 0.58);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border-top: 1px solid var(--rb-glass-bd);
+}
+:root[data-theme="light"] .rb-toolbar,
+:root[data-theme="light"] .rb-rail,
+:root[data-theme="light"] .rb-inspector,
+:root[data-theme="light"] .rb-status {
+  background: var(--glass-body), rgba(255, 255, 255, 0.72);
+}
+
+/* ───────── mode pills — the primary control.
+   Active = red-filled (spec). Inactive = dark-outlined glass pills.
+   The CONTAINER is a pane of glass. ───────── */
+.rb-modeswitch {
+  background: var(--glass-body), rgba(9, 10, 12, 0.45);
+  backdrop-filter: blur(14px) saturate(1.35);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  border: 1px solid var(--rb-glass-bd);
+  box-shadow: var(--glass-rim);
+}
+.rb-modeswitch__btn { border: 1px solid transparent; }
+.rb-modeswitch__btn:hover { background: rgba(255, 255, 255, 0.06); }
+.rb-modeswitch__btn.is-active {
+  background: var(--rb-brand);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 16px -6px var(--rb-brand-glow);
+}
+
+/* ───────── buttons + chips → glass chips (real blur, rim, no flat fills) ── */
+.rb-btn {
+  position: relative;
+  background: var(--glass-body), rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(10px) saturate(1.3);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  border: 1px solid var(--rb-glass-bd);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+.rb-btn:hover {
+  background: var(--glass-body), rgba(255, 255, 255, 0.07);
+  border-color: var(--rb-glass-hi);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 20px -8px var(--rb-brand-glow);
+}
+.rb-btn--ghost { background: transparent; border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+.rb-btn--ghost:hover { background: rgba(255, 255, 255, 0.06); }
+.rb-btn--primary {
+  background: linear-gradient(135deg, var(--rb-brand), var(--rb-brand-press));
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 20px -8px var(--rb-brand-glow);
+}
+.rb-btn--primary:hover {
+  background: linear-gradient(135deg, var(--rb-brand), var(--rb-brand-press));
+  filter: brightness(1.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 28px -8px var(--rb-brand-glow);
+}
+.rb-btn:disabled:hover { background: var(--glass-body), rgba(255, 255, 255, 0.035); border-color: var(--rb-glass-bd); }
+:root[data-theme="light"] .rb-btn { background: var(--glass-body), rgba(255, 255, 255, 0.6); }
+
+/* the plasma ring on ACTIVE chips — ignition, not a recolour */
+.rb-btn.is-active,
+.rb-rail__tab.is-active,
+.rb-lib-cat.is-active,
+.rb-preset.is-active {
+  position: relative;
+  color: var(--rb-brand);
+  background: var(--glass-body), var(--rb-brand-soft);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 18px -8px var(--rb-brand-glow);
+}
+.rb-btn.is-active::after,
+.rb-rail__tab.is-active::after,
+.rb-lib-cat.is-active::after,
+.rb-preset.is-active::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; padding: var(--glass-edge-w);
+  background: conic-gradient(from var(--edge-angle, 200deg) at 50% 50%,
+    var(--glass-c1), var(--glass-c2) 28%, var(--glass-c3) 52%, var(--glass-c2) 76%, var(--glass-c1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: .5;
+}
+.rb-rail__tab { position: relative; border-radius: var(--rb-radius-sm); }
+.rb-lib-cat, .rb-preset, .rb-quick-btn { position: relative; }
+
+/* chips (stash categories, presets, quick inserts) → glass bodies */
+.rb-lib-cat, .rb-preset, .rb-quick-btn, .rb-start__recent, .rb-proj-open {
+  background: var(--glass-body), rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(10px) saturate(1.3);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  border: 1px solid var(--rb-glass-bd);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.rb-lib-cat:hover, .rb-quick-btn:hover, .rb-start__recent:hover, .rb-proj-open:hover {
+  background: var(--glass-body), rgba(255, 255, 255, 0.07);
+  border-color: var(--rb-glass-hi);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 22px -10px var(--rb-brand-glow);
+}
+
+/* ───────── cards (templates, stash, projects) → TRUE glass,
+   plasma edge arrives on hover/focus ───────── */
+.rb-tpl-card, .rb-lib-card {
+  position: relative;
+  background: var(--glass-body), rgba(9, 10, 12, 0.45);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--rb-glass-bd);
+  box-shadow: var(--glass-rim), 0 8px 26px -14px rgba(0, 0, 0, 0.5);
+  transition: transform var(--rb-t-hover), box-shadow .28s var(--glass-ease);
+}
+.rb-tpl-card::after, .rb-lib-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; padding: var(--glass-edge-w);
+  background: conic-gradient(from var(--edge-angle, 200deg) at 50% 50%,
+    var(--glass-c1), var(--glass-c2) 28%, var(--glass-c3) 52%, var(--glass-c2) 76%, var(--glass-c1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: 0; transition: opacity .28s var(--glass-ease);
+}
+.rb-tpl-card:hover, .rb-lib-card:hover {
+  border-color: transparent; transform: translateY(-2px);
+  background: var(--glass-body), rgba(9, 10, 12, 0.45);
+  box-shadow: var(--glass-rim), var(--glass-lift), 0 0 30px -10px var(--rb-brand-glow);
+}
+.rb-tpl-card:hover::after, .rb-tpl-card:focus-visible::after,
+.rb-lib-card:hover::after { opacity: .75; animation: edgeflow 7s linear infinite; }
+.rb-tpl-card:focus-visible { outline: none; }
+
+/* ───────── modals → panes of glass (the backdrop already blurs) ───────── */
+.rb-modal {
+  background: var(--glass-body), rgba(12, 14, 20, 0.72);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border: 1px solid var(--rb-glass-bd);
+  box-shadow: var(--glass-rim), var(--glass-lift);
+}
+:root[data-theme="light"] .rb-modal { background: var(--glass-body), rgba(255, 255, 255, 0.82); }
+.rb-modal .rb-modal__content { box-shadow: none; }
+
+/* floatbar keeps its glass; give it the rim it was missing */
+.rb-floatbar { box-shadow: var(--glass-rim), var(--rb-shadow-lg); }
+
+/* textbar (inline text editing) → glass */
+.rb-textbar {
+  background: var(--glass-body), rgba(9, 10, 12, 0.55);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  border: 1px solid var(--rb-glass-bd);
+  box-shadow: var(--glass-rim), var(--rb-shadow-lg);
+}
+
+/* toast → glass bloomed in the accent, not a flat red pill */
+.rb-toast {
+  background: var(--glass-body), rgba(20, 8, 8, 0.6);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--rb-brand-glow);
+  color: var(--rb-text);
+  box-shadow: var(--glass-rim), 0 10px 34px -12px var(--rb-brand-glow);
+}
+
+/* ───────── LIVE-mode selection = the BLUE star (spec-locked #4A9EFF).
+   Red is what the product IS; blue is what YOU picked. ───────── */
+.rb-overlay-selection {
+  border: 2px solid var(--rb-selection);
+  box-shadow: 0 0 0 1px var(--rb-selection-glow), 0 0 14px var(--rb-selection-glow);
+}
+.rb-overlay-label { background: var(--rb-selection); color: #fff; }
+
+/* device-active = the BLUE star (live/preview + device indicators are star
+   channel, not accent — per designs-tokens). Ring stays fixed plasma. */
+.rb-btn.is-active[data-action^="device-"] {
+  color: var(--rb-star);
+  background: var(--glass-body), rgba(74, 158, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 18px -8px var(--rb-selection-glow);
+}
+
+/* inputs — glass floor, focus blooms (never a hard border swap) */
+.rb-input, .rb-select {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--rb-glass-bd);
+}
+.rb-input:focus, .rb-select:focus {
+  border-color: var(--rb-glass-hi);
+  box-shadow: 0 0 0 3px var(--rb-brand-faint), 0 0 18px -6px var(--rb-brand-glow);
+}
+:root[data-theme="light"] .rb-input, :root[data-theme="light"] .rb-select { background: rgba(255, 255, 255, 0.7); }
+
+/* status pill onboard the glass language */
+.rb-pill { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+/* honour reduced-motion: edges stay lit but stop travelling */
+@media (prefers-reduced-motion: reduce) {
+  .rb-tpl-card:hover::after, .rb-lib-card:hover::after,
+  .rb-btn.is-active::after, .rb-rail__tab.is-active::after,
+  .rb-lib-cat.is-active::after, .rb-preset.is-active::after { animation: none; }
+}

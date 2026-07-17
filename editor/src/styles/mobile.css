@@ -157,5 +157,5 @@ body { -webkit-tap-highlight-color: transparent; }
 .rb-status { display: none; }
 
 /* Rho floats just under the top bar on phones (clear of Save) */
-#rho-launch { top: calc(env(safe-area-inset-top) + 60px) !important; right: 10px !important; bottom: auto !important; width: 40px !important; height: 40px !important; }
+#rho-launch { top: calc(env(safe-area-inset-top) + 60px) !important; right: 10px !important; bottom: auto !important; width: 36px !important; height: 36px !important; }
 #rho-panel { top: calc(env(safe-area-inset-top) + 108px) !important; bottom: auto !important; }
