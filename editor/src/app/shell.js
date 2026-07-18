@@ -19,6 +19,8 @@ import { chat as aiChat, chatWithTools, parseEdit, SYSTEM_PROMPT, PROVIDER_LABEL
 import { openAiToolsParam, runTool, TOOLS_SYSTEM_PROMPT } from '../ai/tools.js';
 import { createThreeMode } from './three-mode.js';
 import { isPro, requirePro, showUpgrade } from './pro.js';
+import { initAuth, isSignedIn, signIn, signOut, onAuthChange } from './auth.js';
+import { loadLocalCache, seedPrefs, getPref, setPrefs, hydratePrefs } from './prefs.js';
 import { STYLES, styleById, styleDirective } from '../ai/styles.js';
 import { voiceSupported, createVoice } from '../ai/voice.js';
 
@@ -104,6 +106,37 @@ export function bootShell() {
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('is-show'), 2800);
   }
   const setTitle = (t) => { docTitleStr = t || 'Untitled page'; if (refs.docTitle) refs.docTitle.textContent = docTitleStr; };
+
+  // ── Auth + server-synced preferences ─────────────────────────────────────
+  // Init auth (picks up ?rhobear_session from URL redirect), load the local
+  // pref cache, and migrate any existing localStorage values so the transition
+  // is seamless. If signed in, hydrate from the server in the background.
+  const { signedIn } = initAuth();
+  loadLocalCache();
+  seedPrefs({
+    'rb-ai': (() => { try { return JSON.parse(localStorage.getItem('rb-ai') || '{}'); } catch { return {}; } })(),
+    'rb-ai-style': (() => { try { return localStorage.getItem('rb-ai-style') || 'default'; } catch { return 'default'; } })(),
+    'rb-ai-deep': (() => { try { return localStorage.getItem('rb-ai-deep') === '1'; } catch { return false; } })(),
+    'rb-designs-api': (() => { try { return localStorage.getItem('rb-designs-api') || ''; } catch { return ''; } })(),
+  });
+  if (signedIn) { hydratePrefs().catch(() => {}); }
+
+  // Sign-in / out button in toolbar
+  const authBtn = document.getElementById('rb-signin-btn');
+  function updateAuthBtn(signed) {
+    if (!authBtn) return;
+    authBtn.hidden = false;
+    authBtn.textContent = signed ? 'Sign out' : 'Sign in';
+    authBtn.title = signed ? 'Sign out of RHOBEAR auth' : 'Sign in for cross-device sync';
+  }
+  updateAuthBtn(signedIn);
+  if (authBtn) {
+    authBtn.addEventListener('click', () => {
+      if (isSignedIn()) { signOut(); updateAuthBtn(false); }
+      else signIn();
+    });
+  }
+  onAuthChange((signed) => { updateAuthBtn(signed); });
 
   const onSelectionChange = (sel) => {
     if (sel) {
@@ -352,17 +385,15 @@ export function bootShell() {
     },
     'settings-close': () => refs.settingsModal.close(),
     'settings-save': () => {
-      try {
-        localStorage.setItem('rb-ai', JSON.stringify({
-          provider: $('ai-provider').value,
-          key: $('ai-key').value,
-          model: ($('ai-model') && $('ai-model').value.trim()) || '',
-          baseUrl: ($('ai-base') && $('ai-base').value.trim()) || '',
-        }));
-      } catch (_e) { /* ignore */ }
+      setPrefs({ 'rb-ai': {
+        provider: $('ai-provider').value,
+        key: $('ai-key').value,
+        model: ($('ai-model') && $('ai-model').value.trim()) || '',
+        baseUrl: ($('ai-base') && $('ai-base').value.trim()) || '',
+      } });
       refs.settingsModal.close();
       aiRefresh();
-      setStatus('LLM key saved locally');
+      setStatus('LLM key saved' + (isSignedIn() ? ' ✓' : ' locally'));
     },
   };
 
@@ -500,13 +531,13 @@ export function bootShell() {
   }
 
   // ---- AI assist (bring-your-own key) ----
-  function aiConfig() { try { return JSON.parse(localStorage.getItem('rb-ai') || '{}'); } catch (_e) { return {}; } }
+  function aiConfig() { const c = getPref('rb-ai', {}); return (c && typeof c === 'object') ? c : {}; }
 
   // ---- Pro layer: generation style · deep thinking · voice (never crimps free) ----
-  function aiStyle() { try { return localStorage.getItem('rb-ai-style') || 'default'; } catch (_e) { return 'default'; } }
-  function setAiStyle(v) { try { localStorage.setItem('rb-ai-style', v); } catch (_e) { /* ignore */ } }
-  function aiDeep() { try { return localStorage.getItem('rb-ai-deep') === '1'; } catch (_e) { return false; } }
-  function setAiDeep(v) { try { localStorage.setItem('rb-ai-deep', v ? '1' : '0'); } catch (_e) { /* ignore */ } }
+  function aiStyle() { return getPref('rb-ai-style', 'default'); }
+  function setAiStyle(v) { setPrefs({ 'rb-ai-style': v }); }
+  function aiDeep() { return !!getPref('rb-ai-deep', false); }
+  function setAiDeep(v) { setPrefs({ 'rb-ai-deep': !!v }); }
 
   let voice = null; let voiceBtn = null;
   function injectProToolbar() {
@@ -703,7 +734,7 @@ export function bootShell() {
   // Resolution order for the API base URL:
   //   1. `?designs_api=<baseUrl>` query param (per-link override)
   //   2. `window.__RB_DESIGNS_API__` global (host page config)
-  //   3. `localStorage.rb-designs-api` (user preference set via settings)
+  //   3. `rb-designs-api` preference (set via settings, synced if signed in)
   //   4. `/v1` same-origin (when the editor is reverse-proxied behind the API)
   (async function autoLoadFromApi() {
     try {
@@ -713,7 +744,7 @@ export function bootShell() {
       const fromQuery = (url.searchParams.get('designs_api') || '').replace(/\/$/, '');
       const fromGlobal = (typeof window !== 'undefined' && window.__RB_DESIGNS_API__) || '';
       let fromLs = '';
-      try { fromLs = (localStorage.getItem('rb-designs-api') || '').replace(/\/$/, ''); } catch (_e) { console.warn('designs-api localStorage read:', _e); }
+      try { fromLs = (getPref('rb-designs-api', '') || '').replace(/\/$/, ''); } catch (_e) { console.warn('designs-api prefs read:', _e); }
       const base = fromQuery || fromGlobal || fromLs || `${url.origin}/v1`;
       const r = await fetch(`${base}/pages/${encodeURIComponent(pageId)}`);
       const body = await r.json().catch(() => ({}));

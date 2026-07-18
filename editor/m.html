@@ -82,6 +82,10 @@
           <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" data-action="preview" data-testid="btn-preview" title="Preview" aria-label="Preview"><svg class="rb-icn"><use href="#i-eye"/></svg></button>
           <button type="button" class="rb-btn rb-btn--primary rb-btn--icon" data-action="save-html" data-testid="btn-save-html" title="Save" aria-label="Save"><svg class="rb-icn"><use href="#i-save"/></svg></button>
         </div>
+        <!-- Auth — sign in / out (managed by auth.js) -->
+        <div class="rb-group" id="rb-auth-group">
+          <button type="button" class="rb-btn rb-btn--ghost" id="rb-signin-btn" data-testid="btn-auth" hidden>Sign in</button>
+        </div>
         <!-- engine-required desktop controls, parked off-screen -->
         <div class="rbm-gone" aria-hidden="true">
           <button type="button" data-action="toggle-rail" data-testid="btn-toggle-rail" tabindex="-1">rail</button>
@@ -251,7 +255,7 @@
           <strong>Connect an LLM</strong>
           <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="settings-close" data-testid="btn-settings-close" aria-label="Close"><svg class="rb-icn"><use href="#i-x"/></svg></button>
         </div>
-        <p class="rb-modal__hint">RHOBEAR Designs never supplies the AI — you bring your own. Keys are stored locally in your browser, never sent to us.</p>
+        <p class="rb-modal__hint">RHOBEAR Designs never supplies the AI — you bring your own. Settings sync across devices when you're signed in.</p>
         <div class="rb-setting">
           <span class="rb-setting__label">Provider</span>
           <select class="rb-input" id="ai-provider" data-testid="ai-provider">
