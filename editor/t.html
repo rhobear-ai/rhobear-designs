@@ -135,6 +135,10 @@
           <button type="button" class="rb-btn" data-action="export-zip" data-testid="btn-export-zip" title="Export HTML + CSS as ZIP"><svg class="rb-icn"><use href="#i-export"/></svg><span>Export</span></button>
           <button type="button" class="rb-btn rb-btn--primary" data-action="save-html" data-testid="btn-save-html" title="Download HTML"><svg class="rb-icn"><use href="#i-save"/></svg><span>Save</span></button>
         </div>
+        <!-- Auth — sign in / out (managed by auth.js) -->
+        <div class="rb-group" id="rb-auth-group">
+          <button type="button" class="rb-btn rb-btn--ghost" id="rb-signin-btn" data-testid="btn-auth" hidden>Sign in</button>
+        </div>
       </header>
 
       <!-- ───────────── Workspace ───────────── -->
@@ -288,7 +292,7 @@
           <strong>Connect an LLM</strong>
           <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="settings-close" data-testid="btn-settings-close" aria-label="Close">✕</button>
         </div>
-        <p class="rb-modal__hint">RHOBEAR Designs never supplies the AI — you bring your own. Keys are stored locally in your browser, never sent to us.</p>
+        <p class="rb-modal__hint">RHOBEAR Designs never supplies the AI — you bring your own. Settings sync across devices when you're signed in.</p>
         <div class="rb-setting">
           <span class="rb-setting__label">Provider</span>
           <select class="rb-input" id="ai-provider" data-testid="ai-provider">
