@@ -1,0 +1,198 @@
+/* ============================================================================
+   CORE TOKENS — brand-agnostic
+   ----------------------------------------------------------------------------
+   Everything here is SHARED and does not vary between products in a family.
+   Product files override the accent set and nothing else.
+
+   If a product needs to change a value in this file, that is a request to amend
+   the system for everyone — not a product override. One product quietly changing
+   the card radius is how a design system dies.
+
+   Fill the <> once per project from DESIGN.md. Values shown are the dark-glass
+   worked example; a paper or print seed replaces them wholesale and the
+   structure is unchanged.
+   ========================================================================= */
+
+:root {
+
+  /* ---- Ground ---------------------------------------------------------- */
+  --bg:              #0A0F14;
+  --nav-bg:          #0D1520;
+  --surface:         #131820;
+  --surface-2:       #1A2435;
+  --surface-hover:   #243450;
+
+  --border:          rgba(255, 255, 255, 0.07);
+  --border-hover:    rgba(255, 255, 255, 0.14);
+
+  /* ---- Text ------------------------------------------------------------ */
+  --text-primary:    #E8F0F7;
+  --text-secondary:  rgba(232, 240, 247, 0.60);
+  --text-muted:      rgba(232, 240, 247, 0.35);
+
+  /* Section labels — uppercase group headings and table column headers.
+     SHARED across every product regardless of accent. Verified across four
+     products using the identical treatment: four products agreeing is a rule,
+     not drift. Without this token a build defaults these to grey and silently
+     drifts off the comps. */
+  --text-section:    #2A8FA8;
+
+  /* ---- Status ---------------------------------------------------------- */
+  --ok:              #22C55E;
+  --warn:            #F59E0B;
+  --danger:          #EF4444;
+  --offline:         rgba(232, 240, 247, 0.25);
+
+  /* ---- Type ------------------------------------------------------------
+     Roles, not fonts. The role mapping survives a rebrand; the families do not.
+     display = what the BRAND says   body = what the UI says
+     mono    = what the MACHINE says                                        */
+  --font-display:    <display-family>, Georgia, serif;
+  --font-body:       <body-family>, system-ui, sans-serif;
+  --font-mono:       <mono-family>, ui-monospace, monospace;
+
+  --text-display:    clamp(1.8rem, 3vw, 2.4rem);
+  --text-h1:         1.5rem;
+  --text-h2:         1.125rem;
+  --text-body:       0.9375rem;
+  --text-small:      0.8125rem;
+  --text-label:      0.75rem;
+
+  --tracking-label:  0.12em;   /* uppercase section labels */
+  --tracking-tight:  -0.02em;  /* large display only */
+
+  /* ---- Space & shape --------------------------------------------------- */
+  --gap-sm:          12px;
+  --gap:             24px;
+  --gap-lg:          40px;
+
+  --radius-card:     16px;
+  --radius-modal:    24px;
+  --radius-control:  10px;
+  --radius-pill:     99px;
+
+  /* ---- Shell ----------------------------------------------------------- */
+  --rail-w:          220px;
+  --rail-w-collapsed: 44px;
+  --topbar-h:        52px;
+  --statusbar-h:     24px;
+  --content-max:     1200px;
+  --panel-w:         240px;
+
+  /* ---- Material --------------------------------------------------------
+     Declared once, held everywhere. Write the NEGATIVE case in DESIGN.md too:
+     "glass where there's glass, flat where there isn't." Material applied
+     everywhere reads as a component gallery; material applied by rule reads
+     as built.
+
+     Glass here means an ACTUAL backdrop-filter. A frosted card coded as a flat
+     fill is the most common silent miss at render-check: it looks fine alone
+     and is wrong beside the comp.                                          */
+  --glass-bg:        rgba(26, 36, 53, 0.85);
+  --glass-blur:      12px;
+  --glass-border:    1px solid rgba(255, 255, 255, 0.08);
+
+  /* ---- Motion ----------------------------------------------------------
+     Damping is brand. See DESIGN.md §7 — two numbers that differentiate
+     for free.                                                              */
+  --ease:            cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:        150ms;
+  --dur:             300ms;
+  --dur-slow:        600ms;
+
+  /* ---- Layers ---------------------------------------------------------- */
+  --z-scene:         0;
+  --z-content:       10;
+  --z-chrome:        20;
+  --z-nav:           30;
+  --z-fab:           50;
+  --z-modal:         100;
+}
+
+
+/* ============================================================================
+   ACCENT CONTRACT
+   ----------------------------------------------------------------------------
+   The ONLY tokens a product file may override. Anything else is an amendment.
+   ========================================================================= */
+
+:root {
+  --accent:          <hex>;
+  --accent-dim:      rgba(<r>, <g>, <b>, 0.12);
+  --accent-glow:     0 0 24px rgba(<r>, <g>, <b>, 0.30);
+  --accent-contrast: #FFFFFF;
+}
+
+/* Accent scope — state it, or it leaks.
+   Permitted: the single primary action · the active nav state · section labels
+              (via --text-section) · the mark.
+   Everything else: --text-primary or --text-muted.
+   No second accent hue in a frame. Teal-family tokens belong to the shared
+   section-label role and to the assistant surface — neither is a product
+   accent, so neither competes with one. */
+
+
+/* ============================================================================
+   NAV ACTIVE — one treatment per control type, system-wide
+   ----------------------------------------------------------------------------
+   Four competing treatments appeared across one family before this was fixed:
+   glowing outlined rect, filled pill, underline, and pill-on-coloured-band.
+   Collapsed here. Do not add a fifth.
+   ========================================================================= */
+
+.nav-item {
+  border-left: 2px solid transparent;      /* rail: 2px left border + 8% fill  */
+  background: transparent;
+  transition: all var(--dur-fast) var(--ease);
+}
+.nav-item[aria-current] {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.tab {                                      /* tab: 2px bottom border          */
+  border-bottom: 2px solid transparent;
+}
+.tab[aria-current] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+.segment[aria-pressed="true"] {             /* segmented control: filled       */
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+/* Never: a glowing outlined rectangle. It was the outlier every time. */
+
+
+/* ============================================================================
+   SECTION LABEL — the token that gets forgotten
+   ========================================================================= */
+
+.section-label {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-section);
+}
+
+
+/* ============================================================================
+   MOTION SAFETY
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Any scroll-scene surface serves its static sequence here — the same
+     deliverable mobile gets, which is why that fallback is never optional
+     and never untested. */
+}

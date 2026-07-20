@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://the-method.dev/schemas/beats.schema.json",
+  "title": "Scroll-scene beat configuration",
+  "description": "Declare beats before modelling anything. Beats are the storyboard; the scene is built to serve them, never the reverse.",
+  "type": "object",
+  "required": ["subject", "journey", "motion", "beats", "mobile"],
+  "additionalProperties": false,
+
+  "properties": {
+    "subject": {
+      "type": "string",
+      "description": "What travels through the scene.",
+      "minLength": 1
+    },
+
+    "journey": {
+      "type": "string",
+      "description": "The continuous environmental gradient across the whole scroll. Must be monotonic — cold to warm, high to low, open to intimate. This single gradient is what makes scrolling feel like a journey rather than a carousel.",
+      "minLength": 1
+    },
+
+    "motion": {
+      "type": "object",
+      "description": "Springs, never lerp. Damping is brand.",
+      "required": ["character", "camY", "camZ", "fov", "scrub"],
+      "additionalProperties": false,
+      "properties": {
+        "character": {
+          "enum": ["heavy-cinematic", "crisp-precise", "bouncy-playful", "floaty-dreamy"]
+        },
+        "camY":  { "$ref": "#/$defs/spring", "description": "Vertical. Heaviest — reads as weight." },
+        "camZ":  { "$ref": "#/$defs/spring", "description": "Depth. Snappier — reads as push." },
+        "fov":   { "$ref": "#/$defs/spring", "description": "MUST be the lowest stiffness of the three. The lens lagging the body under acceleration is the cinematic tell." },
+        "scrub": { "type": "number", "minimum": 0, "maximum": 4, "description": "Scroll lag. ~1.8 reads premium; 0 reads mechanical." }
+      }
+    },
+
+    "beats": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 9,
+      "description": "Under 6 the scroll feels thin. Over 9 viewers stop reading and start scrubbing.",
+      "items": { "$ref": "#/$defs/beat" }
+    },
+
+    "transitions": {
+      "type": "array",
+      "description": "One per adjacent beat pair. Storyboard the middle or it gets improvised at code time, where changing it is expensive.",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "mechanic"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string" },
+          "to":   { "type": "string" },
+          "mechanic": {
+            "enum": ["material-wipe", "temperature-flip", "vignette-close", "bloom-open", "element-rise"],
+            "description": "Exactly one. Two mechanics at once cancel and read as a glitch."
+          },
+          "still": { "type": "string", "description": "Path to the approved midpoint storyboard frame." }
+        }
+      }
+    },
+
+    "mobile": {
+      "type": "object",
+      "required": ["strategy"],
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "const": "static-sequence",
+          "description": "Never a throttled canvas. A WebGL scene on a phone drains battery, janks under the exact gesture the design depends on, and looks broken rather than simple."
+        },
+        "frames": {
+          "type": "array",
+          "description": "One composed 9:16 still per beat. Portrait framing chosen for portrait — not a 16:9 crop.",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "spring": {
+      "type": "object",
+      "required": ["stiffness", "damping", "mass"],
+      "additionalProperties": false,
+      "properties": {
+        "stiffness": { "type": "number", "exclusiveMinimum": 0 },
+        "damping":   { "type": "number", "exclusiveMinimum": 0 },
+        "mass":      { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+
+    "beat": {
+      "type": "object",
+      "required": ["id", "scroll", "camera", "subject", "idea", "atmosphere", "hold"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+
+        "scroll": {
+          "type": "number", "minimum": 0, "maximum": 1,
+          "description": "Position on the page, 0-1."
+        },
+
+        "camera": {
+          "type": "object",
+          "required": ["y", "z", "fov"],
+          "additionalProperties": false,
+          "properties": {
+            "x":   { "type": "number", "default": 0 },
+            "y":   { "type": "number" },
+            "z":   { "type": "number" },
+            "fov": { "type": "number", "minimum": 20, "maximum": 90 }
+          }
+        },
+
+        "subject": {
+          "type": "string",
+          "description": "What the subject is doing here. Must match a named animation state."
+        },
+
+        "idea": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "MANDATORY, one sentence: the single thing the viewer must understand at this beat. A beat that cannot state its idea is a camera position, not a beat — cut it. This field removes more bloat than any other rule in the system."
+        },
+
+        "atmosphere": {
+          "type": "object",
+          "description": "Fog, sky and sun interpolate together. Moving fog without moving sun produces a world lit by nothing — the eye catches it instantly even when it cannot name it.",
+          "required": ["fog", "sky", "sun"],
+          "additionalProperties": false,
+          "properties": {
+            "fog":        { "$ref": "#/$defs/hex" },
+            "sky":        { "$ref": "#/$defs/hex" },
+            "sun":        { "$ref": "#/$defs/hex" },
+            "fogDensity": { "type": "number", "minimum": 0 },
+            "progress":   { "type": "number", "minimum": 0, "maximum": 1,
+                            "description": "Position on the environment gradient. Must increase monotonically across beats." }
+          }
+        },
+
+        "hold": {
+          "type": "integer", "minimum": 0,
+          "description": "Milliseconds held after snap. First and last beats MUST be 0 — trapping arrival is the worst first impression and trapping the CTA is the worst last one. All holds are forced to 0 on touch: a swipe that does nothing reads as a broken page."
+        },
+
+        "peak": {
+          "type": "boolean", "default": false,
+          "description": "Exactly one beat in the scene may set this. Gets the FOV squeeze, the fog LIFT (not thicken — lifting reads as focus, thickening reads as an effect), the rim bloom and the micro camera shake. If every beat is dramatic, none is."
+        },
+
+        "still": { "type": "string", "description": "Path to the approved storyboard frame. Stage 6 approves this before anything is modelled." }
+      }
+    },
+
+    "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+  }
+}
