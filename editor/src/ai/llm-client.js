@@ -53,40 +53,6 @@ export function effectiveBaseUrl(provider, baseUrl) {
   return baseUrl || '';
 }
 
-/**
- * Probe the provider with a tiny real request and return a plain-language verdict
- * the settings UI can show. Never throws — always resolves to {ok, message}.
- * @returns {Promise<{ok:boolean, message:string}>}
- */
-export async function testConnection({ provider, apiKey, model, baseUrl }) {
-  if (!apiKey) return { ok: false, message: 'Add an API key first, then test.' };
-  const root = effectiveBaseUrl(provider, baseUrl);
-  // Mixed-content is invisible in the network tab and the #1 reason a self-hosted
-  // IP endpoint "returns nothing" — catch it before the fetch so we can explain it.
-  if (typeof location !== 'undefined' && location.protocol === 'https:' && /^http:\/\//i.test(root)) {
-    return {
-      ok: false,
-      message: `This page is HTTPS but the endpoint is HTTP (${root}). Browsers silently block that ("mixed content") — nothing comes back. Serve the endpoint over HTTPS (or test with the editor opened at http://localhost).`,
-    };
-  }
-  try {
-    const reply = await chat({
-      provider, apiKey, model, baseUrl,
-      system: 'Connection test. Reply with the single word: ok.',
-      user: 'ping',
-    });
-    const sample = String(reply || '').trim().slice(0, 60);
-    return { ok: true, message: `Connected ✓ — the model replied${sample ? `: “${sample}”` : ' (empty reply, but the endpoint answered)'}.` };
-  } catch (e) {
-    const m = String(e && e.message || e);
-    // A bare "Failed to fetch" from a reachable-looking URL is almost always CORS.
-    const extra = /could not reach|failed to fetch/i.test(m)
-      ? ' If the server IS up, this is usually CORS — the endpoint must send Access-Control-Allow-Origin for browser calls.'
-      : '';
-    return { ok: false, message: m + extra };
-  }
-}
-
 async function anthropic(key, model, system, user, deep) {
   const res = await fetch(ANTHROPIC_MESSAGES_URL, {
     method: 'POST',

@@ -80,14 +80,6 @@ export function loadManifest() {
   return _cache;
 }
 
-/**
- * Test-only: drop the singleton cache so a re-import of manifest.json
- * (e.g. after re-running `dissect.mjs`) is picked up.
- */
-export function _resetManifestCache() {
-  _cache = null;
-}
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------

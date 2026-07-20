@@ -33,9 +33,6 @@ export const CATEGORIES = Object.freeze(Object.keys(FALLBACKS));
 /** Named export of the raw catalog array. */
 export { catalog };
 
-/** Frozen, defensive copy of the raw catalog. */
-export const FONT_CATALOG = Object.freeze(catalog.slice());
-
 /** Family names already injected into the current document. */
 const loaded = new Set();
 

@@ -70,9 +70,6 @@
 // Public constants
 // ---------------------------------------------------------------------------
 
-/** Supported providers. Stable strings; append-only. */
-export const PROVIDERS = Object.freeze(['giphy', 'tenor']);
-
 /** REST endpoint per provider. */
 export const ENDPOINTS = Object.freeze({
   giphy: 'https://api.giphy.com/v1/gifs/search',

@@ -83,8 +83,8 @@
  * @typedef {'ready'|'select'|'hover'|'deselect'|'text-changed'|'request-rect'} BridgeKind
  */
 
-export const BRIDGE_VERSION = 1;
-export const MESSAGE_TYPE = 'rb-bridge';
+const BRIDGE_VERSION = 1;
+const MESSAGE_TYPE = 'rb-bridge';
 
 /** Default target origin for outbound messages. '*' is unsafe in production. */
 const DEFAULT_TARGET_ORIGIN = '*';
@@ -207,100 +207,6 @@ export function guardIncomingEvent(event, opts) {
     return { accept: false, reason: 'envelope invalid (type/version/role/kind)' };
   }
   return { accept: true, msg };
-}
-
-// ---------------------------------------------------------------------------
-// Parent side
-// ---------------------------------------------------------------------------
-
-/**
- * Create the parent-side bridge.
- *
- * @param {HTMLIFrameElement} iframe
- * @param {Object} [callbacks]
- * @param {(m: {path: string, rect: IframeRect, tagName: string, textPreview?: string}) => void} [callbacks.onSelect]
- * @param {(m: {path: string, rect: IframeRect}) => void} [callbacks.onHover]
- * @param {(m: {path: string, prevText: string, text: string}) => void} [callbacks.onTextChange]
- * @param {() => void} [callbacks.onDeselect]
- * @param {(m: {capabilities: string[]}) => void} [callbacks.onReady]
- * @param {string} [callbacks.expectedOrigin='*']   — origin of incoming messages from the iframe
- * @param {string} [callbacks.targetOrigin='*']      — origin used on outgoing postMessage
- * @returns {{
- *   post: (kind: BridgeKind, payload?: object) => boolean,
- *   destroy: () => void,
- *   onMessage: (event: MessageEvent) => boolean,
- * }}
- */
-export function createBridge(iframe, callbacks) {
-  const cb = callbacks || {};
-  const expectedOrigin = cb.expectedOrigin || DEFAULT_EXPECTED_ORIGIN;
-  const targetOrigin = cb.targetOrigin || DEFAULT_TARGET_ORIGIN;
-
-  if (!iframe || typeof iframe.contentWindow !== 'object') {
-    throw new Error('createBridge: iframe.contentWindow required');
-  }
-
-  const target = iframe.contentWindow;
-  const source = target;
-
-  /** Dispatch a single accepted message to the matching callback. */
-  function dispatch(msg) {
-    switch (msg.kind) {
-      case 'select':       if (cb.onSelect)     cb.onSelect(msg.payload); return;
-      case 'hover':        if (cb.onHover)      cb.onHover(msg.payload); return;
-      case 'deselect':     if (cb.onDeselect)   cb.onDeselect(); return;
-      case 'text-changed': if (cb.onTextChange) cb.onTextChange(msg.payload); return;
-      case 'ready':        if (cb.onReady)      cb.onReady(msg.payload); return;
-      case 'request-rect': return; // parent → agent; ignore inbound
-      default: return;
-    }
-  }
-
-  /**
-   * Handle one inbound MessageEvent. Returns true if accepted.
-   * Exposed so tests can drive the bridge without a real MessageEvent listener.
-   * @param {MessageEvent} event
-   */
-  function onMessage(event) {
-    const verdict = guardIncomingEvent(event, {
-      expectedOrigin,
-      expectedSource: source,
-      expectedRole: 'agent',
-    });
-    if (!verdict.accept) return false;
-    dispatch(verdict.msg);
-    return true;
-  }
-
-  const listener = (event) => { onMessage(event); };
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('message', listener);
-  }
-
-  /**
-   * Send a message to the agent.
-   * @param {BridgeKind} kind
-   * @param {Object} [payload]
-   * @returns {boolean} true if posted
-   */
-  function post(kind, payload) {
-    try {
-      const msg = serializeMessage({ role: 'parent', kind, payload: payload || {} });
-      target.postMessage(msg, targetOrigin);
-      return true;
-    } catch (_err) {
-      return false;
-    }
-  }
-
-  function destroy() {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('message', listener);
-    }
-  }
-
-  return { post, destroy, onMessage };
 }
 
 // ---------------------------------------------------------------------------
