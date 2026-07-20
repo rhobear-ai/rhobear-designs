@@ -170,6 +170,30 @@ shared none, and you were never permitted to reach for your own.
 
 ---
 
+## Image generation — the tool you call (Stage 5, the image-first foundation)
+
+This method is **image-first**: at Stage 5 you **generate the frames FIRST**, then build the CSS/JS
+from the picture. You do not describe a screen and hope — you make the picture and read it. The
+generator is bundled with the engine:
+
+```
+python engine/generators/image/generate.py "PROMPT" --out frame.png --aspect 16:9 [--n 2] [--ref prior.png]
+```
+
+- Model: **Nano Banana Pro** (`gemini-3-pro-image-preview`) — the top image model, always; never a
+  flash/lite tier.
+- It runs on our own Vertex credit (project `rhobear`); auth is a service-account key
+  (`GOOGLE_APPLICATION_CREDENTIALS`) on a server, or the local `gcloud` login otherwise.
+- It writes real PNGs and prints their paths. Pass `--ref` a prior frame to keep a subject consistent
+  across a sequence (the `falling-into-place` styles need near-identical frames — generate the end
+  state first, then step toward it with `--ref`).
+- The prompt carries the SEED's material/palette/subject and the **motion** you want *in the still*
+  (e.g. "caught mid-drop, motion blur, dust at the impact point" — a car FALLING with gravity, not a
+  car parked on a desk). Realism and motion live in the prompt; the picture is then the spec (rule 4).
+
+Generate → inspect every frame (Stage 6, you must be able to see) → codify → verify-by-build. The
+picture leads; the code follows.
+
 ## WebGL / three.js scenes
 
 `scroll-scene` shell. Full spec in `references/04-webgl/`. Before inventing any technique, check
