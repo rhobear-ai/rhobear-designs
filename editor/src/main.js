@@ -1,4 +1,5 @@
 import { bootShell } from './app/shell.js';
+import './app/redesign-hooks.js';
 
 const shell = bootShell();
 
