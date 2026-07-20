@@ -34,3 +34,8 @@ export function deleteProject(id) {
   write(state);
 }
 
+export function renameProject(id, name) {
+  const state = read();
+  const p = state.projects.find((x) => x.id === id);
+  if (p) { p.name = name; write(state); }
+}

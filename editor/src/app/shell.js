@@ -33,24 +33,6 @@ const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 // User stash — items the user saved (e.g. a 3D scene), kept locally + shown in the Add panel.
 function userStash() { try { return JSON.parse(localStorage.getItem('rb-user-stash') || '[]'); } catch (_e) { return []; } }
 function addUserStash(el) { const a = userStash(); a.unshift(el); try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); } catch (_e) { console.error('addUserStash:', _e); } }
-// Sanitize user-supplied content before rendering into the editor chrome —
-// strips event handlers and javascript: URLs that an attacker could plant via
-// a compromised localStorage key (e.g. rb-user-stash). innerHTML never runs
-// <script> tags, but event handlers and CSS expression() exfiltration would
-// work in the editor's same-origin chrome, so we strip those too.
-function sanitizeUserHtml(html) {
-  if (!html) return '';
-  // Strip event handler attributes (onclick, onerror, onmouseover, onload, etc.)
-  let s = html.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, ' ');
-  // Strip javascript: URLs in href/src/action/formaction
-  s = s.replace(/\s+(href|src|action|formaction)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, ' $1=""');
-  return s;
-}
-function sanitizeUserCss(css) {
-  if (!css) return '';
-  // Strip CSS expression() (IE legacy, defense in depth)
-  return css.replace(/expression\s*\(/gi, '/* blocked */').replace(/javascript:/gi, 'blocked:');
-}
 
 // Quick structural inserts (clean defaults — distinct from the category filters)
 const QUICK = [
@@ -504,7 +486,7 @@ export function bootShell() {
           `<span class="rb-lib-card__name">${escapeHtml(el.name || el.id)}</span>`;
         try {
           const stage = card.querySelector('.rb-lib-card__stage');
-          stage.innerHTML = (el.css ? `<style>${sanitizeUserCss(el.css)}</style>` : '') + sanitizeUserHtml(el.html || '');
+          stage.innerHTML = (el.css ? `<style>${el.css}</style>` : '') + (el.html || '');
           stage.querySelectorAll('img').forEach((im) => { im.loading = 'lazy'; });
         } catch (_e) { /* preview is best-effort; the name still shows */ }
         card.draggable = true;
@@ -697,7 +679,11 @@ export function bootShell() {
       } catch (err) {
         // Tool calls unsupported (older/local model) or transport error — fall
         // through to plain chat rather than failing the request.
-        console.warn('Tool-mode AI failed, falling back to plain chat:', err?.message || err);
+        if (!/tool|function/i.test(String(err && err.message))) {
+          pending.textContent = `Error: ${err.message}`;
+          pending.classList.add('rb-ai-msg--err');
+          return;
+        }
       }
     }
     const ctx = (mode === 'live') ? live.getSelectionHtml() : (build.getHtmlCss().html || '');

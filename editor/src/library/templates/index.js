@@ -119,5 +119,29 @@ export function templateCount() {
   return manifest.entries.length;
 }
 
+/**
+ * Convenience: distinct tag list across the bank, sorted. Useful for the
+ * gallery's filter sidebar.
+ *
+ * @returns {string[]}
+ */
+export function listTags() {
+  const set = new Set();
+  for (const t of manifest.entries) {
+    if (Array.isArray(t.tags)) for (const tag of t.tags) set.add(tag);
+  }
+  return [...set].sort();
+}
+
+/**
+ * Convenience: distinct collections present in the bank, in the order
+ * declared in the manifest (so newer collections appear last).
+ *
+ * @returns {string[]}
+ */
+export function listCollections() {
+  return manifest.collections.slice();
+}
+
 // Named export for tests + power-users that want to introspect.
 export { manifest };

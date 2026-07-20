@@ -84,6 +84,12 @@ export const GIFS = Object.freeze(rawCatalog.gifs.slice());
  */
 export const GRADIENTS = Object.freeze(rawCatalog.gradients.slice());
 
+/**
+ * Media-type discriminator values. Strings are stable; new types MUST
+ * be appended to keep existing consumers working.
+ */
+export const MEDIA_TYPES = Object.freeze(['image', 'gif', 'gradient']);
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
