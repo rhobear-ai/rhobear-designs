@@ -61,10 +61,21 @@ export function getSession() {
   return sessionToken;
 }
 
-/** Redirect to auth.rhobear.ai sign-in. Comes back to the current page. */
+/**
+ * Redirect to auth.rhobear.ai sign-in. Comes back to the current page.
+ *
+ * Google OAuth, not /auth/dev: /auth/dev is the staff/agent door — an
+ * allow-listed email plus a shared password, not something a real customer
+ * has. Every customer who ever clicked "Sign in" on Designs was being sent
+ * to a form that rejects their email; Designs has never had a working
+ * customer sign-in. auth.rhobear.ai already allow-lists a redirect back to
+ * designs.rhobear.ai (AUTH_ALLOWED_REDIRECTS on the auth service), so this
+ * needed no server-side change — the client was just pointed at the wrong
+ * door. Staff/agent testing still works via the direct /auth/dev form.
+ */
 export function signIn() {
   const here = encodeURIComponent(window.location.href);
-  window.location.href = `${AUTH_BASE}/auth/dev?redirect=${here}`;
+  window.location.href = `${AUTH_BASE}/auth/google/start?app_name=designs&redirect=${here}`;
 }
 
 /** Clear the session locally. Does NOT call the server logout endpoint. */
