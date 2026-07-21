@@ -18,6 +18,7 @@ import { listProjects, saveProject, deleteProject, getProject } from './projects
 import { chat as aiChat, chatWithTools, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS } from '../ai/llm-client.js';
 import { openAiToolsParam, runTool, TOOLS_SYSTEM_PROMPT } from '../ai/tools.js';
 import { createThreeMode } from './three-mode.js';
+import { createMethodMode } from './method-mode.js';
 import { isPro, requirePro, showUpgrade } from './pro.js';
 import { initAuth, isSignedIn, signIn, signOut, onAuthChange } from './auth.js';
 import { loadLocalCache, seedPrefs, getPref, setPrefs, hydratePrefs } from './prefs.js';
@@ -42,7 +43,7 @@ const QUICK = [
   { name: 'Footer', html: '<footer style="padding:40px 24px;text-align:center;color:#888">© 2026 Brand · <a href="#">Privacy</a> · <a href="#">Terms</a></footer>' },
   { name: 'Heading', html: '<h2 style="font-size:2rem;margin:0">Heading</h2>' },
   { name: 'Text', html: '<p style="line-height:1.6;color:#444">New paragraph — double-click to edit.</p>' },
-  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#e94560;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
+  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#ff3a2a;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
   { name: 'Image', html: '' },
 ];
 
@@ -75,6 +76,7 @@ export function bootShell() {
     threeHost: $('three-host'),
     threeRail: $('three-rail'),
     inspector3d: $('inspector-3d'),
+    methodHost: $('method-host'),
     elementLibrary: $('element-library'),
     liveLayers: $('live-layers'),
     floatGrab: $('float-grab'),
@@ -171,6 +173,18 @@ export function bootShell() {
     onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) { console.error('renderElementLibrary on save:', _e); } toast('Saved to stash ✓ — find it in Edit Live Site → Add → Saved'); },
   });
 
+  // Design System desk (THE METHOD) — the 4th mode. Self-contained; mounts into #method-host.
+  const method = refs.methodHost ? createMethodMode({
+    host: refs.methodHost,
+    onStatus: setStatus,
+    // Credits stub for Milestone 0 — real metering is dev-phase D2. Image gen is
+    // never free: run() refuses at <= 0. Returns a positive stub balance for now.
+    getCredits: async () => {
+      try { return Number(localStorage.getItem('rb-credits') ?? '5000') || 0; } catch { return 5000; }
+    },
+  }) : null;
+  if (method) method.onInstall(() => toast('Design system installed to project ✓'));
+
   // templates gallery
   const gallery = createTemplatesGallery({
     modal: refs.templatesModal, grid: refs.templatesGrid, search: refs.templatesSearch,
@@ -265,13 +279,20 @@ export function bootShell() {
   // ---------------------------------------------------------------- modes
   function setMode(next) {
     mode = next;
-    qa('[data-action="mode-live"],[data-action="mode-build"],[data-action="mode-3d"]').forEach((b) =>
+    qa('[data-action="mode-live"],[data-action="mode-build"],[data-action="mode-3d"],[data-action="mode-method"]').forEach((b) =>
       b.classList.toggle('is-active', b.dataset.action === `mode-${next}`));
     qa('[data-build-only]').forEach((el) => el.classList.toggle('is-gone', next !== 'build'));
     qa('[data-live-only]').forEach((el) => el.classList.toggle('is-gone', next !== 'live'));
     qa('[data-3d-only]').forEach((el) => el.classList.toggle('is-gone', next !== '3d'));
+    qa('[data-method-only]').forEach((el) => el.classList.toggle('is-gone', next !== 'method'));
     refs.liveHost.classList.toggle('is-active', next === 'live');
-    if (next === '3d') {
+    if (next === 'method') {
+      // The desk is a self-contained takeover — hide the editor rail + inspector.
+      hideEmpty();
+      refs.inspector.classList.add('is-hidden');
+      if (method) method.ensure();
+      setStatus('Design System — prompt the agent to generate a design system');
+    } else if (next === '3d') {
       hideEmpty();
       refs.inspector.classList.remove('is-hidden'); // 3D controls live in the inspector
       three.ensure();
@@ -334,6 +355,7 @@ export function bootShell() {
     'mode-live': () => setMode('live'),
     'mode-build': () => setMode('build'),
     'mode-3d': () => setMode('3d'),
+    'mode-method': () => setMode('method'),
     'toggle-rail': () => refs.rail.classList.toggle('is-collapsed'),
 
     'new': () => {
