@@ -23,6 +23,12 @@ reaching for what a model shipped last.
 | **Motion** | **springs** (custom, per-axis) on camera; **lerp** only on colour/opacity | the grep-gated law (`SCENE.md`, T1) | Oryzo |
 | **Physics** | **none by default**; Cannon.js / Rapier **only** for the physics-nav archetype | most scroll scenes fake weight with springs; an engine is real cost added only when navigation *is* physics | Bruno Simon (only site here that needs one) |
 
+> **This table is the WebGL scroll-scene stack — it moves the *camera*.** The other motion layer, which
+> moves the **DOM/SVG elements** themselves (vector draws, block/layout/gesture, physics on cards & lists),
+> is a separate held stack: **`MOTION-DOM.md`** — **anime.js** (vector/timelines) · **Motion** (block/layout/
+> gesture/scroll) · **react-spring** (element physics), all MIT. A modern site uses both: this stack for the
+> world, that one for the elements. Pick the DOM library from the *frame's implied motion*, never by habit.
+
 ---
 
 ## The two decisions worth explaining

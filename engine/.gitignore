@@ -3,3 +3,5 @@ dist/
 *.log
 .DS_Store
 vendor/apps/daemon/dist/
+# open-design daemon runtime state (sqlite + generated artifacts) — never tracked
+vendor/.od/
