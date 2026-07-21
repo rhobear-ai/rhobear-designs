@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>RHOBEAR Designs — Tablet Studio</title>
 
+    <!-- Brand type: RHOBEAR Designs typekit (lato · rokkitt · allura). -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="stylesheet" href="https://use.typekit.net/sbv5bcv.css" />
+
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#ff3a2a" />
@@ -98,7 +102,7 @@
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">RHOBEAR Designs</span>
+            <span class="rb-brand__name"><span class="rb-brand__rho">RHOBEAR</span><span class="rb-brand__designs">Designs</span></span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
@@ -378,6 +382,8 @@
         endpoint: 'https://workbench.rhobear.ai/companion',
         ready: true,
         accent: '#ff3a2a',
+        surface: 'Designs',
+        orbTint: 0.9,
       };
     </script>
     <script defer src="companion-embed.js"></script>

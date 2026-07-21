@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>RHOBEAR Designs — Website Editor</title>
 
+    <!-- Brand type: RHOBEAR Designs typekit (lato · rokkitt · allura). Async, non-blocking. -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="stylesheet" href="https://use.typekit.net/sbv5bcv.css" />
+
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#ff3a2a" />
@@ -100,7 +104,7 @@
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">RHOBEAR Designs</span>
+            <span class="rb-brand__name"><span class="rb-brand__rho">RHOBEAR</span><span class="rb-brand__designs">Designs</span></span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
@@ -111,6 +115,7 @@
             <button type="button" class="rb-modeswitch__btn is-active" data-action="mode-live" data-testid="btn-mode-live" role="tab">Edit Live Site</button>
             <button type="button" class="rb-modeswitch__btn" data-action="mode-build" data-testid="btn-mode-build" role="tab">Build from scratch</button>
             <button type="button" class="rb-modeswitch__btn" data-action="mode-3d" data-testid="btn-mode-3d" role="tab">3D Studio</button>
+            <button type="button" class="rb-modeswitch__btn" data-action="mode-method" data-testid="btn-mode-method" role="tab">Design System</button>
           </div>
           <button type="button" class="rb-btn" data-action="open-templates" data-testid="btn-templates" title="Browse templates">Templates</button>
           <button type="button" class="rb-btn rb-btn--ghost" data-action="open-projects" data-testid="btn-projects" title="Projects &amp; folders">Projects</button>
@@ -179,6 +184,8 @@
             </div>
             <!-- 3D Studio host -->
             <div class="rb-three-host" id="three-host" data-3d-only data-testid="three-host"></div>
+            <!-- Design System desk (THE METHOD) host -->
+            <div id="method-host" data-method-only class="is-gone" data-testid="method-host"></div>
           </div>
 
           <!-- Studio start (onboarding / empty state) -->
@@ -373,6 +380,8 @@
         endpoint: 'https://workbench.rhobear.ai/companion',
         ready: true,
         accent: '#ff3a2a',
+        surface: 'Designs',   // → "riding Designs" under the name
+        orbTint: 0.9,         // recolour the plasma orb toward Designs red
       };
     </script>
     <script defer src="companion-embed.js"></script>
@@ -394,8 +403,8 @@
     background:radial-gradient(ellipse,rgba(74,158,255,.07),transparent 70%);pointer-events:none}
   .dsob-brand{display:flex;align-items:center;gap:10px;padding:24px 32px;position:relative;z-index:1}
   .dsob-brand img{width:28px;height:28px;filter:drop-shadow(0 0 8px rgba(255,58,42,.4))}
-  .dsob-name{font-size:15px;font-weight:700;color:#fff}
-  .dsob-name span{color:#ff3a2a}
+  .dsob-name{font-family:var(--rb-display,serif);font-size:15px;font-weight:700;color:#fff;letter-spacing:.06em}
+  .dsob-name span{font-family:var(--rb-script,cursive);color:#ff3a2a;font-size:21px;font-weight:400;letter-spacing:0;margin-left:3px}
   .dsob-dots{display:flex;gap:6px;margin-left:auto}
   .dsob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .2s}
   .dsob-dot.active{background:#fff}.dsob-dot.done{background:#ff3a2a}

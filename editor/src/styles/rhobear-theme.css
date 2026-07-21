@@ -53,7 +53,12 @@
   --rb-radius-sm: 8px;
   --rb-radius-lg: 14px;
 
-  --rb-font: -apple-system, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+  /* Type — RHOBEAR Designs typekit (kit sbv5bcv): lato = body/UI, rokkitt =
+     display/wordmark, allura = the "Designs" script word. System stack is the
+     offline fallback (PWA works without the network). */
+  --rb-font: "lato", -apple-system, "Segoe UI Variable Text", "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+  --rb-display: "rokkitt", "Rockwell", "Roboto Slab", "New York", Georgia, serif;
+  --rb-script: "allura", "Segoe Script", "Snell Roundhand", "Brush Script MT", cursive;
   --rb-serif: "New York", "Iowan Old Style", Charter, Georgia, "Times New Roman", serif;
   --rb-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
 
@@ -157,8 +162,10 @@ html, body {
   font-size: 1rem; font-weight: 500;
 }
 .rb-brand__text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
-/* Wordmark: caps, tracked — the one place case rules bend. */
-.rb-brand__name { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+/* Wordmark: "RHOBEAR" in rokkitt slab-caps, "Designs" in allura script red. */
+.rb-brand__name { display: flex; align-items: baseline; gap: 5px; }
+.rb-brand__rho { font-family: var(--rb-display); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.rb-brand__designs { font-family: var(--rb-script); font-size: 1.12rem; line-height: 1; color: var(--rb-brand); letter-spacing: 0; text-transform: none; }
 .rb-brand__doc {
   font-size: 0.68rem; color: var(--rb-text-muted); font-family: var(--rb-mono);
   max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -293,7 +300,7 @@ html, body {
   width: 72px; height: 72px; border-radius: 18px; display: grid; place-items: center;
   font-size: 1.8rem;
 }
-.rb-empty__title { font-size: 1.7rem; font-weight: 500; margin: 0; font-family: var(--rb-serif); letter-spacing: -0.01em; }
+.rb-empty__title { font-size: 1.9rem; font-weight: 700; margin: 0; font-family: var(--rb-display); letter-spacing: 0; }
 .rb-empty__sub { color: var(--rb-text-muted); max-width: 520px; margin: 0; line-height: 1.6; font-size: 0.9rem; }
 .rb-empty__actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
 

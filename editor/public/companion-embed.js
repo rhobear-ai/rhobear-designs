@@ -47,6 +47,13 @@
   var ENDPOINT = (CFG.endpoint != null ? CFG.endpoint : attr('endpoint', '')).replace(/\/+$/, '');
   var READY    = CFG.ready != null ? !!CFG.ready : (attr('ready', 'false') === 'true');
   var TITLE    = CFG.title   || attr('title', 'Rho');
+  // Surface identity: Rho takes on the host app's colour + a "riding <Surface>"
+  // line, so Designs' Rho reads red where Hub's is teal and Plans' is magenta \u2014
+  // one companion, a different face per app. orbTint (0..1) recolours the plasma
+  // orb toward the accent via a `color`-blend overlay (keeps the photoreal
+  // texture, only shifts the hue). Both are data-driven off the mount config.
+  var SURFACE  = CFG.surface || attr('surface', '');
+  var ORB_TINT = CFG.orbTint != null ? +CFG.orbTint : (parseFloat(attr('orb-tint', '')) || 0);
   // Unicode escapes (\u2014 etc) everywhere below: hosts may serve this file
   // without a UTF-8 charset header and raw em-dashes render as mojibake.
   var GREETING = CFG.greeting || attr('greeting', "Hey \u2014 I'm " + TITLE + ". Ask me anything.");
@@ -145,6 +152,7 @@
     --orb-speaking: url('${ORB_BASE}/speaking.png');
     --orb-error: url('${ORB_BASE}/error.png');
     --orb-loading: url('${ORB_BASE}/loading.png');
+    --rho-orb-tint: ${ORB_TINT};   /* 0 = plasma as-shot · >0 = recoloured toward the surface accent */
     position: fixed; z-index: 2147483000;
     font-family: 'Assistant', system-ui, -apple-system, 'Segoe UI', sans-serif;
   }
@@ -168,6 +176,21 @@
     box-shadow: 0 8px 26px rgba(0,0,0,.45), 0 0 22px color-mix(in srgb, var(--rho-a) 40%, transparent);
     transition: box-shadow .3s ease, transform .12s ease, filter .3s ease, background-image .22s ease;
     will-change: transform, box-shadow;
+    isolation: isolate;   /* contain the surface-tint blend to the orb itself */
+  }
+  /* surface tint — recolour the plasma toward the app accent without flattening
+     it. The 'color' blend keeps the orb's luminance/texture (the lightning, the
+     core) and swaps only the hue, so Designs' Rho glows red, Plans' magenta.
+     The gradient fades out at the rim so the cool plasma edge still reads. */
+  .rho-orbimg::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 50% 47%,
+      color-mix(in srgb, var(--rho-a) 96%, transparent) 0%,
+      color-mix(in srgb, var(--rho-a) 78%, transparent) 52%,
+      color-mix(in srgb, var(--rho-a) 42%, transparent) 78%,
+      transparent 96%);
+    mix-blend-mode: color; opacity: var(--rho-orb-tint, 0);
+    transition: opacity .3s ease;
   }
   .rho-orbimg[data-state="idle"]     { background-image: var(--orb-idle);     animation: rho-orb-idle 2.9s ease-in-out infinite; }
   .rho-orbimg[data-state="thinking"] { background-image: var(--orb-thinking); box-shadow: 0 8px 26px rgba(0,0,0,.45), 0 0 30px rgba(123,63,212,.6); animation: rho-orb-think .95s ease-in-out infinite; }
@@ -233,7 +256,14 @@
   .rho-head-orb .rho-orbrim { animation-duration: 9s; }
   #rho-embed.rho-busy .rho-head-orb { animation: rho-pulse 1.1s ease-in-out infinite; }
   @keyframes rho-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  #rho-head .rho-names { display: flex; flex-direction: column; gap: 1px; line-height: 1.12; min-width: 0; }
   #rho-head .rho-name { font-weight: 700; font-size: 15px; letter-spacing: .2px; }
+  /* "riding <Surface>" — the per-app identity line (Hub/Plans have it; so does
+     Designs). Muted, but tinted toward the surface accent so it belongs. */
+  #rho-head .rho-surface {
+    font-size: 11px; font-weight: 600; letter-spacing: .2px;
+    color: color-mix(in srgb, var(--rho-a) 58%, rgba(255,255,255,.6));
+  }
   #rho-head .rho-chip {
     font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     padding: 3px 8px; border-radius: 9px;
@@ -626,7 +656,8 @@
     '<section id="rho-panel" role="dialog" aria-label="' + TITLE + ' chat">' +
       '<header id="rho-head">' +
         '<span class="rho-head-orb">' + ORB + '</span>' +
-        '<span class="rho-name">' + TITLE + '</span>' +
+        '<span class="rho-names"><span class="rho-name">' + TITLE + '</span>' +
+          (SURFACE ? '<span class="rho-surface">riding ' + SURFACE + '</span>' : '') + '</span>' +
         (READY ? '' : '<span class="rho-chip" id="rho-chip">warming up</span>') +
         '<span class="rho-spacer"></span>' +
         '<button class="rho-hbtn" id="rho-gear" aria-label="Personalize" title="Colors & voice">' + ICON.gear + '</button>' +

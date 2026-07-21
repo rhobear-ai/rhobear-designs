@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
     <title>RHOBEAR Designs — Mobile Studio</title>
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="stylesheet" href="https://use.typekit.net/sbv5bcv.css" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#ff3a2a" />
     <meta name="description" content="RHOBEAR Designs on your phone — a purpose-built mobile studio, not a squeezed desktop." />
@@ -71,7 +73,7 @@
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">Designs</span>
+            <span class="rb-brand__name"><span class="rb-brand__designs">Designs</span></span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
@@ -376,6 +378,8 @@
         endpoint: 'https://workbench.rhobear.ai/companion',
         ready: true,
         accent: '#ff3a2a',
+        surface: 'Designs',
+        orbTint: 0.9,
       };
     </script>
     <script defer src="companion-embed.js"></script>
