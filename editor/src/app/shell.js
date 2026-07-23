@@ -494,8 +494,15 @@ export function bootShell() {
     renderGrid();
   }
 
-  // ---- AI assist (bring-your-own key) ----
-  function aiConfig() { try { return JSON.parse(localStorage.getItem('rb-ai') || '{}'); } catch (_e) { return {}; } }
+  // ---- AI assist — house-managed only ----
+  // Designs is a PAID product: AI features pipe OUR house AI, never bring-your-own-key
+  // (owner 2026-07-23). Force `managed` regardless of anything stored, and never carry a key.
+  function aiConfig() {
+    try {
+      const c = JSON.parse(localStorage.getItem('rb-ai') || '{}');
+      return { ...c, provider: 'managed', key: '' };
+    } catch (_e) { return { provider: 'managed', key: '' }; }
+  }
 
   // ---- Pro layer: generation style · deep thinking · voice (never crimps free) ----
   function aiStyle() { try { return localStorage.getItem('rb-ai-style') || 'default'; } catch (_e) { return 'default'; } }
@@ -623,7 +630,7 @@ export function bootShell() {
       if (host) host.insertBefore(meter, host.firstChild);
     }
     if (!state) {
-      meter.innerHTML = '<span class="rb-cloud-meter__dot" data-off></span> Cloud offline — BYOK still works.';
+      meter.innerHTML = '<span class="rb-cloud-meter__dot" data-off></span> House AI offline — try again in a moment.';
       return;
     }
     if (!signedIn) {

@@ -68,10 +68,13 @@ const MANAGED_BASE = String(import.meta.env?.VITE_MANAGED_BASE ?? '').replace(/\
  * FREE users always get ARC; the UI hides the Pro models behind the upgrade
  * wall so a FREE user never accidentally triggers a 402.
  */
+// House model IDs sent to the managed /v1 endpoint. These are the real gateway
+// model names board-render's cookie-authed /v1 relay accepts (owner 2026-07-23:
+// Designs pipes OUR house AI, never BYO). ARC = free/fast, URS = pro.
 export const MANAGED_MODELS = {
-  ARC: 'ARC',
-  URS_MINOR: 'URS_MINOR',
-  URS: 'URS',
+  ARC: 'gemini-3-flash-preview',
+  URS_MINOR: 'gemini-3-flash-preview',
+  URS: 'gemini-3-pro-preview',
 };
 
 export const MANAGED_MODEL_LABELS = {
